@@ -1,25 +1,68 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { theme, ThemeProvider, CSSReset, Flex, Spinner, Text} from "@chakra-ui/core";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from "react-router-dom";
+import { useAmbientUser, AppUser } from 'ambient-react';
+import { Index } from './pages';
+import {LoginPage} from './pages/login'
+
+export const userNamespace = 'local-only-tracker'
+
+AppUser.setUserNamespace(userNamespace)
+
+// A wrapper for <Route> that redirects to the login
+// screen if you're not yet authenticated.
+function AuthenticatedRoute({ children, ...rest }: any) {
+
+  const { loading, user } = useAmbientUser()
+
+  if (loading) {
+    return (
+      <Flex align="center" justify="center" h="100%">
+        <Spinner />
+        <Text ml="1rem">Loading up Tupelo</Text>
+      </Flex>
+    )
+  }
+
+  return (
+    <Route
+      {...rest}
+      render={({ location }) =>
+        user ? (
+          children
+        ) : (
+            <Redirect
+              to={{
+                pathname: "/login",
+                state: { from: location }
+              }}
+            />
+          )
+      }
+    />
+  );
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CSSReset />
+      <Router>
+          <Switch>
+            <Route path="/login">
+              <LoginPage />
+            </Route>
+            <AuthenticatedRoute path="/">
+              <Index />
+            </AuthenticatedRoute>
+          </Switch>
+      </Router>
+    </ThemeProvider>
   );
 }
 
