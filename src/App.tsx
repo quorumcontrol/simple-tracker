@@ -9,6 +9,7 @@ import {
 import { useAmbientUser, AppUser } from 'ambient-react';
 import { Index } from './pages';
 import {LoginPage} from './pages/login'
+import {RegisterPage} from './pages/register'
 
 export const userNamespace = 'local-only-tracker'
 
@@ -56,6 +57,9 @@ function App() {
           <Switch>
             <Route path="/login">
               <LoginPage />
+            </Route>
+            <Route path="/register">
+              <RegisterPage />
             </Route>
             <AuthenticatedRoute path="/">
               <Index />

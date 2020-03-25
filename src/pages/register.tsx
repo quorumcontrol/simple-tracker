@@ -4,22 +4,27 @@ import { useForm } from "react-hook-form";
 import { useAmbientUser } from 'ambient-react';
 import { Redirect, Link as RouterLink} from 'react-router-dom';
 
-const sleep = (ms:number) => new Promise(resolve => setTimeout(resolve, ms));
-
-type LoginFormData = {
+type RegistrationFormData = {
     username: string;
     password: string;
+    passwordConfirmation: string
   };
 
-export function LoginPage() {
-    const { handleSubmit, errors, setError, register, formState } = useForm<LoginFormData>();
-    const { login } = useAmbientUser()
+export function RegisterPage() {
+    const { handleSubmit, errors, setError, register, formState } = useForm<RegistrationFormData>();
+    const userMethods = useAmbientUser()
+    const registerUser = userMethods.register
     const [loginSuccess,setLoginSuccess] = useState(false)
 
-    async function onSubmit({username,password}:LoginFormData) {
-        const [found] = await login(username, password)
-        if (!found) {
-            setError("username", "not found", "User not found")
+    async function onSubmit({username,password, passwordConfirmation}:RegistrationFormData) {
+        if (password !== passwordConfirmation) {
+            setError("password", "invalid", "password confirmation doesn't match")
+            return
+        }
+        try {
+            await registerUser(username, password)
+        } catch(e) {
+            setError("username", "unknown", "Could not create that user")
             return
         }
         setLoginSuccess(true)
@@ -37,7 +42,7 @@ export function LoginPage() {
 
     return (
         <Flex align="center" justify="center" h="100%" flexDir="column">
-            <Heading>Login</Heading>
+            <Heading>Register</Heading>
             <Box borderWidth="1px" rounded="lg" p={8} mt={2}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <FormControl isInvalid={!!errors.username}>
@@ -48,7 +53,7 @@ export function LoginPage() {
                             ref={register({ required: "Username is required" })}
                         />
                         <FormErrorMessage>
-                            {errors.username && (errors.username.message)}
+                            {errors.username && errors.username.message}
                         </FormErrorMessage>
                     </FormControl>
                     <FormControl isInvalid={!!errors.password} mt={5}>
@@ -57,10 +62,22 @@ export function LoginPage() {
                             name="password"
                             placeholder="Password"
                             type="password"
-                            ref={register({ required: true })}
+                            ref={register({ required: "Password is required" })}
                         />
                         <FormErrorMessage>
-                            {errors.password && "Password is required"}
+                            {errors.password && errors.password.message}
+                        </FormErrorMessage>
+                    </FormControl>
+                    <FormControl isInvalid={!!errors.passwordConfirmation} mt={5}>
+                        <FormLabel htmlFor="passwordConfirmation">Re-Type your password</FormLabel>
+                        <Input
+                            name="passwordConfirmation"
+                            placeholder="Password Confirmation"
+                            type="password"
+                            ref={register({ required: "Password confirmation is required" })}
+                        />
+                        <FormErrorMessage>
+                            {errors.passwordConfirmation && errors.passwordConfirmation.message}
                         </FormErrorMessage>
                     </FormControl>
                     <Button
@@ -69,12 +86,12 @@ export function LoginPage() {
                         isLoading={formState.isSubmitting}
                         type="submit"
                     >
-                        Login
+                        Register
                     </Button>
                 </form>
                 <Box mt={4}>
-                    <RouterLink to="/register">
-                        <Link as="text">Or Register</Link>
+                    <RouterLink to="/Login">
+                        <Link as="text">Or Login</Link>
                     </RouterLink>
                 </Box>
             </Box>
