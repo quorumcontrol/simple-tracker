@@ -10,6 +10,7 @@ import { useAmbientUser, AppUser } from 'ambient-react';
 import { Index } from './pages';
 import {LoginPage} from './pages/login'
 import {RegisterPage} from './pages/register'
+import { ObjectPage } from './pages/object';
 
 export const userNamespace = 'local-only-tracker'
 
@@ -60,6 +61,9 @@ function App() {
             </Route>
             <Route path="/register">
               <RegisterPage />
+            </Route>
+            <Route path="/objects/:objectId">
+              <ObjectPage />
             </Route>
             <AuthenticatedRoute path="/">
               <Index />

@@ -4,8 +4,6 @@ import { useForm } from "react-hook-form";
 import { useAmbientUser } from 'ambient-react';
 import { Redirect, Link as RouterLink} from 'react-router-dom';
 
-const sleep = (ms:number) => new Promise(resolve => setTimeout(resolve, ms));
-
 type LoginFormData = {
     username: string;
     password: string;

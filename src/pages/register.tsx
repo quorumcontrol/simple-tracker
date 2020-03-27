@@ -24,7 +24,7 @@ export function RegisterPage() {
         try {
             await registerUser(username, password)
         } catch(e) {
-            setError("username", "unknown", "Could not create that user")
+            setError("username", "unknown", `Could not create that user: ${e.message}`)
             return
         }
         setLoginSuccess(true)

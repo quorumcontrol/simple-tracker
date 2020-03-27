@@ -1,10 +1,17 @@
 import React from 'react'
-import { Box, Flex } from '@chakra-ui/core'
+import { Box, Flex, Button } from '@chakra-ui/core'
+import Header from '../components/header'
+import { Link as RouterLink} from 'react-router-dom';
 
 export function Index() {
     return (
-        <Flex align="center" justify="center" h="100%">
-            <p>hi</p>
-        </Flex>
+        <Box>
+            <Header/>
+            <Flex mt={5} p={10}>
+                <RouterLink to="/objects/new">
+                    <Button>Add Object</Button>
+                </RouterLink>
+            </Flex>
+        </Box>
     )
 }
