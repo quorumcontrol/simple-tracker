@@ -7,10 +7,17 @@ import {
   Redirect,
 } from "react-router-dom";
 import { useAmbientUser, AppUser } from 'ambient-react';
-import { Index } from './pages';
-import {LoginPage} from './pages/login'
-import {RegisterPage} from './pages/register'
-import { ObjectPage } from './pages/object';
+import { Index } from './trackable';
+import {LoginPage} from './login/login'
+import {RegisterPage} from './login/register'
+import { TrackablePage } from './trackable/trackable';
+import { Provider } from 'react-redux'
+import rootReducer from './reducers'
+import { configureStore } from '@reduxjs/toolkit'
+
+const store = configureStore({
+  reducer: rootReducer
+})
 
 export const userNamespace = 'local-only-tracker'
 
@@ -54,6 +61,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CSSReset />
+      <Provider store={store}>
       <Router>
           <Switch>
             <Route path="/login">
@@ -62,14 +70,15 @@ function App() {
             <Route path="/register">
               <RegisterPage />
             </Route>
-            <Route path="/objects/:objectId">
-              <ObjectPage />
+            <Route path="/trackables/:trackableId">
+              <TrackablePage />
             </Route>
             <AuthenticatedRoute path="/">
               <Index />
             </AuthenticatedRoute>
           </Switch>
       </Router>
+      </Provider>
     </ThemeProvider>
   );
 }

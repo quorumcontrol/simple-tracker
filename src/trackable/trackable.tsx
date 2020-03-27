@@ -1,8 +1,8 @@
 import React from 'react'
 import { Box, Flex } from '@chakra-ui/core'
-import Header from '../components/header'
+import Header from '../header'
 
-export function ObjectPage() {
+export function TrackablePage() {
     return (
         <Box>
             <Header/>
