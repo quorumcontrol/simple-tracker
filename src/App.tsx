@@ -11,10 +11,8 @@ import { Index } from './pages';
 import {LoginPage} from './pages/login'
 import {RegisterPage} from './pages/register'
 import { ObjectPage } from './pages/object';
+import './store'; // for side effects only
 
-export const userNamespace = 'local-only-tracker'
-
-AppUser.setUserNamespace(userNamespace)
 
 // A wrapper for <Route> that redirects to the login
 // screen if you're not yet authenticated.
