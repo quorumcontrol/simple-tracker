@@ -1,7 +1,7 @@
 import {AppUser} from 'ambient-react'
 import debug from 'debug'
 import { User, Database } from 'ambient-stack'
-import { v5 as uuidv5 } from 'uuid';
+import {uuid} from 'automerge'
 
 const log = debug("store")
 
@@ -33,10 +33,23 @@ export enum TrackableCollectionActions {
 
 export interface TrackableCollectionUpdate {
     type: TrackableCollectionActions,
-    name: string
+    trackable: Trackable
 }
 
-const uuidNamespace = '121867b5-c602-443e-ae5e-020a49b638e9'
+export enum TrackableActions {
+    ADD, // do we need anything else?
+}
+
+export interface TrackableAction {
+    type: TrackableActions,
+    update: TrackableUpdate
+}
+
+export function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, user:User, name:string) {
+    const trackable:Trackable = {name: name, id: uuid(), updates:[]}
+    dispatch({type: TrackableCollectionActions.ADD, trackable: trackable})
+    return trackable
+}
 
 export const TrackableCollectionReducer = (doc: TrackableCollection, evt: TrackableCollectionUpdate) => {
     if (doc.trackables === undefined) {
@@ -44,8 +57,7 @@ export const TrackableCollectionReducer = (doc: TrackableCollection, evt: Tracka
     }
     switch (evt.type) {
         case TrackableCollectionActions.ADD:
-            const uuid = uuidv5(doc.userDid, uuidNamespace);
-            const trackable:Trackable = {name: evt.name, id: uuid, updates:[]}
+            const trackable = evt.trackable
             doc.trackables[trackable.id] = trackable
             break;
         default:
@@ -54,6 +66,20 @@ export const TrackableCollectionReducer = (doc: TrackableCollection, evt: Tracka
 }
 
 
+export const TrackableReducer = (doc: Trackable, evt: TrackableAction) => {
+    if (doc.updates === undefined) {
+        doc.updates = []
+    }
+    switch (evt.type) {
+        case TrackableActions.ADD:
+            let update = evt.update
+            update.timestamp = (new Date()).getTime()
+            doc.updates.push(update)
+            break;
+        default:
+            console.error("unsupported action: ", evt)
+    }
+}
 
 AppUser.afterRegister = async (user: User) => {
   log('setting up trackable collection')

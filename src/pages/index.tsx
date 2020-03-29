@@ -3,17 +3,24 @@ import { Box, Flex, Button, ListItem, List } from '@chakra-ui/core'
 import Header from '../components/header'
 import { Link as RouterLink } from 'react-router-dom';
 import { useAmbientUser, useAmbientDatabase } from 'ambient-react';
-import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, TrackableCollectionActions } from '../store';
+import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, TrackableCollectionActions, addTrackable, TrackableAction, Trackable, TrackableReducer } from '../store';
+import { Database } from 'ambient-stack';
+import debug from 'debug'
+
+const log = debug("pages.index")
 
 export function Index() {
 
     const { user } = useAmbientUser()
     const [dispatch, trackableState, db] = useAmbientDatabase<TrackableCollection, TrackableCollectionUpdate>(user!.userName + "-trackables", TrackableCollectionReducer)
 
-    const addNewTrackable = () => {
-        dispatch({
-            type: TrackableCollectionActions.ADD,
-            name: "New Object"
+    const addNewTrackable = async () => {
+        const trackable = addTrackable(dispatch, user!, "New Trackable")
+        log("addNewTrackable: ", trackable)
+        const db = new Database<Trackable, TrackableAction>(trackable.id, TrackableReducer)
+        await db.create(user!.tree.key!, {
+            writers: [user?.did!],
+            initialState: trackable,
         })
     }
 
