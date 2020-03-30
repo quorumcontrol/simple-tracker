@@ -3,7 +3,7 @@ import { Box, Flex, Button, ListItem, List, Collapse, FormControl, FormLabel, In
 import Header from '../components/header'
 import { Link as RouterLink } from 'react-router-dom';
 import { useAmbientUser, useAmbientDatabase } from 'ambient-react';
-import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, TrackableCollectionActions, addTrackable, TrackableAction, Trackable, TrackableReducer } from '../store';
+import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, addTrackable } from '../store';
 import debug from 'debug'
 import { useForm } from 'react-hook-form';
 

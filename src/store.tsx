@@ -1,7 +1,8 @@
 import {AppUser} from 'ambient-react'
 import debug from 'debug'
-import { User, Database } from 'ambient-stack'
-import {uuid} from 'automerge'
+import { User, Database, getAppCommunity } from 'ambient-stack'
+import { EcdsaKey, ChainTree, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
+import CID from 'cids'
 
 const log = debug("store")
 
@@ -19,6 +20,7 @@ export interface Trackable {
     id:string
     name:string
     updates:TrackableUpdate[]
+    latestTip?:CID
 }
 
 export interface TrackableCollection {
@@ -36,32 +38,21 @@ export interface TrackableCollectionUpdate {
     trackable: Trackable
 }
 
-export enum TrackableActions {
-    ADD,
-    RENAME,
-}
-
-export interface TrackableAction {
-    type: TrackableActions
-    update?: TrackableUpdate
-    name?:string
-}
-
 export async function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, user:User, name:string) {
-    const trackable:Trackable = {name: name, id: uuid(), updates:[]}
-    log("addNewTrackable: ", trackable)
-    const db = new Database<Trackable, TrackableAction>(trackable.id, TrackableReducer)
-    await db.create(user!.tree.key!, {
-        writers: [user?.did!],
-        initialState: trackable,
-    })
+    const c = await getAppCommunity()
+    const key = await EcdsaKey.generate()
+    const tree = await ChainTree.newEmptyTree(c.blockservice, key)
+    const did = await tree.id()
+    const trackable:Trackable = {name: name, id: did!, updates:[], latestTip:tree.tip}
+
+    await c.playTransactions(tree, [
+        setDataTransaction("_tracker", trackable),
+        setOwnershipTransaction([await user.tree.key?.address()!])
+    ])
     dispatch({type: TrackableCollectionActions.ADD, trackable: trackable})
     return trackable
 }
 
-export function addUpdate(dispatch:(update:TrackableAction)=>void, update:TrackableUpdate) {
-    dispatch({type:TrackableActions.ADD, update: update})
-}
 
 export const TrackableCollectionReducer = (doc: TrackableCollection, evt: TrackableCollectionUpdate) => {
     if (doc.trackables === undefined) {
@@ -77,29 +68,6 @@ export const TrackableCollectionReducer = (doc: TrackableCollection, evt: Tracka
     }
 }
 
-
-export const TrackableReducer = (doc: Trackable, evt: TrackableAction) => {
-    if (doc.updates === undefined) {
-        doc.updates = []
-    }
-    switch (evt.type) {
-        case TrackableActions.ADD:
-            let update = evt.update
-            if (update === undefined) {
-                throw new Error("must specify an update for ADD")
-            }
-            update.timestamp = (new Date()).getTime()
-            doc.updates.push(update)
-            break;
-        case TrackableActions.RENAME:
-            if (evt.name === undefined) {
-                throw new Error("must specify a name in order to rename")
-            }
-            doc.name = evt.name
-        default:
-            console.error("unsupported action: ", evt)
-    }
-}
 
 AppUser.afterRegister = async (user: User) => {
   log('setting up trackable collection')

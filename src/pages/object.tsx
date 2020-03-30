@@ -1,48 +1,90 @@
-import React, { useState } from 'react'
-import { Box, Flex, Heading, Button, Collapse,FormControl, Input, FormErrorMessage,FormLabel, ListItem, List } from '@chakra-ui/core'
+import React, { useState, useEffect } from 'react'
+import { Box, Flex, Heading, Button, Collapse, FormControl, Input, FormErrorMessage, FormLabel, ListItem, List } from '@chakra-ui/core'
 import Header from '../components/header'
-import { useAmbientDatabase } from 'ambient-react'
-import { TrackableAction, Trackable, TrackableReducer, TrackableUpdate, addUpdate } from '../store'
+import { useAmbientUser } from 'ambient-react'
+import { Trackable, TrackableUpdate } from '../store'
 import { useParams } from 'react-router-dom'
 import debug from 'debug'
 import { useForm } from 'react-hook-form'
+import { getAppCommunity } from 'ambient-stack'
+import { EcdsaKey, ChainTree, setDataTransaction } from 'tupelo-wasm-sdk'
 
 const log = debug("pages.object")
 
+const useTrackable = (did: string, key: EcdsaKey) => {
+    const [tree, setTree] = useState<ChainTree | undefined>(undefined)
+    const [trackable, setTrackable] = useState<Trackable>({name: "Loading", id: did, updates:[]})
+    useEffect(() => {
+        const initialize = async () => {
+            const c = await getAppCommunity()
+            const tip = await c.getTip(did)
+            const tree = new ChainTree({
+                key: key,
+                store: c.blockservice,
+                tip: tip,
+            })
+            let resp = await tree.resolveData("_tracker")
+            setTrackable(resp.value)
+            setTree(tree)
+        }
+        if (!tree && did && key) {
+            initialize()
+        }
+    }, [did, tree, key])
+
+    const addUpdate = async (update:TrackableUpdate)=> {
+        update.timestamp = (new Date()).getTime()
+        trackable.updates.push(update)
+        setTrackable(trackable)
+
+        const c = await getAppCommunity()
+        return c.playTransactions(tree!, [setDataTransaction("_tracker", trackable)])
+    }
+
+    return { tree, trackable, addUpdate }
+}
+
 export function ObjectPage() {
     const { objectId } = useParams()
-    const [dispatch, trackableState, db] = useAmbientDatabase<Trackable, TrackableAction>(objectId!, TrackableReducer)
+    const { user } = useAmbientUser()
+    const {trackable,addUpdate} = useTrackable(objectId!, user?.tree.key!)
+
     const [show, setShow] = useState(false)
     const [addLoading, setAddLoading] = useState(false)
-    const { handleSubmit, errors, setError, register, formState } = useForm<TrackableUpdate>();
+    const { handleSubmit, errors, reset, register } = useForm<TrackableUpdate>();
 
     const handleToggle = () => setShow(!show);
+   
 
-    log("trackableState: ", trackableState)
-
-    const onSubmit = async (data:TrackableUpdate)=> {
+    const onSubmit = async (data: TrackableUpdate) => {
         setAddLoading(true)
-        addUpdate(dispatch, {message: data.message})
-        setAddLoading(false)
+        addUpdate({message: data.message})
         setShow(false)
+        reset()
+        setAddLoading(false)
     }
 
     let updates: ReturnType<typeof ListItem>[] = []
 
-    if (trackableState && trackableState.updates) {
-        updates = trackableState.updates.map((update)=> {
+    if (trackable) {
+        updates = trackable.updates.map((update) => {
             return (
-                <ListItem key={update.timestamp}>{update.message}</ListItem>
+                <ListItem key={update.timestamp}>
+                    <Box borderWidth="1px" rounded="lg" p={10} mt={10}>
+                        {update.message}
+                    </Box>
+                </ListItem>
             )
         })
     }
+    
 
     return (
         <Box>
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
-                    <Heading>{trackableState?.name}</Heading>
+                    <Heading>{trackable?.name}</Heading>
                 </Box>
                 <Box mt={5}>
                     <Button isLoading={addLoading} onClick={handleToggle}>
@@ -63,7 +105,7 @@ export function ObjectPage() {
                             </FormControl>
                             <Button type="submit" isLoading={addLoading}>Add</Button>
                         </form>
-                   </Collapse>
+                    </Collapse>
                 </Box>
                 <Box>
                     <List>
