@@ -1,27 +1,34 @@
-import React from 'react'
-import { Box, Flex, Button, ListItem, List } from '@chakra-ui/core'
+import React, { useState } from 'react'
+import { Box, Flex, Button, ListItem, List, Collapse, FormControl, FormLabel, Input, FormErrorMessage } from '@chakra-ui/core'
 import Header from '../components/header'
 import { Link as RouterLink } from 'react-router-dom';
 import { useAmbientUser, useAmbientDatabase } from 'ambient-react';
 import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, TrackableCollectionActions, addTrackable, TrackableAction, Trackable, TrackableReducer } from '../store';
-import { Database } from 'ambient-stack';
 import debug from 'debug'
+import { useForm } from 'react-hook-form';
 
 const log = debug("pages.index")
+
+type AddTrackableFormData = {
+    name: string
+}
 
 export function Index() {
 
     const { user } = useAmbientUser()
-    const [dispatch, trackableState, db] = useAmbientDatabase<TrackableCollection, TrackableCollectionUpdate>(user!.userName + "-trackables", TrackableCollectionReducer)
+    const [dispatch, trackableState,] = useAmbientDatabase<TrackableCollection, TrackableCollectionUpdate>(user!.userName + "-trackables", TrackableCollectionReducer)
+    const [addLoading, setAddLoading] = useState(false)
+    const [show, setShow] = useState(false);
 
-    const addNewTrackable = async () => {
-        const trackable = addTrackable(dispatch, user!, "New Trackable")
-        log("addNewTrackable: ", trackable)
-        const db = new Database<Trackable, TrackableAction>(trackable.id, TrackableReducer)
-        await db.create(user!.tree.key!, {
-            writers: [user?.did!],
-            initialState: trackable,
-        })
+    const { handleSubmit, errors, setError, register, formState } = useForm<AddTrackableFormData>();
+
+    const handleToggle = () => setShow(!show);
+
+    const onSubmit = async ({name}:AddTrackableFormData) => {
+        setAddLoading(true)
+        await addTrackable(dispatch, user!, name)
+        setAddLoading(false)
+        setShow(false)
     }
 
     let trackables: ReturnType<typeof ListItem>[] = []
@@ -43,13 +50,31 @@ export function Index() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
-                    <Button onClick={addNewTrackable}>Add Object</Button>
+                    <Button isLoading={addLoading} onClick={handleToggle}>
+                        Add Object
+                    </Button>
+                    <Collapse mt={4} isOpen={show}>
+                        <form onSubmit={handleSubmit(onSubmit)}>
+                            <FormControl>
+                                <FormLabel htmlFor="name">Name</FormLabel>
+                                <Input
+                                    name="name"
+                                    placeholder="Trackable Name"
+                                    ref={register({required: "Name is required"})}
+                                />
+                                <FormErrorMessage>
+                                    {errors.name && errors.name.message}
+                                </FormErrorMessage>
+                            </FormControl>
+                            <Button type="submit" isLoading={addLoading}>Add</Button>
+                        </form>
+                   </Collapse>
                 </Box>
-                <Box mt={10}>
-                    <List>
-                        {trackables}
-                    </List>
-                </Box>
+                    <Box mt={10}>
+                        <List>
+                            {trackables}
+                        </List>
+                    </Box>
             </Flex>
         </Box>
     )

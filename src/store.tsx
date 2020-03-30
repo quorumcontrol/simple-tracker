@@ -10,9 +10,9 @@ export const userNamespace = 'local-only-tracker'
 AppUser.setUserNamespace(userNamespace)
 
 export interface TrackableUpdate {
-    timestamp:number
+    timestamp?:number
     message:string
-    metadata:{[key:string]:any}
+    metadata?:{[key:string]:any}
 }
 
 export interface Trackable {
@@ -32,23 +32,35 @@ export enum TrackableCollectionActions {
 }
 
 export interface TrackableCollectionUpdate {
-    type: TrackableCollectionActions,
+    type: TrackableCollectionActions
     trackable: Trackable
 }
 
 export enum TrackableActions {
-    ADD, // do we need anything else?
+    ADD,
+    RENAME,
 }
 
 export interface TrackableAction {
-    type: TrackableActions,
-    update: TrackableUpdate
+    type: TrackableActions
+    update?: TrackableUpdate
+    name?:string
 }
 
-export function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, user:User, name:string) {
+export async function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, user:User, name:string) {
     const trackable:Trackable = {name: name, id: uuid(), updates:[]}
+    log("addNewTrackable: ", trackable)
+    const db = new Database<Trackable, TrackableAction>(trackable.id, TrackableReducer)
+    await db.create(user!.tree.key!, {
+        writers: [user?.did!],
+        initialState: trackable,
+    })
     dispatch({type: TrackableCollectionActions.ADD, trackable: trackable})
     return trackable
+}
+
+export function addUpdate(dispatch:(update:TrackableAction)=>void, update:TrackableUpdate) {
+    dispatch({type:TrackableActions.ADD, update: update})
 }
 
 export const TrackableCollectionReducer = (doc: TrackableCollection, evt: TrackableCollectionUpdate) => {
@@ -73,9 +85,17 @@ export const TrackableReducer = (doc: Trackable, evt: TrackableAction) => {
     switch (evt.type) {
         case TrackableActions.ADD:
             let update = evt.update
+            if (update === undefined) {
+                throw new Error("must specify an update for ADD")
+            }
             update.timestamp = (new Date()).getTime()
             doc.updates.push(update)
             break;
+        case TrackableActions.RENAME:
+            if (evt.name === undefined) {
+                throw new Error("must specify a name in order to rename")
+            }
+            doc.name = evt.name
         default:
             console.error("unsupported action: ", evt)
     }

@@ -1,29 +1,29 @@
 import React, { useState } from 'react'
-import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link} from '@chakra-ui/core'
+import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link } from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
 import { useAmbientUser } from 'ambient-react';
-import { Redirect, Link as RouterLink} from 'react-router-dom';
+import { Redirect, Link as RouterLink } from 'react-router-dom';
 
 type RegistrationFormData = {
     username: string;
     password: string;
     passwordConfirmation: string
-  };
+};
 
 export function RegisterPage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<RegistrationFormData>();
     const userMethods = useAmbientUser()
     const registerUser = userMethods.register
-    const [loginSuccess,setLoginSuccess] = useState(false)
+    const [loginSuccess, setLoginSuccess] = useState(false)
 
-    async function onSubmit({username,password, passwordConfirmation}:RegistrationFormData) {
+    async function onSubmit({ username, password, passwordConfirmation }: RegistrationFormData) {
         if (password !== passwordConfirmation) {
             setError("password", "invalid", "password confirmation doesn't match")
             return
         }
         try {
             await registerUser(username, password)
-        } catch(e) {
+        } catch (e) {
             setError("username", "unknown", `Could not create that user: ${e.message}`)
             return
         }
