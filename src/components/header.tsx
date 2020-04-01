@@ -1,17 +1,12 @@
 import React from "react";
-import { Box, Heading, Flex, Text, Button } from "@chakra-ui/core";
+import { Box, Heading, Flex, Button } from "@chakra-ui/core";
 import { useAmbientUser } from "ambient-react";
+import { Link } from "react-router-dom";
 
-// const MenuItems = ({ children }:any) => (
-//   <Text mt={{ base: 4, md: 0 }} mr={6} display="block">
-//     {children}
-//   </Text>
-// );
-
-const Header = ()=> {
+const Header = () => {
   const [show, setShow] = React.useState(false);
   const handleToggle = () => setShow(!show);
-  const {logout} = useAmbientUser()
+  const { logout } = useAmbientUser()
 
   return (
     <Flex
@@ -25,7 +20,9 @@ const Header = ()=> {
     >
       <Flex align="center" mr={5}>
         <Heading as="h1" size="lg">
-          Simple Track
+          <Link to="/">
+            Simple Track
+          </Link>
         </Heading>
       </Flex>
 
@@ -47,9 +44,6 @@ const Header = ()=> {
         alignItems="center"
         flexGrow={1}
       >
-        {/* <MenuItems>Docs</MenuItems>
-        <MenuItems>Examples</MenuItems>
-        <MenuItems>Blog</MenuItems> */}
       </Box>
 
       <Box

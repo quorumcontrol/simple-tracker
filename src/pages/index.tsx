@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { Box, Flex, Button, Image, Collapse, FormControl, FormLabel, Input, FormErrorMessage, Icon } from '@chakra-ui/core'
 import Header from '../components/header'
-import { Link as RouterLink, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { useAmbientUser, useAmbientDatabase } from 'ambient-react';
-import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, addTrackable } from '../store';
+import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, addTrackable, useTrackableCollection } from '../store';
 import debug from 'debug'
 import { useForm } from 'react-hook-form';
 import { upload, getUrl } from '../lib/skynet';
@@ -17,13 +17,13 @@ type AddTrackableFormData = {
 
 export function Index() {
     const { user } = useAmbientUser()
-    const [dispatch, trackableState,] = useAmbientDatabase<TrackableCollection, TrackableCollectionUpdate>(user!.userName + "-trackables", TrackableCollectionReducer)
+    const [dispatch, trackableState,] = useTrackableCollection(user!)
     const [addLoading, setAddLoading] = useState(false)
     const [show, setShow] = useState(false);
     const [imageAdded, setImageAdded] = useState(false)
     const history = useHistory()
 
-    const { handleSubmit, errors, setError, register, formState } = useForm<AddTrackableFormData>();
+    const { handleSubmit, errors, register, reset } = useForm<AddTrackableFormData>();
 
     const handleToggle = () => setShow(!show);
 
@@ -40,6 +40,7 @@ export function Index() {
         }
 
         await addTrackable(dispatch, user!, name, skylink)
+        reset()
         setAddLoading(false)
     }
 

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { Box, Flex, Heading, Button, Collapse, FormControl, Input, FormErrorMessage, FormLabel, ListItem, List, Image, Text, Icon } from '@chakra-ui/core'
 import Header from '../components/header'
 import { useAmbientUser } from 'ambient-react'
-import { Trackable, TrackableUpdate, CollaboratorList, userNamespace } from '../store'
+import { Trackable, TrackableUpdate, CollaboratorList, userNamespace, useTrackableCollection, addExistingTrackable } from '../store'
 import { useParams } from 'react-router-dom'
 import debug from 'debug'
 import { useForm } from 'react-hook-form'
-import { getAppCommunity, findUserAccount, User } from 'ambient-stack'
+import { getAppCommunity, User } from 'ambient-stack'
 import { EcdsaKey, ChainTree, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
 import moment from 'moment';    
 import {upload,getUrl} from '../lib/skynet'
@@ -112,6 +112,7 @@ export function CollaboratorUI({collaborators, addCollaborator}:{collaborators:C
         setAddLoading(true)
         setShow(!show)
         await addCollaborator(data.name)
+        reset()
         setAddLoading(false)
     }
 
@@ -157,6 +158,7 @@ export function CollaboratorUI({collaborators, addCollaborator}:{collaborators:C
 export function ObjectPage() {
     const { objectId } = useParams()
     const { user } = useAmbientUser()
+    const [dispatch, userCollection] = useTrackableCollection(user!)
     const { trackable, addUpdate, collaborators,addCollaborator } = useTrackable(objectId!, user?.tree.key!)
 
     const [show, setShow] = useState(false)
@@ -167,6 +169,15 @@ export function ObjectPage() {
     const [locationLoading, setLocationLoading] = useState(false)
 
     const [imageAdded, setImageAdded] = useState(false)
+
+    useEffect(()=> {
+        if (trackable && userCollection) {
+            if (!userCollection.trackables[trackable.id]) {
+                console.log("add existing")
+                addExistingTrackable(dispatch, trackable)
+            }
+        }
+    }, [trackable, userCollection, dispatch])
 
     const handleToggle = () => setShow(!show);
 

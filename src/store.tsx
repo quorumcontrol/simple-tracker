@@ -1,4 +1,4 @@
-import {AppUser} from 'ambient-react'
+import {AppUser, useAmbientDatabase} from 'ambient-react'
 import debug from 'debug'
 import { User, Database, getAppCommunity } from 'ambient-stack'
 import { EcdsaKey, ChainTree, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
@@ -48,6 +48,11 @@ export interface TrackableCollectionUpdate {
     trackable: Trackable
 }
 
+export async function addExistingTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, trackable:Trackable) {
+    dispatch({type: TrackableCollectionActions.ADD, trackable: trackable})
+    return trackable
+}
+
 export async function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, user:User, name:string, image?:string) {
     const c = await getAppCommunity()
     const key = await EcdsaKey.generate()
@@ -84,6 +89,10 @@ export const TrackableCollectionReducer = (doc: TrackableCollection, evt: Tracka
         default:
             console.error("unsupported action: ", evt)
     }
+}
+
+export function useTrackableCollection(user:User) {
+    return useAmbientDatabase<TrackableCollection, TrackableCollectionUpdate>(user!.userName + "-trackables", TrackableCollectionReducer)
 }
 
 
