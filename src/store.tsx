@@ -11,9 +11,11 @@ export const userNamespace = 'local-only-tracker'
 AppUser.setUserNamespace(userNamespace)
 
 export interface TrackableUpdate {
-    timestamp?:number
+    timestamp?:string // ISO standard string
     message:string
     metadata?:{[key:string]:any}
+    user?:string //did
+    userName?:string
 }
 
 export interface Trackable {

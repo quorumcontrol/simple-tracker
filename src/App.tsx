@@ -60,9 +60,9 @@ function App() {
             <Route path="/register">
               <RegisterPage />
             </Route>
-            <Route path="/objects/:objectId">
+            <AuthenticatedRoute path="/objects/:objectId">
               <ObjectPage />
-            </Route>
+            </AuthenticatedRoute>
             <AuthenticatedRoute path="/">
               <Index />
             </AuthenticatedRoute>

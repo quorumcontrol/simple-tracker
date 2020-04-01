@@ -14,7 +14,6 @@ type AddTrackableFormData = {
 }
 
 export function Index() {
-
     const { user } = useAmbientUser()
     const [dispatch, trackableState,] = useAmbientDatabase<TrackableCollection, TrackableCollectionUpdate>(user!.userName + "-trackables", TrackableCollectionReducer)
     const [addLoading, setAddLoading] = useState(false)
@@ -24,11 +23,11 @@ export function Index() {
 
     const handleToggle = () => setShow(!show);
 
-    const onSubmit = async ({name}:AddTrackableFormData) => {
+    const onSubmit = async ({ name }: AddTrackableFormData) => {
         setAddLoading(true)
+        setShow(false)
         await addTrackable(dispatch, user!, name)
         setAddLoading(false)
-        setShow(false)
     }
 
     let trackables: ReturnType<typeof ListItem>[] = []
@@ -60,21 +59,22 @@ export function Index() {
                                 <Input
                                     name="name"
                                     placeholder="Trackable Name"
-                                    ref={register({required: "Name is required"})}
+                                    ref={register({ required: "Name is required" })}
                                 />
                                 <FormErrorMessage>
                                     {errors.name && errors.name.message}
                                 </FormErrorMessage>
                             </FormControl>
+
                             <Button type="submit" isLoading={addLoading}>Add</Button>
                         </form>
-                   </Collapse>
+                    </Collapse>
                 </Box>
-                    <Box mt={10}>
-                        <List>
-                            {trackables}
-                        </List>
-                    </Box>
+                <Box mt={10}>
+                    <List>
+                        {trackables}
+                    </List>
+                </Box>
             </Flex>
         </Box>
     )
