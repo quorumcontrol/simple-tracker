@@ -18,9 +18,17 @@ export interface TrackableUpdate {
     userName?:string
 }
 
+export interface Collaborator {
+    name:string
+    did:string
+}
+
+export type CollaboratorList = Collaborator[]
+
 export interface Trackable {
     id:string
     name:string
+    image?:string //skynet URL for now
     updates:TrackableUpdate[]
     latestTip?:CID
 }
@@ -40,15 +48,23 @@ export interface TrackableCollectionUpdate {
     trackable: Trackable
 }
 
-export async function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, user:User, name:string) {
+export async function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>void, user:User, name:string, image?:string) {
     const c = await getAppCommunity()
     const key = await EcdsaKey.generate()
     const tree = await ChainTree.newEmptyTree(c.blockservice, key)
     const did = await tree.id()
-    const trackable:Trackable = {name: name, id: did!, updates:[], latestTip:tree.tip}
+    const trackable:Trackable = {
+        name: name, 
+        id: did!, 
+        updates:[], 
+        latestTip:tree.tip,
+        image: image,
+    }
+    const collaborators:CollaboratorList = [{name: user.userName, did:user.did!}]
 
     await c.playTransactions(tree, [
         setDataTransaction("_tracker", trackable),
+        setDataTransaction("_trackerCollaborators", collaborators),
         setOwnershipTransaction([await user.tree.key?.address()!])
     ])
     dispatch({type: TrackableCollectionActions.ADD, trackable: trackable})
