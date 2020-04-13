@@ -25,6 +25,7 @@ const useTrackable = (did: string, key: EcdsaKey) => {
     const [trackable, setTrackable] = useState<Trackable>({ name: "Loading", id: did, updates: [] })
     const [collaborators, setCollaborators] = useState<CollaboratorList>([])
     const { user } = useAmbientUser()
+    const [dispatch, userCollection] = useTrackableCollection(user!)
 
     useEffect(() => {
         const initialize = async () => {
@@ -44,7 +45,10 @@ const useTrackable = (did: string, key: EcdsaKey) => {
         if (!tree && did && key) {
             initialize()
         }
-    }, [did, tree, key])
+        if (tree && did && userCollection && !userCollection.trackables[did]) {
+            addExistingTrackable(dispatch, trackable)
+        }
+    }, [did, tree, key, userCollection, dispatch])
 
     const addUpdate = async (update: TrackableUpdate) => {
         update.timestamp = (new Date()).toISOString()
@@ -158,7 +162,6 @@ export function CollaboratorUI({collaborators, addCollaborator}:{collaborators:C
 export function ObjectPage() {
     const { objectId } = useParams()
     const { user } = useAmbientUser()
-    const [dispatch, userCollection] = useTrackableCollection(user!)
     const { trackable, addUpdate, collaborators,addCollaborator } = useTrackable(objectId!, user?.tree.key!)
 
     const [show, setShow] = useState(false)
@@ -169,15 +172,6 @@ export function ObjectPage() {
     const [locationLoading, setLocationLoading] = useState(false)
 
     const [imageAdded, setImageAdded] = useState(false)
-
-    useEffect(()=> {
-        if (trackable && userCollection) {
-            if (!userCollection.trackables[trackable.id]) {
-                console.log("add existing")
-                addExistingTrackable(dispatch, trackable)
-            }
-        }
-    }, [trackable, userCollection, dispatch])
 
     const handleToggle = () => setShow(!show);
 
