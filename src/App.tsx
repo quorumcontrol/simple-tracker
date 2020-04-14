@@ -10,7 +10,7 @@ import { useAmbientUser, AppUser } from 'ambient-react';
 import { Index } from './pages';
 import {LoginPage} from './pages/login'
 import {RegisterPage} from './pages/register'
-import { ObjectPage } from './pages/object';
+import { ObjectPage, LocationWidget } from './pages/object';
 import './store'; // for side effects only
 
 

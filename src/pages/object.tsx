@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { Box, Flex, Heading, Button, Collapse, FormControl, Input, FormErrorMessage, FormLabel, ListItem, List, Image, Text, Icon } from '@chakra-ui/core'
 import Header from '../components/header'
 import { useAmbientUser } from 'ambient-react'
@@ -8,9 +8,11 @@ import debug from 'debug'
 import { useForm } from 'react-hook-form'
 import { getAppCommunity, User } from 'ambient-stack'
 import { EcdsaKey, ChainTree, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
-import moment from 'moment';    
-import {upload,getUrl} from '../lib/skynet'
+import moment from 'moment';
+import { upload, getUrl } from '../lib/skynet'
 import { QRCode } from 'react-qrcode-logo';
+import { Map, Marker, Popup, TileLayer } from 'react-leaflet'
+import { LatLngTuple } from 'leaflet'
 
 const log = debug("pages.object")
 
@@ -64,13 +66,13 @@ const useTrackable = (did: string, key: EcdsaKey) => {
 
     const authPath = "tree/_tupelo/authentications"
 
-    const addCollaborator = async (username:string) => {
+    const addCollaborator = async (username: string) => {
         const c = await getAppCommunity()
 
         const user = await User.find(username, Buffer.from(userNamespace), c)
         if (user) {
             await user.load()
-            collaborators.push({name: user.userName, did: user.did!})
+            collaborators.push({ name: user.userName, did: user.did! })
             setCollaborators(collaborators)
             const userAuthResp = await user.tree.resolve(authPath)
             const currAuthResp = await tree?.resolve(authPath)
@@ -102,17 +104,17 @@ function geoPositonToPojo(coords: Coordinates): Coordinates {
 }
 
 type CollaboratorFormData = {
-    name:string
+    name: string
 }
 
-export function CollaboratorUI({collaborators, addCollaborator}:{collaborators:CollaboratorList, addCollaborator:(username:string)=>Promise<void>}) {
+export function CollaboratorUI({ collaborators, addCollaborator }: { collaborators: CollaboratorList, addCollaborator: (username: string) => Promise<void> }) {
     const [show, setShow] = useState(false)
     const [addLoading, setAddLoading] = useState(false)
     const { handleSubmit, errors, reset, register } = useForm<CollaboratorFormData>();
 
     const handleToggle = () => setShow(!show);
 
-    const onSubmit = async (data:CollaboratorFormData)=> {
+    const onSubmit = async (data: CollaboratorFormData) => {
         setAddLoading(true)
         setShow(!show)
         await addCollaborator(data.name)
@@ -123,8 +125,8 @@ export function CollaboratorUI({collaborators, addCollaborator}:{collaborators:C
 
     let collaboratorItems: ReturnType<typeof ListItem>[] = []
     if (collaborators) {
-        collaboratorItems = collaborators.map((collaborator)=> {
-            return <ListItem key={collaborator.did}><Icon name="at-sign"/> {collaborator.name}</ListItem>
+        collaboratorItems = collaborators.map((collaborator) => {
+            return <ListItem key={collaborator.did}><Icon name="at-sign" /> {collaborator.name}</ListItem>
         })
     }
 
@@ -135,34 +137,85 @@ export function CollaboratorUI({collaborators, addCollaborator}:{collaborators:C
                 {collaboratorItems}
             </List>
             <Box mt={5}>
-                    <Button isLoading={addLoading} onClick={handleToggle}>
-                        Add Owner
+                <Button isLoading={addLoading} onClick={handleToggle}>
+                    Add Owner
                     </Button>
-                    <Collapse mt={4} isOpen={show}>
-                            <form onSubmit={handleSubmit(onSubmit)}>
-                                <FormControl>
-                                    <FormLabel htmlFor="name">Name</FormLabel>
-                                    <Input
-                                        name="name"
-                                        placeholder="Name"
-                                        ref={register({required: "Name is required"})}
-                                    />
-                                    <FormErrorMessage>
-                                        {errors.name && errors.name.message}
-                                    </FormErrorMessage>
-                                </FormControl>
-                                <Button type="submit" isLoading={addLoading}>Add</Button>
-                            </form>
-                    </Collapse>
+                <Collapse mt={4} isOpen={show}>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <FormControl>
+                            <FormLabel htmlFor="name">Name</FormLabel>
+                            <Input
+                                name="name"
+                                placeholder="Name"
+                                ref={register({ required: "Name is required" })}
+                            />
+                            <FormErrorMessage>
+                                {errors.name && errors.name.message}
+                            </FormErrorMessage>
+                        </FormControl>
+                        <Button type="submit" isLoading={addLoading}>Add</Button>
+                    </form>
+                </Collapse>
             </Box>
         </>
+    )
+}
+
+export function LocationWidget({ latitude, longitude }: { latitude: number, longitude: number }) {
+    const [show, setShow] = useState(false)
+    const handleToggle = () => setShow(!show);
+
+    const mapDiv = useRef<HTMLDivElement>(null)
+
+    const position:LatLngTuple = [latitude, longitude]
+
+    return (
+        <Box p={5}>
+            <Text onClick={handleToggle}>{latitude},{longitude}</Text>
+            <Collapse mt={4} isOpen={show}>
+                    <Map center={position} zoom={12} style={{height: "300px", width: "300px"}}>
+                        <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+                        />
+                        <Marker position={position}>
+                            <Popup>A pretty CSS3 popup.<br />Easily customizable.</Popup>
+                        </Marker>
+                    </Map> 
+            </Collapse>
+        </Box>
+    )
+}
+
+function ObjectUpdate({ update }: { update: TrackableUpdate }) {
+    let img: ReturnType<typeof Image> = null
+    if (update.metadata && update.metadata.image) {
+        img = <Image src={getUrl(update.metadata.image)} />
+    }
+
+    return (
+        <ListItem key={update.timestamp}>
+            <Box borderWidth="1px" rounded="lg" p={2} mt={10}>
+                <Box>
+                    <Text fontSize="sm">{update.userName} added {moment(update.timestamp).fromNow()}</Text>
+                </Box>
+                <Box p={5}>
+                    <Text>{update.message}</Text>
+                </Box>
+                {update.metadata && update.metadata.location &&
+                    <LocationWidget longitude={update.metadata.location.longitude} latitude={update.metadata.location.latitude} />}
+                {img && <Box p={5}>
+                    {img}
+                </Box>}
+            </Box>
+        </ListItem>
     )
 }
 
 export function ObjectPage() {
     const { objectId } = useParams()
     const { user } = useAmbientUser()
-    const { trackable, addUpdate, collaborators,addCollaborator } = useTrackable(objectId!, user?.tree.key!)
+    const { trackable, addUpdate, collaborators, addCollaborator } = useTrackable(objectId!, user?.tree.key!)
 
     const [show, setShow] = useState(false)
     const [addLoading, setAddLoading] = useState(false)
@@ -196,29 +249,8 @@ export function ObjectPage() {
 
     if (trackable) {
         updates = trackable.updates.map((update) => {
-            log("update: ", update)
-            let img: ReturnType<typeof Image> = null
-            if (update.metadata && update.metadata.image) {
-                img = <Image src={getUrl(update.metadata.image)} />
-            }
-
             return (
-                <ListItem key={update.timestamp}>
-                    <Box borderWidth="1px" rounded="lg" p={2} mt={10}>
-                        <Box>
-                            <Text fontSize="sm">{update.userName} added {moment(update.timestamp).fromNow()}</Text>
-                        </Box>
-                        <Box p={5}>
-                            <Text>{update.message}</Text>
-                        </Box>
-                        {update.metadata && update.metadata.location && <Box p={5}>
-                            <Text>{update.metadata.location.latitude},{update.metadata.location.longitude}</Text>
-                        </Box>}
-                        {img && <Box p={5}>
-                            {img}
-                        </Box>}
-                    </Box>
-                </ListItem>
+                <ObjectUpdate update={update} />
             )
         })
     }

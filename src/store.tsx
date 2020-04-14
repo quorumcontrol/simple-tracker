@@ -63,7 +63,9 @@ export async function addTrackable(dispatch:(update:TrackableCollectionUpdate)=>
         id: did!, 
         updates:[], 
         latestTip:tree.tip,
-        image: image,
+    }
+    if (image) {
+        trackable.image = image
     }
     const collaborators:CollaboratorList = [{name: user.userName, did:user.did!}]
 

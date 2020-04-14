@@ -41,6 +41,7 @@ export function Index() {
 
         await addTrackable(dispatch, user!, name, skylink)
         reset()
+        setImageAdded(false)
         setAddLoading(false)
     }
 
