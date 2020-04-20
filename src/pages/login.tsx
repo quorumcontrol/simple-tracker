@@ -1,8 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link} from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
-import { useAmbientUser } from 'ambient-react';
+// import { useAmbientUser } from 'ambient-react';
 import { Redirect, Link as RouterLink} from 'react-router-dom';
+import { useMutation } from '@apollo/client';
+import { LOGIN_USER } from '../store/queries';
+import { AppUser } from 'ambient-react';
 
 type LoginFormData = {
     username: string;
@@ -11,16 +14,31 @@ type LoginFormData = {
 
 export function LoginPage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<LoginFormData>();
-    const { login } = useAmbientUser()
-    const [loginSuccess,setLoginSuccess] = useState(false)
 
-    async function onSubmit({username,password}:LoginFormData) {
-        const [found] = await login(username, password)
-        if (!found) {
+    const [loginUser, resp] = useMutation(LOGIN_USER)
+    const data = resp.data
+
+    useEffect(()=> {
+        if (resp.loading || !resp.called) {
+            return
+        }
+        if (!data || !data.login) {
             setError("username", "not found", "User not found")
             return
         }
         setLoginSuccess(true)
+    }, [resp.called, resp.loading, data])
+
+   
+    // const { login } = useAmbientUser()
+    const [loginSuccess,setLoginSuccess] = useState(false)
+
+    async function onSubmit({username,password}:LoginFormData) {
+        try {
+            await loginUser({variables: {username, password, namespace: AppUser.userNamespace?.toString()! }})
+        } catch (e) {
+            setError("username", "unknown", `Could not create that user: ${e.message}`)
+        }
     }
 
     if (loginSuccess) {

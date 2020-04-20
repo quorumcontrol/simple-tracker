@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
-import { Box, Flex, Button, Image, Collapse, FormControl, FormLabel, Input, FormErrorMessage, Icon } from '@chakra-ui/core'
+import { Box, Flex, Button, Image, Collapse, FormControl, FormLabel, Input, FormErrorMessage, Icon, Spinner } from '@chakra-ui/core'
 import Header from '../components/header'
 import { useHistory } from 'react-router-dom';
 import { useAmbientUser, useAmbientDatabase } from 'ambient-react';
 import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, addTrackable, useTrackableCollection } from '../store';
 import debug from 'debug'
+import { Trackable, TrackableEdge } from '../generated/graphql'
 import { useForm } from 'react-hook-form';
 import { upload, getUrl } from '../lib/skynet';
+import { gql, useQuery, useMutation } from '@apollo/client';
+import { CREATE_TRACKABLE } from '../store/queries';
 
 const log = debug("pages.index")
 
@@ -15,9 +18,34 @@ type AddTrackableFormData = {
     image: FileList
 }
 
+const GET_TRACKABLES = gql`
+    {
+        me {
+            did
+            collection {
+               did
+               trackables {
+                   edges {
+                        did
+                        node {
+                            name
+                            image
+                        }
+                   }
+               }
+            }
+        }
+    }
+`
+
 export function Index() {
     const { user } = useAmbientUser()
-    const [dispatch, trackableState,] = useTrackableCollection(user!)
+    // const [dispatch, trackableState,] = useTrackableCollection(user!)
+
+    const query = useQuery(GET_TRACKABLES)
+    const [createTrackable, result] = useMutation(CREATE_TRACKABLE)
+    console.log("index query: ", query)
+
     const [addLoading, setAddLoading] = useState(false)
     const [show, setShow] = useState(false);
     const [imageAdded, setImageAdded] = useState(false)
@@ -39,7 +67,8 @@ export function Index() {
             skylink = resp.skylink
         }
 
-        await addTrackable(dispatch, user!, name, skylink)
+        await createTrackable({variables: {input: {name}}})
+        // await addTrackable(dispatch, user!, name, skylink)
         reset()
         setImageAdded(false)
         setAddLoading(false)
@@ -58,14 +87,14 @@ export function Index() {
 
     let trackables: ReturnType<typeof Box>[] = []
 
-    if (trackableState && trackableState.trackables) {
-        trackables = Object.keys(trackableState.trackables).map((id) => {
-            const trackable = trackableState.trackables[id]
+    if (query.data && query.data.me.collection) {
+        const trackableState = query.data.me.collection.trackables.edges
+        trackables = trackableState.map((trackable:TrackableEdge) => {
             return (
 
-                <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={id} onClick={() => { history.push(`/objects/${id}`) }}>
-                    {trackable.image &&
-                        <Image src={getUrl(trackable.image)} />
+                <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did} onClick={() => { history.push(`/objects/${trackable.did}`) }}>
+                    {trackable.node?.image &&
+                        <Image src={getUrl(trackable.node.image)} />
                     }
                     <Box
                         mt="1"
@@ -74,10 +103,10 @@ export function Index() {
                         lineHeight="tight"
                         isTruncated
                     >
-                        {trackable.name}
+                        {trackable.node?.name}
                     </Box>
                     <Box mt="2" color="gray.600" fontSize="sm">
-                        {trackable.id}
+                        {trackable.did}
                     </Box>
                 </Box>
             )
@@ -130,7 +159,7 @@ export function Index() {
                 </Box>
                 <Box mt={10}>
                     <Flex>
-                        {trackables}
+                        {query.loading ? <Spinner /> : trackables}
                     </Flex>
                 </Box>
             </Flex>

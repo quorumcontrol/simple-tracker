@@ -1,5 +1,5 @@
 import React from 'react';
-import { theme, ThemeProvider, CSSReset, Flex, Spinner, Text} from "@chakra-ui/core";
+import { theme, ThemeProvider, CSSReset, Flex, Spinner, Text } from "@chakra-ui/core";
 import {
   BrowserRouter as Router,
   Switch,
@@ -8,17 +8,28 @@ import {
 } from "react-router-dom";
 import { useAmbientUser, AppUser } from 'ambient-react';
 import { Index } from './pages';
-import {LoginPage} from './pages/login'
-import {RegisterPage} from './pages/register'
+import { LoginPage } from './pages/login'
+import { RegisterPage } from './pages/register'
 import { ObjectPage, LocationWidget } from './pages/object';
 import './store'; // for side effects only
-
+import { ApolloProvider, useQuery } from '@apollo/client';
+import {client} from './store/index';
+import { CURRENT_USER } from './store/queries';
 
 // A wrapper for <Route> that redirects to the login
 // screen if you're not yet authenticated.
 function AuthenticatedRoute({ children, ...rest }: any) {
 
-  const { loading, user } = useAmbientUser()
+  // const { loading, error, data } = useQuery(CURRENT_USER);
+  const query = useQuery(CURRENT_USER);
+  const loading = query.loading
+  const error = query.error
+  // const user = query.data.user
+  let user:any
+  if (!loading) {
+    user = query.data.me
+  }
+  // const { loading, user } = useAmbientUser()
 
   if (loading) {
     return (
@@ -33,7 +44,7 @@ function AuthenticatedRoute({ children, ...rest }: any) {
     <Route
       {...rest}
       render={({ location }) =>
-        user ? (
+        (user && user.loggedIn) ? (
           children
         ) : (
             <Redirect
@@ -52,7 +63,8 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CSSReset />
-      <Router>
+      <ApolloProvider client={client}>
+        <Router>
           <Switch>
             <Route path="/login">
               <LoginPage />
@@ -67,7 +79,8 @@ function App() {
               <Index />
             </AuthenticatedRoute>
           </Switch>
-      </Router>
+        </Router>
+      </ApolloProvider>
     </ThemeProvider>
   );
 }

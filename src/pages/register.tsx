@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link } from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
-import { useAmbientUser } from 'ambient-react';
+// import { useAmbientUser } from 'ambient-react';
 import { Redirect, Link as RouterLink } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
+import { REGISTER_USER } from '../store/queries';
+import {AppUser} from 'ambient-react';
 
 type RegistrationFormData = {
     username: string;
@@ -12,8 +15,10 @@ type RegistrationFormData = {
 
 export function RegisterPage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<RegistrationFormData>();
-    const userMethods = useAmbientUser()
-    const registerUser = userMethods.register
+    // const userMethods = useAmbientUser()
+    // const registerUser = userMethods.register
+
+    const [registerUser, {data}] = useMutation(REGISTER_USER)
     const [loginSuccess, setLoginSuccess] = useState(false)
 
     async function onSubmit({ username, password, passwordConfirmation }: RegistrationFormData) {
@@ -22,7 +27,7 @@ export function RegisterPage() {
             return
         }
         try {
-            await registerUser(username, password)
+            await registerUser({variables: {username: username, password: password, namespace: AppUser.userNamespace?.toString()!} })
         } catch (e) {
             setError("username", "unknown", `Could not create that user: ${e.message}`)
             return

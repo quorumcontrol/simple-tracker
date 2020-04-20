@@ -98,17 +98,17 @@ export function useTrackableCollection(user:User) {
 }
 
 
-AppUser.afterRegister = async (user: User) => {
-  log('setting up trackable collection')
-  // setup their app database
-  const did = await user.tree.id()
-  const db = new Database<TrackableCollection, TrackableCollectionUpdate>(user.userName + "-trackables", TrackableCollectionReducer)
-  await db.create(user.tree.key!, {
-      writers: [did!],
-      initialState: {
-          userDid: did!,
-          trackables:{},
-      }
-  })
-  return user
-}
+// AppUser.afterRegister = async (user: User) => {
+//   log('setting up trackable collection')
+//   // setup their app database
+//   const did = await user.tree.id()
+//   const db = new Database<TrackableCollection, TrackableCollectionUpdate>(user.userName + "-trackables", TrackableCollectionReducer)
+//   await db.create(user.tree.key!, {
+//       writers: [did!],
+//       initialState: {
+//           userDid: did!,
+//           trackables:{},
+//       }
+//   })
+//   return user
+// }

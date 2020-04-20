@@ -2,11 +2,19 @@ import React from "react";
 import { Box, Heading, Flex, Button } from "@chakra-ui/core";
 import { useAmbientUser } from "ambient-react";
 import { Link } from "react-router-dom";
+import { useMutation } from "@apollo/client";
+import { LOGOUT_USER } from "../store/queries";
 
 const Header = () => {
   const [show, setShow] = React.useState(false);
   const handleToggle = () => setShow(!show);
-  const { logout } = useAmbientUser()
+
+  const [logout,{data}] = useMutation(LOGOUT_USER)
+  // const { logout } = useAmbientUser()
+
+  const handleLogout = (_evt:any) => {
+    logout({variables: {did: 'current'}})
+  }
 
   return (
     <Flex
@@ -50,7 +58,7 @@ const Header = () => {
         display={{ sm: show ? "block" : "none", md: "block" }}
         mt={{ base: 4, md: 0 }}
       >
-        <Button bg="transparent" border="1px" onClick={logout}>
+        <Button bg="transparent" border="1px" onClick={handleLogout}>
           Logout
         </Button>
       </Box>
