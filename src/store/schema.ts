@@ -37,18 +37,9 @@ type MetadataEntry {
     value: String
 }
 
-type TrackableConnection {
-    edges: [TrackableEdge]
-}
-
-type TrackableEdge {
-    did: ID!
-    node: Trackable
-}
-
 type TrackableCollection {
     did: ID!
-    trackables: TrackableConnection
+    trackables: [Trackable!]
 }
 
 type Query {

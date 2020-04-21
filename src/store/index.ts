@@ -11,8 +11,6 @@ import {
     MutationRegisterArgs,
     TrackableCollection,
     Trackable,
-    TrackableEdge,
-    TrackableConnection,
     MutationCreateTrackableArgs,
     CreateTrackablePayload,
 } from '../generated/graphql'
@@ -48,45 +46,35 @@ const resolvers: Resolvers = {
         }
     },
     Trackable: {
-        name: async (trackable: TrackableEdge, _context): Promise<string> => {
-            const did = trackable.did.split("/")[1]
+        name: async (trackable: Trackable, _context): Promise<string> => {
+            console.log("name trackable: ", trackable)
+            const did = trackable.did
             const tree = await Tupelo.getLatest(did)
             return (await tree.resolveData("name")).value
         },
         image: async (trackable: Trackable, _context): Promise<string> => {
-            const did = trackable.did.split("/")[1]
+            const did = trackable.did
             const tree = await Tupelo.getLatest(did)
             return (await tree.resolveData("image")).value
         },
     },
     TrackableCollection: {
-        trackables: async (collection: TrackableCollection, _context): Promise<TrackableConnection> => {
+        trackables: async (collection: TrackableCollection, _context): Promise<Trackable[]> => {
             const tree = await Tupelo.getLatest(collection.did)
             // this will be a map of timestamp to did
             const trackableResp = (await tree.resolveData("updates"))
             console.log(trackableResp)
             const trackables = trackableResp.value
             if (!trackables) {
-                return { edges: [] }
+                return []
             }
-            return {
-                edges: Object.keys(trackables).map((timestamp: string) => {
-                    const did: string = trackables[timestamp]
-                    return { did, node: { did } }
-                })
-            }
+            return Object.keys(trackables).map((timestamp: string) => {
+                const did: string = trackables[timestamp]
+                return { did }
+            })
         }
     },
-    TrackableEdge: {
-        node: async (edge: TrackableEdge, _context): Promise<Trackable> => {
-            const tree = await Tupelo.getLatest(edge.did)
-            const trackable = (await tree.resolveData("/")).value
-            return {
-                ...trackable,
-                did: "edge/" + edge.did,
-            }
-        }
-    },
+
     Query: {
         me: async (_, { communityPromise }: TrackerContext): Promise<User | undefined> => {
             if (!appUser.userPromise) {

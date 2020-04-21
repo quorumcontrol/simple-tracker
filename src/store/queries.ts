@@ -30,19 +30,6 @@ export const LOGIN_USER = gql`
     }
 `
 
-export const CREATE_TRACKABLE = gql`
-    mutation CreateTrackable($input: CreateTrackableInput!) {
-        createTrackable(input: $input) {
-            collection {
-                did
-            }
-            trackable {
-                did
-            }
-        }
-    }
-`
-
 export const LOGOUT_USER = gql`
     mutation Logout($did: String!) {
         logout(did:$did) {

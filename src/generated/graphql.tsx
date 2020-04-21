@@ -50,21 +50,10 @@ export type MetadataEntry = {
   value?: Maybe<Scalars['String']>;
 };
 
-export type TrackableConnection = {
-   __typename?: 'TrackableConnection';
-  edges?: Maybe<Array<Maybe<TrackableEdge>>>;
-};
-
-export type TrackableEdge = {
-   __typename?: 'TrackableEdge';
-  did: Scalars['ID'];
-  node?: Maybe<Trackable>;
-};
-
 export type TrackableCollection = {
    __typename?: 'TrackableCollection';
   did: Scalars['ID'];
-  trackables?: Maybe<TrackableConnection>;
+  trackables?: Maybe<Array<Trackable>>;
 };
 
 export type Query = {
@@ -196,8 +185,6 @@ export type ResolversTypes = {
   TrackableUpdateConnection: ResolverTypeWrapper<TrackableUpdateConnection>,
   TrackableUpdate: ResolverTypeWrapper<TrackableUpdate>,
   MetadataEntry: ResolverTypeWrapper<MetadataEntry>,
-  TrackableConnection: ResolverTypeWrapper<TrackableConnection>,
-  TrackableEdge: ResolverTypeWrapper<TrackableEdge>,
   TrackableCollection: ResolverTypeWrapper<TrackableCollection>,
   Query: ResolverTypeWrapper<{}>,
   CreateTrackableInput: CreateTrackableInput,
@@ -215,8 +202,6 @@ export type ResolversParentTypes = {
   TrackableUpdateConnection: TrackableUpdateConnection,
   TrackableUpdate: TrackableUpdate,
   MetadataEntry: MetadataEntry,
-  TrackableConnection: TrackableConnection,
-  TrackableEdge: TrackableEdge,
   TrackableCollection: TrackableCollection,
   Query: {},
   CreateTrackableInput: CreateTrackableInput,
@@ -263,20 +248,9 @@ export type MetadataEntryResolvers<ContextType = any, ParentType extends Resolve
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
-export type TrackableConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TrackableConnection'] = ResolversParentTypes['TrackableConnection']> = {
-  edges?: Resolver<Maybe<Array<Maybe<ResolversTypes['TrackableEdge']>>>, ParentType, ContextType>,
-  __isTypeOf?: isTypeOfResolverFn<ParentType>,
-};
-
-export type TrackableEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['TrackableEdge'] = ResolversParentTypes['TrackableEdge']> = {
-  did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
-  node?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType>,
-  __isTypeOf?: isTypeOfResolverFn<ParentType>,
-};
-
 export type TrackableCollectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TrackableCollection'] = ResolversParentTypes['TrackableCollection']> = {
   did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
-  trackables?: Resolver<Maybe<ResolversTypes['TrackableConnection']>, ParentType, ContextType>,
+  trackables?: Resolver<Maybe<Array<ResolversTypes['Trackable']>>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
@@ -303,8 +277,6 @@ export type Resolvers<ContextType = any> = {
   TrackableUpdateConnection?: TrackableUpdateConnectionResolvers<ContextType>,
   TrackableUpdate?: TrackableUpdateResolvers<ContextType>,
   MetadataEntry?: MetadataEntryResolvers<ContextType>,
-  TrackableConnection?: TrackableConnectionResolvers<ContextType>,
-  TrackableEdge?: TrackableEdgeResolvers<ContextType>,
   TrackableCollection?: TrackableCollectionResolvers<ContextType>,
   Query?: QueryResolvers<ContextType>,
   CreateTrackablePayload?: CreateTrackablePayloadResolvers<ContextType>,

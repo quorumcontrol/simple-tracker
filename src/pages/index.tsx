@@ -2,14 +2,12 @@ import React, { useState } from 'react'
 import { Box, Flex, Button, Image, Collapse, FormControl, FormLabel, Input, FormErrorMessage, Icon, Spinner } from '@chakra-ui/core'
 import Header from '../components/header'
 import { useHistory } from 'react-router-dom';
-import { useAmbientUser, useAmbientDatabase } from 'ambient-react';
-import { TrackableCollection, TrackableCollectionUpdate, TrackableCollectionReducer, addTrackable, useTrackableCollection } from '../store';
+import { useAmbientUser } from 'ambient-react';
 import debug from 'debug'
-import { Trackable, TrackableEdge } from '../generated/graphql'
+import { Trackable } from '../generated/graphql'
 import { useForm } from 'react-hook-form';
 import { upload, getUrl } from '../lib/skynet';
 import { gql, useQuery, useMutation } from '@apollo/client';
-import { CREATE_TRACKABLE } from '../store/queries';
 
 const log = debug("pages.index")
 
@@ -18,6 +16,22 @@ type AddTrackableFormData = {
     image: FileList
 }
 
+
+const CREATE_TRACKABLE = gql`
+    mutation CreateTrackable($input: CreateTrackableInput!) {
+        createTrackable(input: $input) {
+            collection {
+                did
+            }
+            trackable {
+                did
+                name
+                image
+            }
+        }
+    }
+`
+
 const GET_TRACKABLES = gql`
     {
         me {
@@ -25,13 +39,9 @@ const GET_TRACKABLES = gql`
             collection {
                did
                trackables {
-                   edges {
-                        did
-                        node {
-                            name
-                            image
-                        }
-                   }
+                   did
+                   name
+                   image
                }
             }
         }
@@ -43,8 +53,8 @@ export function Index() {
     // const [dispatch, trackableState,] = useTrackableCollection(user!)
 
     const query = useQuery(GET_TRACKABLES)
-    const [createTrackable, result] = useMutation(CREATE_TRACKABLE)
-    console.log("index query: ", query)
+    const [createTrackable] = useMutation(CREATE_TRACKABLE)
+    // console.log("index query: ", query)
 
     const [addLoading, setAddLoading] = useState(false)
     const [show, setShow] = useState(false);
@@ -67,7 +77,40 @@ export function Index() {
             skylink = resp.skylink
         }
 
-        await createTrackable({variables: {input: {name}}})
+        await createTrackable({
+            variables: {input: {name}},
+            optimisticResponse: {
+                __typename: "Mutation",
+                createTrackable: {
+                    collection: {
+                        __typename: "TrackableCollection",
+                        did: query.data.me.collection.did,
+                    },
+                    trackable: {
+                        __typename: "Trackable",
+                        did: "loading...",
+                        name: name,
+                        image: skylink || "",
+                    }
+                }
+            },
+            update: (proxy, {data: {createTrackable}})=> {
+                const data:any = proxy.readQuery({query: GET_TRACKABLES})
+                console.log("update called: ", createTrackable, " readQuery: ", data)
+                // data.me.collection.trackables.push(createTrackable.trackable)
+                // TODO: this should be a deep merge
+                proxy.writeQuery({query: GET_TRACKABLES, data: {
+                    ...data,
+                    me: {
+                        ...data.me,
+                        collection: {
+                            ...data.me.collection,
+                            trackables: data.me.collection.trackables.concat([createTrackable.trackable])
+                        }
+                    }
+                }})
+            }
+        })
         // await addTrackable(dispatch, user!, name, skylink)
         reset()
         setImageAdded(false)
@@ -88,13 +131,13 @@ export function Index() {
     let trackables: ReturnType<typeof Box>[] = []
 
     if (query.data && query.data.me.collection) {
-        const trackableState = query.data.me.collection.trackables.edges
-        trackables = trackableState.map((trackable:TrackableEdge) => {
+        const trackableState = query.data.me.collection.trackables
+        trackables = trackableState.map((trackable:Trackable) => {
             return (
 
                 <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did} onClick={() => { history.push(`/objects/${trackable.did}`) }}>
-                    {trackable.node?.image &&
-                        <Image src={getUrl(trackable.node.image)} />
+                    {trackable.image &&
+                        <Image src={getUrl(trackable.image)} />
                     }
                     <Box
                         mt="1"
@@ -103,7 +146,7 @@ export function Index() {
                         lineHeight="tight"
                         isTruncated
                     >
-                        {trackable.node?.name}
+                        {trackable.name}
                     </Box>
                     <Box mt="2" color="gray.600" fontSize="sm">
                         {trackable.did}
