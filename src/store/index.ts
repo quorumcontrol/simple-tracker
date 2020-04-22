@@ -3,8 +3,6 @@ import {
     ApolloClient,
     InMemoryCache,
     Resolvers,
-    gql,
-    Cache,
 } from '@apollo/client';
 import {
     User,
@@ -13,15 +11,27 @@ import {
     Trackable,
     MutationCreateTrackableArgs,
     CreateTrackablePayload,
+    QueryGetTrackableArgs,
+    TrackableUpdateConnection,
+    AddUpdatePayload,
+    MutationAddUpdateArgs,
+    TrackableUpdate,
+    TrackableCollaboratorConnection,
+    MutationAddCollaboratorArgs,
+    AddCollaboratorPayload,
 } from '../generated/graphql'
-import { Tupelo, Community, Repo, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
+import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
 import { AppUser } from 'ambient-react';
 import { makeExecutableSchema } from 'graphql-tools';
 import { SchemaLink } from '@apollo/link-schema';
-import { getAppCommunity } from 'ambient-stack';
+import { getAppCommunity, resolveUsername, findUserAccount } from 'ambient-stack';
 import { appUser } from 'ambient-react';
 import { CURRENT_USER } from './queries';
+const GraphQLJSON = require('graphql-type-json');
 
+export const userNamespace = 'local-only-tracker'
+
+AppUser.setUserNamespace(userNamespace)
 
 interface TrackerContext {
     communityPromise: Promise<Community>,
@@ -33,7 +43,12 @@ function namespaceToPath(namespace: string) {
 }
 
 const resolvers: Resolvers = {
+    JSON: GraphQLJSON,
     User: {
+        username: async (user: User, { communityPromise }: TrackerContext): Promise<String> => {
+            const tree = await Tupelo.getLatest(user.did)
+            return resolveUsername(tree)
+        },
         collection: async (user: User, { communityPromise }: TrackerContext): Promise<TrackableCollection | undefined> => {
             const tree = await Tupelo.getLatest(user.did)
             if (!user.namespace) {
@@ -46,6 +61,19 @@ const resolvers: Resolvers = {
         }
     },
     Trackable: {
+        collaborators: async (trackable: Trackable, _context): Promise<TrackableCollaboratorConnection> => {
+            const did = trackable.did
+            const tree = await Tupelo.getLatest(did)
+            const resp = await tree.resolveData("collaborators")
+            if (!resp.value) {
+                return {edges: []}
+            }
+            const edges = Object.keys(resp.value).map((did:string)=> {
+                return {did}
+            })
+
+            return {edges}
+        },
         name: async (trackable: Trackable, _context): Promise<string> => {
             console.log("name trackable: ", trackable)
             const did = trackable.did
@@ -57,6 +85,26 @@ const resolvers: Resolvers = {
             const tree = await Tupelo.getLatest(did)
             return (await tree.resolveData("image")).value
         },
+        updates: async (trackable: Trackable, _context): Promise<TrackableUpdateConnection> => {
+            const did = trackable.did
+            const tree = await Tupelo.getLatest(did)
+            let updates = await tree.resolveData("updates")
+            console.log("updates from resolve: ", updates.value)
+            if (updates.value) {
+                // updates is a map of timestamp to TrackableUpdate
+                let edges = await Promise.all(Object.keys(updates.value).map(async (timestamp)=> {
+                    let update = (await tree.resolveData(`updates/${timestamp}`)).value
+                    console.log("resolved update: ", update)
+                    update.did = `${did}-${timestamp}`
+                    return update
+                }))
+                return {edges}
+            }
+
+            return {
+                edges: [],
+            }
+        }
     },
     TrackableCollection: {
         trackables: async (collection: TrackableCollection, _context): Promise<Trackable[]> => {
@@ -70,12 +118,19 @@ const resolvers: Resolvers = {
             }
             return Object.keys(trackables).map((timestamp: string) => {
                 const did: string = trackables[timestamp]
-                return { did }
+                return { did, updates:{} }
             })
         }
     },
 
     Query: {
+        getTrackable: async (_root, {did}:QueryGetTrackableArgs ,_ctx:TrackerContext) => {
+            console.log("get trackable: ", did)
+            const tree = await Tupelo.getLatest(did)
+            return {
+                did: await tree.id(),
+            }
+        },
         me: async (_, { communityPromise }: TrackerContext): Promise<User | undefined> => {
             if (!appUser.userPromise) {
                 return undefined
@@ -119,10 +174,13 @@ const resolvers: Resolvers = {
             console.log("getting: ", collectionDid)
             const collectionTree = await Tupelo.getLatest(collectionDid)
             collectionTree.key = ambientUser.tree.key
+            let collaborators:{[key:string]:Boolean} = {}
+            collaborators[(await ambientUser.tree.id())!] = true
 
             await Promise.all([
                 c.playTransactions(tree, [
                     setDataTransaction("/", input),
+                    setDataTransaction("collaborators", collaborators),
                     setOwnershipTransaction([await ambientUser.tree.key!.address()]),
                 ]),
                 c.playTransactions(collectionTree, [setDataTransaction(`updates/${now}`, await tree.id())])
@@ -134,6 +192,7 @@ const resolvers: Resolvers = {
                 trackable: {
                     did: (await tree.id())!,
                     name: input.name,
+                    updates: {},
                 }
             }
         },
@@ -157,6 +216,78 @@ const resolvers: Resolvers = {
             })
 
             return user
+        },
+        // TODO: this is way easier when chaintrees can own chaintrees
+        addCollaborator: async (_root, { input: {trackable, username} }: MutationAddCollaboratorArgs, { communityPromise }: TrackerContext): Promise<AddCollaboratorPayload | undefined> => {
+            if (!appUser.userPromise) {
+                return undefined
+            }
+            let ambientUser = await appUser.userPromise
+            if (!ambientUser) {
+                return undefined
+            }
+            await ambientUser.load()
+
+            const collaboratorTree = await findUserAccount(username, Buffer.from(AppUser.userNamespace?.toString()!))
+            if (!collaboratorTree) {
+                return {code: 404}
+            }
+            let collaboratorAuths = (await collaboratorTree.resolve("tree/_tupelo/authentications")).value
+
+            // const namespace = AppUser.userNamespace?.toString()!
+
+            const trackableTree = await Tupelo.getLatest(trackable)
+            trackableTree.key = ambientUser.tree.key
+
+            let trackableAuthsResp = await trackableTree.resolve("tree/_tupelo/authentications")
+            let auths: string[] = trackableAuthsResp.value || []
+            auths = auths.concat(collaboratorAuths)
+
+            let c = await communityPromise
+            await c.playTransactions(trackableTree, [
+                setDataTransaction(`collaborators/${await collaboratorTree.id()}`, true),
+                setOwnershipTransaction(auths)
+            ])
+            return {
+                collaborator: {
+                    did: (await collaboratorTree.id())!,
+                },
+                code: 200
+            }
+
+        },
+        addUpdate: async (_root, { input: {trackable,message,metadata} }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
+            if (!appUser.userPromise) {
+                return undefined
+            }
+            let ambientUser = await appUser.userPromise
+            if (!ambientUser) {
+                return undefined
+            }
+            await ambientUser.load()
+
+            // const namespace = AppUser.userNamespace?.toString()!
+
+            let timestamp = (new Date()).toISOString()
+
+            const trackableTree = await Tupelo.getLatest(trackable)
+            trackableTree.key = ambientUser.tree.key
+
+            let update:TrackableUpdate = {
+                did: `${(await trackableTree.id())}-${timestamp}`,
+                timestamp: timestamp,
+                message: message,
+                metadata: metadata,
+                userDid: ambientUser.did!,
+                userName: ambientUser.userName,
+            }
+            console.log("update: ", update)
+            let c = await communityPromise
+            await c.playTransactions(trackableTree, [setDataTransaction(`updates/${timestamp}`, update)])
+            return {
+                update: update,
+            }
+
         },
         register: async (_root, { username, password }: MutationRegisterArgs, { communityPromise }: TrackerContext): Promise<User | undefined> => {
             let ambientUser = await appUser.register(username!, password!)

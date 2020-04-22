@@ -1,4 +1,4 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import gql from 'graphql-tag';
 export type Maybe<T> = T | null;
 export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
@@ -9,7 +9,9 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  JSON: any;
 };
+
 
 export type User = {
    __typename?: 'User';
@@ -25,21 +27,26 @@ export type Trackable = {
   did: Scalars['ID'];
   name?: Maybe<Scalars['String']>;
   image?: Maybe<Scalars['String']>;
-  updates?: Maybe<TrackableUpdateConnection>;
+  updates: TrackableUpdateConnection;
+  collaborators?: Maybe<TrackableCollaboratorConnection>;
+};
+
+export type TrackableCollaboratorConnection = {
+   __typename?: 'TrackableCollaboratorConnection';
+  edges?: Maybe<Array<User>>;
 };
 
 export type TrackableUpdateConnection = {
    __typename?: 'TrackableUpdateConnection';
-  did: Scalars['ID'];
-  edges?: Maybe<Array<Maybe<TrackableUpdate>>>;
+  edges?: Maybe<Array<TrackableUpdate>>;
 };
 
 export type TrackableUpdate = {
    __typename?: 'TrackableUpdate';
-  id: Scalars['ID'];
-  timestamp?: Maybe<Scalars['String']>;
+  did: Scalars['ID'];
+  timestamp: Scalars['String'];
   message?: Maybe<Scalars['String']>;
-  metadata?: Maybe<Array<Maybe<MetadataEntry>>>;
+  metadata?: Maybe<Array<MetadataEntry>>;
   userDid: Scalars['String'];
   userName: Scalars['String'];
 };
@@ -47,7 +54,7 @@ export type TrackableUpdate = {
 export type MetadataEntry = {
    __typename?: 'MetadataEntry';
   key: Scalars['String'];
-  value?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['JSON']>;
 };
 
 export type TrackableCollection = {
@@ -56,14 +63,20 @@ export type TrackableCollection = {
   trackables?: Maybe<Array<Trackable>>;
 };
 
-export type Query = {
-   __typename?: 'Query';
-  me?: Maybe<User>;
-};
-
 export type CreateTrackableInput = {
   name: Scalars['String'];
   image?: Maybe<Scalars['String']>;
+};
+
+export type MetadataEntryInput = {
+  key: Scalars['String'];
+  value?: Maybe<Scalars['JSON']>;
+};
+
+export type AddUpdateInput = {
+  trackable: Scalars['ID'];
+  message: Scalars['String'];
+  metadata?: Maybe<Array<MetadataEntryInput>>;
 };
 
 export type CreateTrackablePayload = {
@@ -72,12 +85,41 @@ export type CreateTrackablePayload = {
   trackable?: Maybe<Trackable>;
 };
 
+export type AddUpdatePayload = {
+   __typename?: 'AddUpdatePayload';
+  update: TrackableUpdate;
+};
+
+export type AddCollaboratorPayload = {
+   __typename?: 'AddCollaboratorPayload';
+  collaborator?: Maybe<User>;
+  code?: Maybe<Scalars['Int']>;
+};
+
+export type AddCollaboratorInput = {
+  trackable: Scalars['ID'];
+  username: Scalars['String'];
+};
+
+export type Query = {
+   __typename?: 'Query';
+  getTrackable?: Maybe<Trackable>;
+  me?: Maybe<User>;
+};
+
+
+export type QueryGetTrackableArgs = {
+  did: Scalars['ID'];
+};
+
 export type Mutation = {
    __typename?: 'Mutation';
   login?: Maybe<User>;
   register?: Maybe<User>;
   logout?: Maybe<User>;
   createTrackable?: Maybe<CreateTrackablePayload>;
+  addUpdate?: Maybe<AddUpdatePayload>;
+  addCollaborator?: Maybe<AddCollaboratorPayload>;
 };
 
 
@@ -102,6 +144,16 @@ export type MutationLogoutArgs = {
 
 export type MutationCreateTrackableArgs = {
   input: CreateTrackableInput;
+};
+
+
+export type MutationAddUpdateArgs = {
+  input: AddUpdateInput;
+};
+
+
+export type MutationAddCollaboratorArgs = {
+  input: AddCollaboratorInput;
 };
 
 
@@ -179,16 +231,24 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars['String']>,
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>,
+  JSON: ResolverTypeWrapper<Scalars['JSON']>,
   User: ResolverTypeWrapper<User>,
   ID: ResolverTypeWrapper<Scalars['ID']>,
   Trackable: ResolverTypeWrapper<Trackable>,
+  TrackableCollaboratorConnection: ResolverTypeWrapper<TrackableCollaboratorConnection>,
   TrackableUpdateConnection: ResolverTypeWrapper<TrackableUpdateConnection>,
   TrackableUpdate: ResolverTypeWrapper<TrackableUpdate>,
   MetadataEntry: ResolverTypeWrapper<MetadataEntry>,
   TrackableCollection: ResolverTypeWrapper<TrackableCollection>,
-  Query: ResolverTypeWrapper<{}>,
   CreateTrackableInput: CreateTrackableInput,
+  MetadataEntryInput: MetadataEntryInput,
+  AddUpdateInput: AddUpdateInput,
   CreateTrackablePayload: ResolverTypeWrapper<CreateTrackablePayload>,
+  AddUpdatePayload: ResolverTypeWrapper<AddUpdatePayload>,
+  AddCollaboratorPayload: ResolverTypeWrapper<AddCollaboratorPayload>,
+  Int: ResolverTypeWrapper<Scalars['Int']>,
+  AddCollaboratorInput: AddCollaboratorInput,
+  Query: ResolverTypeWrapper<{}>,
   Mutation: ResolverTypeWrapper<{}>,
 };
 
@@ -196,18 +256,30 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   String: Scalars['String'],
   Boolean: Scalars['Boolean'],
+  JSON: Scalars['JSON'],
   User: User,
   ID: Scalars['ID'],
   Trackable: Trackable,
+  TrackableCollaboratorConnection: TrackableCollaboratorConnection,
   TrackableUpdateConnection: TrackableUpdateConnection,
   TrackableUpdate: TrackableUpdate,
   MetadataEntry: MetadataEntry,
   TrackableCollection: TrackableCollection,
-  Query: {},
   CreateTrackableInput: CreateTrackableInput,
+  MetadataEntryInput: MetadataEntryInput,
+  AddUpdateInput: AddUpdateInput,
   CreateTrackablePayload: CreateTrackablePayload,
+  AddUpdatePayload: AddUpdatePayload,
+  AddCollaboratorPayload: AddCollaboratorPayload,
+  Int: Scalars['Int'],
+  AddCollaboratorInput: AddCollaboratorInput,
+  Query: {},
   Mutation: {},
 };
+
+export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSON'], any> {
+  name: 'JSON'
+}
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
   did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
@@ -222,21 +294,26 @@ export type TrackableResolvers<ContextType = any, ParentType extends ResolversPa
   did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
-  updates?: Resolver<Maybe<ResolversTypes['TrackableUpdateConnection']>, ParentType, ContextType>,
+  updates?: Resolver<ResolversTypes['TrackableUpdateConnection'], ParentType, ContextType>,
+  collaborators?: Resolver<Maybe<ResolversTypes['TrackableCollaboratorConnection']>, ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
+export type TrackableCollaboratorConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TrackableCollaboratorConnection'] = ResolversParentTypes['TrackableCollaboratorConnection']> = {
+  edges?: Resolver<Maybe<Array<ResolversTypes['User']>>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
 export type TrackableUpdateConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TrackableUpdateConnection'] = ResolversParentTypes['TrackableUpdateConnection']> = {
-  did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
-  edges?: Resolver<Maybe<Array<Maybe<ResolversTypes['TrackableUpdate']>>>, ParentType, ContextType>,
+  edges?: Resolver<Maybe<Array<ResolversTypes['TrackableUpdate']>>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
 export type TrackableUpdateResolvers<ContextType = any, ParentType extends ResolversParentTypes['TrackableUpdate'] = ResolversParentTypes['TrackableUpdate']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
+  timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
-  metadata?: Resolver<Maybe<Array<Maybe<ResolversTypes['MetadataEntry']>>>, ParentType, ContextType>,
+  metadata?: Resolver<Maybe<Array<ResolversTypes['MetadataEntry']>>, ParentType, ContextType>,
   userDid?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   userName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
@@ -244,7 +321,7 @@ export type TrackableUpdateResolvers<ContextType = any, ParentType extends Resol
 
 export type MetadataEntryResolvers<ContextType = any, ParentType extends ResolversParentTypes['MetadataEntry'] = ResolversParentTypes['MetadataEntry']> = {
   key?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
-  value?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  value?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
@@ -254,14 +331,26 @@ export type TrackableCollectionResolvers<ContextType = any, ParentType extends R
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
-export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
-};
-
 export type CreateTrackablePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateTrackablePayload'] = ResolversParentTypes['CreateTrackablePayload']> = {
   collection?: Resolver<Maybe<ResolversTypes['TrackableCollection']>, ParentType, ContextType>,
   trackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
+export type AddUpdatePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AddUpdatePayload'] = ResolversParentTypes['AddUpdatePayload']> = {
+  update?: Resolver<ResolversTypes['TrackableUpdate'], ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
+export type AddCollaboratorPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AddCollaboratorPayload'] = ResolversParentTypes['AddCollaboratorPayload']> = {
+  collaborator?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
+  code?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
+export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  getTrackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType, RequireFields<QueryGetTrackableArgs, 'did'>>,
+  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
@@ -269,17 +358,23 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   register?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationRegisterArgs, 'namespace' | 'username' | 'password'>>,
   logout?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationLogoutArgs, never>>,
   createTrackable?: Resolver<Maybe<ResolversTypes['CreateTrackablePayload']>, ParentType, ContextType, RequireFields<MutationCreateTrackableArgs, 'input'>>,
+  addUpdate?: Resolver<Maybe<ResolversTypes['AddUpdatePayload']>, ParentType, ContextType, RequireFields<MutationAddUpdateArgs, 'input'>>,
+  addCollaborator?: Resolver<Maybe<ResolversTypes['AddCollaboratorPayload']>, ParentType, ContextType, RequireFields<MutationAddCollaboratorArgs, 'input'>>,
 };
 
 export type Resolvers<ContextType = any> = {
+  JSON?: GraphQLScalarType,
   User?: UserResolvers<ContextType>,
   Trackable?: TrackableResolvers<ContextType>,
+  TrackableCollaboratorConnection?: TrackableCollaboratorConnectionResolvers<ContextType>,
   TrackableUpdateConnection?: TrackableUpdateConnectionResolvers<ContextType>,
   TrackableUpdate?: TrackableUpdateResolvers<ContextType>,
   MetadataEntry?: MetadataEntryResolvers<ContextType>,
   TrackableCollection?: TrackableCollectionResolvers<ContextType>,
-  Query?: QueryResolvers<ContextType>,
   CreateTrackablePayload?: CreateTrackablePayloadResolvers<ContextType>,
+  AddUpdatePayload?: AddUpdatePayloadResolvers<ContextType>,
+  AddCollaboratorPayload?: AddCollaboratorPayloadResolvers<ContextType>,
+  Query?: QueryResolvers<ContextType>,
   Mutation?: MutationResolvers<ContextType>,
 };
 

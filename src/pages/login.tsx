@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link} from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
-// import { useAmbientUser } from 'ambient-react';
 import { Redirect, Link as RouterLink} from 'react-router-dom';
-import { useMutation } from '@apollo/client';
-import { LOGIN_USER } from '../store/queries';
+import { useMutation,gql } from '@apollo/client';
 import { AppUser } from 'ambient-react';
+
+
+const LOGIN_USER = gql`
+    mutation LoginUser($namespace: String!, $username: String!, $password: String!) {
+        login(namespace: $namespace, username: $username, password: $password) {
+            did
+            username
+            loggedIn
+        }
+    }
+`
 
 type LoginFormData = {
     username: string;
@@ -27,7 +36,7 @@ export function LoginPage() {
             return
         }
         setLoginSuccess(true)
-    }, [resp.called, resp.loading, data])
+    }, [resp.called, resp.loading, data, setError])
 
    
     // const { login } = useAmbientUser()

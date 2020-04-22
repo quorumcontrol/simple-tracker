@@ -1,18 +1,16 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import React, { useState } from 'react'
 import { Box, Flex, Heading, Button, Collapse, FormControl, Input, FormErrorMessage, FormLabel, ListItem, List, Image, Text, Icon } from '@chakra-ui/core'
 import Header from '../components/header'
-import { useAmbientUser } from 'ambient-react'
-import { Trackable, TrackableUpdate, CollaboratorList, userNamespace, useTrackableCollection, addExistingTrackable } from '../store'
 import { useParams } from 'react-router-dom'
 import debug from 'debug'
 import { useForm } from 'react-hook-form'
-import { getAppCommunity, User } from 'ambient-stack'
-import { EcdsaKey, ChainTree, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
 import moment from 'moment';
 import { upload, getUrl } from '../lib/skynet'
 import { QRCode } from 'react-qrcode-logo';
 import { Map, Marker, Popup, TileLayer } from 'react-leaflet'
 import { LatLngTuple } from 'leaflet'
+import { gql, useQuery, useMutation } from '@apollo/client'
+import {Trackable, TrackableUpdate, MetadataEntry, Scalars, User} from '../generated/graphql'
 
 const log = debug("pages.object")
 
@@ -22,71 +20,64 @@ type TrackableFormData = {
     location: Position
 }
 
-const useTrackable = (did: string, key: EcdsaKey) => {
-    const [tree, setTree] = useState<ChainTree | undefined>(undefined)
-    const [trackable, setTrackable] = useState<Trackable>({ name: "Loading", id: did, updates: [] })
-    const [collaborators, setCollaborators] = useState<CollaboratorList>([])
-    const { user } = useAmbientUser()
-    const [dispatch, userCollection] = useTrackableCollection(user!)
-
-    useEffect(() => {
-        const initialize = async () => {
-            const c = await getAppCommunity()
-            const tip = await c.getTip(did)
-            const tree = new ChainTree({
-                key: key,
-                store: c.blockservice,
-                tip: tip,
-            })
-            let resp = await tree.resolveData("_tracker")
-            setTrackable(resp.value)
-            setTree(tree)
-            let collaboratorResp = await tree.resolveData("_trackerCollaborators")
-            setCollaborators(collaboratorResp.value)
-        }
-        if (!tree && did && key) {
-            initialize()
-        }
-        if (tree && did && userCollection && !userCollection.trackables[did]) {
-            addExistingTrackable(dispatch, trackable)
-        }
-    }, [did, tree, key, userCollection, dispatch])
-
-    const addUpdate = async (update: TrackableUpdate) => {
-        update.timestamp = (new Date()).toISOString()
-        update.userName = user?.userName
-        update.user = user?.did
-
-        trackable.updates.unshift(update)
-        setTrackable(trackable)
-
-        const c = await getAppCommunity()
-        return c.playTransactions(tree!, [setDataTransaction("_tracker", trackable)])
-    }
-
-    const authPath = "tree/_tupelo/authentications"
-
-    const addCollaborator = async (username: string) => {
-        const c = await getAppCommunity()
-
-        const user = await User.find(username, Buffer.from(userNamespace), c)
-        if (user) {
-            await user.load()
-            collaborators.push({ name: user.userName, did: user.did! })
-            setCollaborators(collaborators)
-            const userAuthResp = await user.tree.resolve(authPath)
-            const currAuthResp = await tree?.resolve(authPath)
-            const newAuths = currAuthResp?.value.concat(userAuthResp.value)
-            await c.playTransactions(tree!, [
-                setDataTransaction("_trackerCollaborators", collaborators),
-                setOwnershipTransaction(newAuths),
-            ])
-            return
+const GET_COLLABORATORS=gql`
+    query GetCollaborators($did: ID!) {
+        getTrackable(did: $did) {
+            did
+            collaborators {
+                edges {
+                    did
+                    username
+                }
+            }
         }
     }
+`
 
-    return { tree, trackable, addUpdate, collaborators, addCollaborator }
-}
+const GET_TRACKABLE=gql`
+    query GetTrackable($did: ID!) {
+        getTrackable(did: $did) {
+            did
+            name
+            image
+            updates {
+                edges {
+                    did
+                    message
+                    metadata {
+                        key
+                        value
+                    }
+                    timestamp
+                }
+            }
+        }
+    }
+`
+
+const ADD_COLLABORATOR = gql`
+    mutation AddCollaborator($input: AddCollaboratorInput!) {
+        addCollaborator(input: $input) {
+            code
+            collaborator {
+                did
+                username
+            }
+        }
+    }
+`
+
+const ADD_UPDATE = gql`
+    mutation UpdateTrackable($input: AddUpdateInput!) {
+        addUpdate(input: $input) {
+            update {
+                did
+                message
+                metadata
+            }
+        }
+    }
+`
 
 function geoPositonToPojo(coords: Coordinates): Coordinates {
     const keys = ["latitude",
@@ -107,28 +98,66 @@ type CollaboratorFormData = {
     name: string
 }
 
-export function CollaboratorUI({ collaborators, addCollaborator }: { collaborators: CollaboratorList, addCollaborator: (username: string) => Promise<void> }) {
+export function CollaboratorUI({did}:{did: Scalars['ID']}) {
     const [show, setShow] = useState(false)
     const [addLoading, setAddLoading] = useState(false)
     const { handleSubmit, errors, reset, register } = useForm<CollaboratorFormData>();
+    const query = useQuery(GET_COLLABORATORS, {variables: {did: did}})
+    log("getcollaborator results: ", query)
+
+    let collaborators:User[] = []
+    if (!query.loading && !query.error) {
+        collaborators = query.data.getTrackable.collaborators.edges
+    }
+    const [addCollaborator] = useMutation(ADD_COLLABORATOR)
 
     const handleToggle = () => setShow(!show);
 
     const onSubmit = async (data: CollaboratorFormData) => {
         setAddLoading(true)
         setShow(!show)
-        await addCollaborator(data.name)
+        await addCollaborator({
+            variables: {input: {username: data.name, trackable: did}},
+            optimisticResponse: {
+                __typename: "Mutation",
+                addCollaborator: {
+                    collaborator: {
+                        __typename: "User",
+                        did: "loading",
+                        username: data.name,
+                    }
+                }
+            },
+            update: (proxy, {data: {addCollaborator}})=> {
+                const data:any = proxy.readQuery({query: GET_COLLABORATORS, variables: {did: did}})
+                console.log("update called: ", addCollaborator, " readQuery: ", data)
+                // data.me.collection.trackables.push(createTrackable.trackable)
+                // TODO: this should be a deep merge
+                proxy.writeQuery({
+                    query: GET_COLLABORATORS, 
+                    variables: {did: did},
+                    data: {
+                        ...data,
+                        getTrackable: {
+                            ...data.getTrackable,
+                            collaborators: {
+                                ...data.getTrackable.collaborators,
+                                edges: query.data.getTrackable.collaborators.edges.concat([addCollaborator.collaborator]),
+                            }
+                        }
+                    }
+                })
+            }
+        })
         reset()
         setAddLoading(false)
     }
 
 
     let collaboratorItems: ReturnType<typeof ListItem>[] = []
-    if (collaborators) {
-        collaboratorItems = collaborators.map((collaborator) => {
-            return <ListItem key={collaborator.did}><Icon name="at-sign" /> {collaborator.name}</ListItem>
-        })
-    }
+    collaboratorItems = collaborators.map((collaborator) => {
+        return <ListItem key={collaborator.did}><Icon name="at-sign" /> {collaborator.username}</ListItem>
+    })
 
     return (
         <>
@@ -165,8 +194,6 @@ export function LocationWidget({ latitude, longitude }: { latitude: number, long
     const [show, setShow] = useState(false)
     const handleToggle = () => setShow(!show);
 
-    const mapDiv = useRef<HTMLDivElement>(null)
-
     const position:LatLngTuple = [latitude, longitude]
 
     return (
@@ -189,8 +216,17 @@ export function LocationWidget({ latitude, longitude }: { latitude: number, long
 
 function ObjectUpdate({ update }: { update: TrackableUpdate }) {
     let img: ReturnType<typeof Image> = null
-    if (update.metadata && update.metadata.image) {
-        img = <Image src={getUrl(update.metadata.image)} />
+
+    let metadata:{[key:string]:any} = {}
+    if (update.metadata) {
+        update.metadata.forEach(({key,value}, _i)=> {
+            metadata[key] = value
+        })
+    }
+    console.log("metadata: ", metadata)
+
+    if (metadata.image) {
+        img = <Image src={getUrl(metadata.image)} />
     }
 
     return (
@@ -202,8 +238,8 @@ function ObjectUpdate({ update }: { update: TrackableUpdate }) {
                 <Box p={5}>
                     <Text>{update.message}</Text>
                 </Box>
-                {update.metadata && update.metadata.location &&
-                    <LocationWidget longitude={update.metadata.location.longitude} latitude={update.metadata.location.latitude} />}
+                {metadata.location &&
+                    <LocationWidget longitude={metadata.location.longitude} latitude={metadata.location.latitude} />}
                 {img && <Box p={5}>
                     {img}
                 </Box>}
@@ -214,8 +250,19 @@ function ObjectUpdate({ update }: { update: TrackableUpdate }) {
 
 export function ObjectPage() {
     const { objectId } = useParams()
-    const { user } = useAmbientUser()
-    const { trackable, addUpdate, collaborators, addCollaborator } = useTrackable(objectId!, user?.tree.key!)
+
+    const query = useQuery(GET_TRACKABLE, {variables: {did: objectId!}})
+    log("object page query: ", query)
+    let trackable:Trackable = { name: "Loading", did: objectId!, image: "", updates: {} }
+    if (query.error) {
+        throw query.error
+    }
+    if (!query.loading) {
+        trackable = query.data.getTrackable
+    }
+
+    const [addUpdate,result] = useMutation(ADD_UPDATE)
+    log("mutation result: ", result)
 
     const [show, setShow] = useState(false)
     const [addLoading, setAddLoading] = useState(false)
@@ -230,27 +277,62 @@ export function ObjectPage() {
 
     const onSubmit = async (data: TrackableFormData) => {
         setAddLoading(true)
-        let metadata: { [key: string]: any } = {}
+        let metadata:MetadataEntry[] = []
         if (location) {
-            metadata.location = geoPositonToPojo(location.coords)
+            metadata.push({key: "location", value: geoPositonToPojo(location.coords)})
         }
         if (data.image && data.image.length > 0) {
             const { skylink } = await upload(data.image, {});
-            log("skylink: ", skylink)
-            metadata['image'] = skylink
+            metadata.push({key: "image", value: skylink})
         }
-        addUpdate({ message: data.message, metadata: metadata })
         setShow(false)
         reset()
+        await addUpdate({
+            variables: {input: {trackable: objectId, message: data.message, metadata: metadata}},
+            optimisticResponse: {
+                __typename: "Mutation",
+                addUpdate: {
+                    update: {
+                        __typename: "TrackableUpdate",
+                        did: "did/update/loading",
+                        timestamp: (new Date()).toISOString(),
+                        message: data.message,
+                        metadata: metadata,
+                        userName: "you",
+                        userDid: "loading...",
+                    }
+                }
+            },
+            update: (proxy, {data: {addUpdate}})=> {
+                const data:any = proxy.readQuery({query: GET_TRACKABLE, variables: {did: objectId}})
+                console.log("update called: ", addUpdate, " readQuery: ", data)
+                // data.me.collection.trackables.push(createTrackable.trackable)
+                // TODO: this should be a deep merge
+                proxy.writeQuery({
+                    query: GET_TRACKABLE, 
+                    variables: {did: objectId},
+                    data: {
+                        ...data,
+                        getTrackable: {
+                            ...data.getTrackable,
+                            updates: {
+                                ...data.getTrackable.updates,
+                                edges: query.data.getTrackable.updates.edges.concat([addUpdate.update]),
+                            }
+                        }
+                    }
+                })
+            }
+        })
         setAddLoading(false)
     }
 
     let updates: ReturnType<typeof ListItem>[] = []
 
-    if (trackable) {
-        updates = trackable.updates.map((update) => {
+    if (trackable && trackable.updates.edges) {
+        updates = trackable.updates.edges.map((update) => {
             return (
-                <ObjectUpdate update={update} />
+                <ObjectUpdate key={update.timestamp} update={update} />
             )
         })
     }
@@ -340,7 +422,7 @@ export function ObjectPage() {
                         </List>
                     </Box>
                     <Box borderWidth="1px" p={10} rounded="sm" ml={5}>
-                        <CollaboratorUI collaborators={collaborators} addCollaborator={addCollaborator} />
+                        <CollaboratorUI did={objectId!} />
                     </Box>
                 </Flex>
                 <Box mt={10}>

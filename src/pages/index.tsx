@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { Box, Flex, Button, Image, Collapse, FormControl, FormLabel, Input, FormErrorMessage, Icon, Spinner } from '@chakra-ui/core'
+import { Box, Flex, Button, Image, Collapse, FormControl, FormLabel, Input, FormErrorMessage, Icon, Spinner, Text } from '@chakra-ui/core'
 import Header from '../components/header'
 import { useHistory } from 'react-router-dom';
-import { useAmbientUser } from 'ambient-react';
 import debug from 'debug'
 import { Trackable } from '../generated/graphql'
 import { useForm } from 'react-hook-form';
@@ -15,7 +14,6 @@ type AddTrackableFormData = {
     name: string
     image: FileList
 }
-
 
 const CREATE_TRACKABLE = gql`
     mutation CreateTrackable($input: CreateTrackableInput!) {
@@ -49,12 +47,8 @@ const GET_TRACKABLES = gql`
 `
 
 export function Index() {
-    const { user } = useAmbientUser()
-    // const [dispatch, trackableState,] = useTrackableCollection(user!)
-
     const query = useQuery(GET_TRACKABLES)
     const [createTrackable] = useMutation(CREATE_TRACKABLE)
-    // console.log("index query: ", query)
 
     const [addLoading, setAddLoading] = useState(false)
     const [show, setShow] = useState(false);
@@ -161,9 +155,10 @@ export function Index() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
+                    {!show && 
                     <Button isLoading={addLoading} onClick={handleToggle}>
                         Add Object
-                    </Button>
+                    </Button>}
                     <Collapse mt={4} isOpen={show}>
                         <form onSubmit={handleSubmit(onSubmit)}>
                             <FormControl>
@@ -196,7 +191,11 @@ export function Index() {
                                     {errors.image && "There was a problem with your upload"}
                                 </FormErrorMessage>
                             </FormControl>
-                            <Button type="submit" isLoading={addLoading}>Add</Button>
+                            <Flex>
+                                <Button type="submit" isLoading={addLoading}>Save</Button>
+                                <Text ml={4} onClick={handleToggle}>cancel</Text>
+                            </Flex>
+
                         </form>
                     </Collapse>
                 </Box>

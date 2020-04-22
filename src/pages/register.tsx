@@ -1,10 +1,8 @@
 import React, { useState } from 'react'
 import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link } from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
-// import { useAmbientUser } from 'ambient-react';
 import { Redirect, Link as RouterLink } from 'react-router-dom';
-import { useMutation } from '@apollo/client';
-import { REGISTER_USER } from '../store/queries';
+import { useMutation, gql } from '@apollo/client';
 import {AppUser} from 'ambient-react';
 
 type RegistrationFormData = {
@@ -13,12 +11,22 @@ type RegistrationFormData = {
     passwordConfirmation: string
 };
 
+const REGISTER_USER = gql`
+    mutation RegisterUser($namespace: String!, $username: String!, $password: String!) {
+        register(namespace: $namespace, username: $username, password: $password) {
+            did
+            username
+            loggedIn
+        }
+    }
+`
+
 export function RegisterPage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<RegistrationFormData>();
     // const userMethods = useAmbientUser()
     // const registerUser = userMethods.register
 
-    const [registerUser, {data}] = useMutation(REGISTER_USER)
+    const [registerUser,] = useMutation(REGISTER_USER)
     const [loginSuccess, setLoginSuccess] = useState(false)
 
     async function onSubmit({ username, password, passwordConfirmation }: RegistrationFormData) {

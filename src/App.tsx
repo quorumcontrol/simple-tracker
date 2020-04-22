@@ -6,7 +6,6 @@ import {
   Route,
   Redirect,
 } from "react-router-dom";
-import { useAmbientUser, AppUser } from 'ambient-react';
 import { Index } from './pages';
 import { LoginPage } from './pages/login'
 import { RegisterPage } from './pages/register'
@@ -19,17 +18,22 @@ import { CURRENT_USER } from './store/queries';
 // A wrapper for <Route> that redirects to the login
 // screen if you're not yet authenticated.
 function AuthenticatedRoute({ children, ...rest }: any) {
-
-  // const { loading, error, data } = useQuery(CURRENT_USER);
   const query = useQuery(CURRENT_USER);
   const loading = query.loading
   const error = query.error
-  // const user = query.data.user
+
   let user:any
-  if (!loading) {
+  if (!loading && !error) {
     user = query.data.me
   }
-  // const { loading, user } = useAmbientUser()
+
+  if (error) {
+    return (
+      <Flex align="center" justify="center" h="100%">
+        <Text ml="1rem">Error: {error}</Text>
+      </Flex>
+    )
+  }
 
   if (loading) {
     return (
