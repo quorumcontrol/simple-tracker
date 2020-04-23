@@ -1,5 +1,15 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+# Getting Started
+
+1. Copy the Tupelo WASM file to your public directory
+    1. `npm run cp:wasm`
+    1. Only needs to be done once to get started and on subsequent updates to tupelo-wasm-sdk.
+1. Start up the development Tupelo network
+    1. `docker-compose up`
+1. Start up the app
+    1. `npm start`
+
 ## Available Scripts
 
 In the project directory, you can run:
