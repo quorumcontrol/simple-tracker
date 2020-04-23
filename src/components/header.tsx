@@ -27,7 +27,7 @@ const Header = () => {
       <Flex align="center" mr={5}>
         <Heading as="h1" size="lg">
           <Link to="/">
-            Simple Track
+            GivingChain
           </Link>
         </Heading>
       </Flex>
