@@ -96,11 +96,6 @@ export function LoginPage() {
                         Login
                     </Button>
                 </form>
-                <Box mt={4}>
-                    <RouterLink to="/register">
-                        <Link as="text">Or Register</Link>
-                    </RouterLink>
-                </Box>
             </Box>
 
             <Link href="https://www.netlify.com/" mt={10} isExternal>
