@@ -3,7 +3,7 @@ import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Hea
 import { useForm } from "react-hook-form";
 import { Redirect, Link as RouterLink } from 'react-router-dom';
 import { useMutation, gql } from '@apollo/client';
-import {AppUser} from 'ambient-react';
+import {userNamespace} from '../store/index';
 
 type RegistrationFormData = {
     username: string;
@@ -35,7 +35,7 @@ export function RegisterPage() {
             return
         }
         try {
-            await registerUser({variables: {username: username, password: password, namespace: AppUser.userNamespace?.toString()!} })
+            await registerUser({variables: {username: username, password: password, namespace: userNamespace} })
         } catch (e) {
             setError("username", "unknown", `Could not create that user: ${e.message}`)
             return
