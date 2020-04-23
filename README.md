@@ -1,6 +1,8 @@
+# Simple Track & Trace on Tupelo
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-# Getting Started
+## Getting Started
 
 1. Copy the Tupelo WASM file to your public directory
     1. `npm run cp:wasm`
@@ -9,6 +11,8 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
     1. `docker-compose up`
 1. Start up the app
     1. `npm start`
+
+> Create React App boilerplate below here
 
 ## Available Scripts
 
