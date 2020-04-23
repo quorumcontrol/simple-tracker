@@ -21,15 +21,16 @@ import {
     AddCollaboratorPayload,
 } from '../generated/graphql'
 import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
-import { AppUser } from 'ambient-react';
+import { AppUser } from './user';
 import { makeExecutableSchema } from 'graphql-tools';
 import { SchemaLink } from '@apollo/link-schema';
-import { getAppCommunity, resolveUsername, findUserAccount } from 'ambient-stack';
-import { appUser } from 'ambient-react';
+import { getAppCommunity } from './community';
+import { appUser } from './user';
 import { CURRENT_USER } from './queries';
 const GraphQLJSON = require('graphql-type-json');
 
 export const userNamespace = 'local-only-tracker'
+export const usernamePath = "tupelo.me/username" // taken from ambient stack - should probably be `userNamespace/username` 
 
 AppUser.setUserNamespace(userNamespace)
 
@@ -40,6 +41,50 @@ interface TrackerContext {
 
 function namespaceToPath(namespace: string) {
     return `/apps/${namespace}/collection`
+}
+
+/**
+ * Looks up the user account chaintree for the given username, returning it if
+ * it exists.
+ */
+const findUserAccount = async (username: string, appNamespace:Uint8Array):Promise<ChainTree|undefined> => {
+    const community = await getAppCommunity()
+
+    const insecureKey = await EcdsaKey.passPhraseKey(Buffer.from(username), appNamespace)
+    const did = await insecureKey.toDid()
+
+    let tip
+    let tree:ChainTree|undefined = undefined
+
+    try {
+        tip = await community.getTip(did)
+    } catch (e) {
+        if (e.message.includes("not found")) {
+            // do nothing, let tip be null
+            return undefined
+        }
+    }
+
+    if (tip !== undefined) {
+        tree = new ChainTree({
+            store: community.blockservice,
+            tip: tip,
+        })
+    }
+
+    return tree
+};
+
+/**
+ * Find the username from the given user account ChainTree
+ */
+const resolveUsername = async (tree: ChainTree) => {
+    const usernameResp = await tree.resolveData(usernamePath)
+    if (usernameResp.remainderPath.length && usernameResp.remainderPath.length > 0) {
+        return ""
+    } else {
+        return usernameResp.value
+    }
 }
 
 const resolvers: Resolvers = {
@@ -196,7 +241,8 @@ const resolvers: Resolvers = {
                 }
             }
         },
-        login: async (_root, { username, password }: MutationRegisterArgs, { cache }): Promise<User | undefined> => {
+        login: async (_root, { username, password }: MutationRegisterArgs, { cache, communityPromise }): Promise<User | undefined> => {
+            await communityPromise
             let [success, ambientUser] = await appUser.login(username!, password!)
             if (!success || !ambientUser) {
                 return undefined
@@ -290,6 +336,8 @@ const resolvers: Resolvers = {
 
         },
         register: async (_root, { username, password }: MutationRegisterArgs, { communityPromise }: TrackerContext): Promise<User | undefined> => {
+            await communityPromise
+
             let ambientUser = await appUser.register(username!, password!)
             if (!ambientUser) {
                 return undefined

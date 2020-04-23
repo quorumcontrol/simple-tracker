@@ -3,8 +3,7 @@ import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Hea
 import { useForm } from "react-hook-form";
 import { Redirect, Link as RouterLink} from 'react-router-dom';
 import { useMutation,gql } from '@apollo/client';
-import { AppUser } from 'ambient-react';
-
+import {userNamespace} from '../store/index'
 
 const LOGIN_USER = gql`
     mutation LoginUser($namespace: String!, $username: String!, $password: String!) {
@@ -44,7 +43,7 @@ export function LoginPage() {
 
     async function onSubmit({username,password}:LoginFormData) {
         try {
-            await loginUser({variables: {username, password, namespace: AppUser.userNamespace?.toString()! }})
+            await loginUser({variables: {username, password, namespace: userNamespace.toString()! }})
         } catch (e) {
             setError("username", "unknown", `Could not create that user: ${e.message}`)
         }
