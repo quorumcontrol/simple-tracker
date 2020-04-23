@@ -103,6 +103,10 @@ export function LoginPage() {
                     </RouterLink>
                 </Box>
             </Box>
+
+            <Link href="https://www.netlify.com/" mt={10} isExternal>
+                This site is powered by Netlify
+            </Link>
         </Flex>
     )
 }
