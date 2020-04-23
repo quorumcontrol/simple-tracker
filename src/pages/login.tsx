@@ -61,7 +61,7 @@ export function LoginPage() {
 
     return (
         <Flex align="center" justify="center" h="100%" flexDir="column">
-            <Heading>Login</Heading>
+            <Heading>Giving Chain<br/>Driver Login</Heading>
             <Box borderWidth="1px" rounded="lg" p={8} mt={2}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <FormControl isInvalid={!!errors.username}>
