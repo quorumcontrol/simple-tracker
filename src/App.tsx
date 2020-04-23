@@ -9,6 +9,7 @@ import {
 import { Index } from './pages';
 import { LoginPage } from './pages/login'
 import { RegisterPage } from './pages/register'
+import { DonatePage } from './pages/donate'
 import { ObjectPage, LocationWidget } from './pages/object';
 import './store'; // for side effects only
 import { ApolloProvider, useQuery } from '@apollo/client';
@@ -83,9 +84,12 @@ function App() {
             <AuthenticatedRoute path="/summary">
               <SummaryPage />
             </AuthenticatedRoute>
-            <AuthenticatedRoute path="/">
+            <Route path="/donate">
+              <DonatePage />
+            </Route>
+            <Route path="/">
               <Index />
-            </AuthenticatedRoute>
+            </Route>
           </Switch>
         </Router>
       </ApolloProvider>

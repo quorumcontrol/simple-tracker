@@ -18,7 +18,7 @@ const LOGIN_USER = gql`
 type LoginFormData = {
     username: string;
     password: string;
-  };
+};
 
 export function LoginPage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<LoginFormData>();
