@@ -29,8 +29,8 @@ import { appUser } from './user';
 import { CURRENT_USER } from './queries';
 const GraphQLJSON = require('graphql-type-json');
 
-export const userNamespace = 'local-only-tracker'
-export const usernamePath = "tupelo.me/username" // taken from ambient stack - should probably be `userNamespace/username` 
+export const userNamespace = 'givingchain'
+export const usernamePath = "givingchain/username" // taken from ambient stack - should probably be `userNamespace/username` 
 
 AppUser.setUserNamespace(userNamespace)
 
@@ -180,15 +180,15 @@ const resolvers: Resolvers = {
             if (!appUser.userPromise) {
                 return undefined
             }
-            let ambientUser = await appUser.userPromise
-            if (!ambientUser) {
+            let user = await appUser.userPromise
+            if (!user) {
                 return undefined
             }
 
             return {
-                did: ambientUser.did!,
+                did: user.did!,
                 namespace: AppUser.userNamespace?.toString()!,
-                username: ambientUser.userName,
+                username: user.userName,
                 loggedIn: true,
             }
         }
@@ -198,12 +198,12 @@ const resolvers: Resolvers = {
             if (!appUser.userPromise) {
                 return undefined
             }
-            let ambientUser = await appUser.userPromise
-            if (!ambientUser) {
+            let user = await appUser.userPromise
+            if (!user) {
                 return undefined
             }
 
-            let buf = Buffer.from(ambientUser.tree.key?.privateKey!).toString()
+            let buf = Buffer.from(user.tree.key?.privateKey!).toString()
 
             let passphrase = buf + "/trackables/" + input?.name
             let trackableKey = await EcdsaKey.passPhraseKey(Buffer.from(passphrase), Buffer.from(AppUser.userNamespace?.toString()!))
@@ -213,20 +213,20 @@ const resolvers: Resolvers = {
 
             const namespace = AppUser.userNamespace?.toString()!
 
-            console.log(await ambientUser.tree.resolveData(`/apps/${namespace}`))
+            console.log(await user.tree.resolveData(`/apps/${namespace}`))
 
-            const collectionDid = (await ambientUser.tree.resolveData(namespaceToPath(namespace))).value
+            const collectionDid = (await user.tree.resolveData(namespaceToPath(namespace))).value
             console.log("getting: ", collectionDid)
             const collectionTree = await Tupelo.getLatest(collectionDid)
-            collectionTree.key = ambientUser.tree.key
+            collectionTree.key = user.tree.key
             let collaborators:{[key:string]:Boolean} = {}
-            collaborators[(await ambientUser.tree.id())!] = true
+            collaborators[(await user.tree.id())!] = true
 
             await Promise.all([
                 c.playTransactions(tree, [
                     setDataTransaction("/", input),
                     setDataTransaction("collaborators", collaborators),
-                    setOwnershipTransaction([await ambientUser.tree.key!.address()]),
+                    setOwnershipTransaction([await user.tree.key!.address()]),
                 ]),
                 c.playTransactions(collectionTree, [setDataTransaction(`updates/${now}`, await tree.id())])
             ])
@@ -243,36 +243,36 @@ const resolvers: Resolvers = {
         },
         login: async (_root, { username, password }: MutationRegisterArgs, { cache, communityPromise }): Promise<User | undefined> => {
             await communityPromise
-            let [success, ambientUser] = await appUser.login(username!, password!)
-            if (!success || !ambientUser) {
+            let [success, user] = await appUser.login(username!, password!)
+            if (!success || !user) {
                 return undefined
             }
 
-            await ambientUser.load()
-            let user = {
-                did: ambientUser.did!,
+            await user.load()
+            let userObj = {
+                did: user.did!,
                 namespace: AppUser.userNamespace?.toString()!,
-                username: ambientUser.userName,
+                username: user.userName,
                 loggedIn: true,
             }
 
             cache.writeQuery({
                 query: CURRENT_USER,
-                data: { me: user }
+                data: { me: userObj }
             })
 
-            return user
+            return userObj
         },
         // TODO: this is way easier when chaintrees can own chaintrees
         addCollaborator: async (_root, { input: {trackable, username} }: MutationAddCollaboratorArgs, { communityPromise }: TrackerContext): Promise<AddCollaboratorPayload | undefined> => {
             if (!appUser.userPromise) {
                 return undefined
             }
-            let ambientUser = await appUser.userPromise
-            if (!ambientUser) {
+            let user = await appUser.userPromise
+            if (!user) {
                 return undefined
             }
-            await ambientUser.load()
+            await user.load()
 
             const collaboratorTree = await findUserAccount(username, Buffer.from(AppUser.userNamespace?.toString()!))
             if (!collaboratorTree) {
@@ -283,7 +283,7 @@ const resolvers: Resolvers = {
             // const namespace = AppUser.userNamespace?.toString()!
 
             const trackableTree = await Tupelo.getLatest(trackable)
-            trackableTree.key = ambientUser.tree.key
+            trackableTree.key = user.tree.key
 
             let trackableAuthsResp = await trackableTree.resolve("tree/_tupelo/authentications")
             let auths: string[] = trackableAuthsResp.value || []
@@ -306,26 +306,26 @@ const resolvers: Resolvers = {
             if (!appUser.userPromise) {
                 return undefined
             }
-            let ambientUser = await appUser.userPromise
-            if (!ambientUser) {
+            let user = await appUser.userPromise
+            if (!user) {
                 return undefined
             }
-            await ambientUser.load()
+            await user.load()
 
             // const namespace = AppUser.userNamespace?.toString()!
 
             let timestamp = (new Date()).toISOString()
 
             const trackableTree = await Tupelo.getLatest(trackable)
-            trackableTree.key = ambientUser.tree.key
+            trackableTree.key = user.tree.key
 
             let update:TrackableUpdate = {
                 did: `${(await trackableTree.id())}-${timestamp}`,
                 timestamp: timestamp,
                 message: message,
                 metadata: metadata,
-                userDid: ambientUser.did!,
-                userName: ambientUser.userName,
+                userDid: user.did!,
+                userName: user.userName,
             }
             console.log("update: ", update)
             let c = await communityPromise
@@ -338,22 +338,22 @@ const resolvers: Resolvers = {
         register: async (_root, { username, password }: MutationRegisterArgs, { communityPromise }: TrackerContext): Promise<User | undefined> => {
             await communityPromise
 
-            let ambientUser = await appUser.register(username!, password!)
-            if (!ambientUser) {
+            let user = await appUser.register(username!, password!)
+            if (!user) {
                 return undefined
             }
 
-            await ambientUser.load()
+            await user.load()
             const namespace = AppUser.userNamespace?.toString()!
-            let user = {
-                did: ambientUser.did!,
+            let userObj = {
+                did: user.did!,
                 namespace: namespace,
-                username: ambientUser.userName,
+                username: user.userName,
                 loggedIn: true,
             }
             let pathToTree = namespaceToPath(namespace)
 
-            let buf = Buffer.from(ambientUser.tree.key?.privateKey!).toString()
+            let buf = Buffer.from(user.tree.key?.privateKey!).toString()
 
             let passphrase = buf + pathToTree + "collection"
 
@@ -364,19 +364,19 @@ const resolvers: Resolvers = {
 
             console.log('setting data')
             await Promise.all([
-                c.playTransactions(ambientUser.tree, [setDataTransaction(pathToTree, await (await tree).id())]),
-                c.playTransactions(tree, [setOwnershipTransaction([await ambientUser.tree.key!.address()])])
+                c.playTransactions(user.tree, [setDataTransaction(pathToTree, await (await tree).id())]),
+                c.playTransactions(tree, [setOwnershipTransaction([await user.tree.key!.address()])])
             ])
 
-            console.log("post register resolve: ", await ambientUser.tree.resolveData(`/apps/${namespace}`))
+            console.log("post register resolve: ", await user.tree.resolveData(`/apps/${namespace}`))
 
 
             cache.writeQuery({
                 query: CURRENT_USER,
-                data: { me: user }
+                data: { me: userObj }
             })
 
-            return user
+            return userObj
         },
         logout: async (_root, _variables, { cache }): Promise<User> => {
             console.log("writing query")
