@@ -2,7 +2,6 @@ import { ChainTree, Tupelo, EcdsaKey, setDataTransaction, Community } from "tupe
 import { Trackable } from "../generated/graphql"
 import { getAppCommunity } from "./community"
 import debug from 'debug'
-import { rejects } from "assert"
 
 const log = debug("AppCollection")
 
@@ -28,7 +27,7 @@ export class AppCollection {
     }
 
     private async findOrCreateTree(): Promise<ChainTree> {
-        const c = await Community.getDefault()
+        const c = await getAppCommunity()
 
         const key = await EcdsaKey.passPhraseKey(this.name, this.namespace)
         const did = await key.toDid()
