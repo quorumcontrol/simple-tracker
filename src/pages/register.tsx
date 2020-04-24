@@ -55,15 +55,21 @@ export function RegisterPage() {
 
     return (
         <Flex align="center" justify="center" h="100%" flexDir="column">
-            <Heading>Register</Heading>
-            <Box borderWidth="1px" rounded="lg" p={8} mt={2}>
+             <Heading>Giving Chain<br/>Driver Signup</Heading>
+             <Box borderWidth="1px" rounded="lg" p={8} mt={2}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <FormControl isInvalid={!!errors.username}>
-                        <FormLabel htmlFor="username">Username</FormLabel>
+                        <FormLabel htmlFor="username">Email</FormLabel>
                         <Input
                             name="username"
-                            placeholder="Username"
-                            ref={register({ required: "Username is required" })}
+                            placeholder="Email"
+                            ref={register({
+                                required: "Email is required",
+                                pattern: {
+                                    value: /^\S+@\S+$/,
+                                    message: 'Please enter a valid email address',
+                                }
+                            })}
                         />
                         <FormErrorMessage>
                             {errors.username && errors.username.message}
