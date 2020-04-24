@@ -27,6 +27,7 @@ import { SchemaLink } from '@apollo/link-schema';
 import { getAppCommunity } from './community';
 import { appUser } from './user';
 import { CURRENT_USER } from './queries';
+import { AppCollection } from './collection';
 const GraphQLJSON = require('graphql-type-json');
 
 export const userNamespace = 'givingchain'
@@ -42,6 +43,8 @@ interface TrackerContext {
 function namespaceToPath(namespace: string) {
     return `/apps/${namespace}/collection`
 }
+
+const appCollection = new AppCollection({name: `${userNamespace}/trackables`, namespace: userNamespace})
 
 /**
  * Looks up the user account chaintree for the given username, returning it if
@@ -230,15 +233,18 @@ const resolvers: Resolvers = {
                 ]),
                 c.playTransactions(collectionTree, [setDataTransaction(`updates/${now}`, await tree.id())])
             ])
+            const trackable = {
+                did: (await tree.id())!,
+                name: input.name,
+                updates: {},
+            }
+            // TODO: this might make adding too slow, consider doing this in the background
+            await appCollection.addTrackable(trackable)
             return {
                 collection: {
                     did: (await collectionTree.id())!,
                 },
-                trackable: {
-                    did: (await tree.id())!,
-                    name: input.name,
-                    updates: {},
-                }
+                trackable: trackable
             }
         },
         login: async (_root, { username, password }: MutationRegisterArgs, { cache, communityPromise }): Promise<User | undefined> => {
@@ -280,8 +286,6 @@ const resolvers: Resolvers = {
             }
             let collaboratorAuths = (await collaboratorTree.resolve("tree/_tupelo/authentications")).value
 
-            // const namespace = AppUser.userNamespace?.toString()!
-
             const trackableTree = await Tupelo.getLatest(trackable)
             trackableTree.key = user.tree.key
 
@@ -311,8 +315,6 @@ const resolvers: Resolvers = {
                 return undefined
             }
             await user.load()
-
-            // const namespace = AppUser.userNamespace?.toString()!
 
             let timestamp = (new Date()).toISOString()
 
@@ -369,8 +371,7 @@ const resolvers: Resolvers = {
             ])
 
             console.log("post register resolve: ", await user.tree.resolveData(`/apps/${namespace}`))
-
-
+            
             cache.writeQuery({
                 query: CURRENT_USER,
                 data: { me: userObj }
