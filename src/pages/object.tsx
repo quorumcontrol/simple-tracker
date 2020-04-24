@@ -174,6 +174,7 @@ export function CollaboratorUI({did}:{did: Scalars['ID']}) {
                         <FormControl>
                             <FormLabel htmlFor="name">Name</FormLabel>
                             <Input
+                                id="name"
                                 name="name"
                                 placeholder="Name"
                                 ref={register({ required: "Name is required" })}
@@ -378,6 +379,7 @@ export function ObjectPage() {
                                 <FormControl>
                                     <FormLabel htmlFor="message">Message</FormLabel>
                                     <Input
+                                        id="message"
                                         name="message"
                                         placeholder="Message"
                                         ref={register()}

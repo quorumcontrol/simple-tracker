@@ -164,6 +164,7 @@ export function Trackable() {
                             <FormControl>
                                 <FormLabel htmlFor="name">Name</FormLabel>
                                 <Input
+                                    id="name"
                                     name="name"
                                     placeholder="Trackable Name"
                                     ref={register({ required: "Name is required" })}
