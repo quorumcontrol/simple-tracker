@@ -12,7 +12,7 @@ import { RegisterPage } from './pages/register'
 import { ObjectPage, LocationWidget } from './pages/object';
 import './store'; // for side effects only
 import { ApolloProvider, useQuery } from '@apollo/client';
-import {client} from './store/index';
+import { client } from './store/index';
 import { CURRENT_USER } from './store/queries';
 
 // A wrapper for <Route> that redirects to the login
@@ -22,7 +22,7 @@ function AuthenticatedRoute({ children, ...rest }: any) {
   const loading = query.loading
   const error = query.error
 
-  let user:any
+  let user: any
   if (!loading && !error) {
     user = query.data.me
   }
