@@ -30,7 +30,7 @@ import { CURRENT_USER } from './queries';
 const GraphQLJSON = require('graphql-type-json');
 
 export const userNamespace = 'givingchain'
-export const usernamePath = "givingchain/username" // taken from ambient stack - should probably be `userNamespace/username` 
+export const usernamePath = "givingchain/username"
 
 AppUser.setUserNamespace(userNamespace)
 
