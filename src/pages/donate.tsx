@@ -1,7 +1,12 @@
-import { Box, Flex, Button, FormControl, Text, FormLabel, Input, FormErrorMessage, Stack, Textarea } from "@chakra-ui/core";
+import { Box, Flex, Button, FormControl, Text, Input, FormErrorMessage, Stack, Textarea } from "@chakra-ui/core";
 import React, { useState } from 'react';
 import Header from "../components/header";
 import { useForm } from "react-hook-form";
+import { useMutation } from "@apollo/client";
+import { CREATE_TRACKABLE } from "./trackable";
+import debug from "debug";
+
+const log = debug("pages.donate")
 
 type Address = {
   street:       string;
@@ -14,14 +19,26 @@ type DonationData = {
 }
 
 export function DonatePage() {
+  const [createTrackable, { error: createError }] = useMutation(CREATE_TRACKABLE)
   const { handleSubmit, errors, setError, register, formState } = useForm<DonationData>();
 
   async function onSubmit({pickupAddr,instructions}:DonationData) {
-    setDoneLoading(true)
-    console.log("Submitted:", pickupAddr, instructions);
+    setSubmitLoading(true)
+    log("submitted:", pickupAddr, instructions);
+
+    // first create the trackable
+    // TODO: Add the image once that's working
+    await createTrackable({
+      variables: {input: {name: "donation"}}
+    })
+
+    // TODO: add the location in an update
+    // How do we get the new trackable?
+
+    setSubmitLoading(false)
   }
 
-  const [doneLoading, setDoneLoading] = useState(false)
+  const [submitLoading, setSubmitLoading] = useState(false)
 
   return (
     <Box>
@@ -33,7 +50,7 @@ export function DonatePage() {
             <Text mt={10}>Address for Pickup</Text>
             <FormControl isInvalid={!!errors.pickupAddr?.street}>
               <Input
-                name="street"
+                name="pickupAddr.street"
                 placeholder="Street Address"
                 ref={register({ required: "Street Address is required"})}
               />
@@ -43,7 +60,7 @@ export function DonatePage() {
             </FormControl>
             <FormControl isInvalid={!!errors.pickupAddr?.cityStateZip}>
               <Input
-                name="cityStateZip"
+                name="pickupAddr.cityStateZip"
                 placeholder="City, ST Zip"
                 ref={register({ required: "City, ST Zip is required"})}
               />
@@ -61,7 +78,10 @@ export function DonatePage() {
                 ref={register()}>
               </Textarea>
             </FormControl>
-            <Button type="submit" isLoading={doneLoading}>Done</Button>
+            <Button type="submit" isLoading={submitLoading}>Done</Button>
+            <FormErrorMessage>
+              {createError && (createError.message)}
+            </FormErrorMessage>
           </Stack>
         </form>
       </Flex>
