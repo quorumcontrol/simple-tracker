@@ -42,7 +42,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha",
+    "integration-test": "react-scripts test",
     "eject": "react-scripts eject",
     "cp:wasm": "cp ./node_modules/tupelo-wasm-sdk/lib/js/go/tupelo.wasm ./public/",
     "generate": "graphql-codegen --config codegen.yml"
