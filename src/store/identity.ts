@@ -11,7 +11,7 @@ const log = debug("identity")
 /**
  * The path within the user ChainTree where decentratweet stores the username
  */
-export const usernamePath = "tupelo.me/username"
+export const usernamePath = "givingchain/username"
 
 /**
  * Generates a public/private keypair from an *insecure* passphrase (username).

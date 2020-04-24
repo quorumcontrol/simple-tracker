@@ -35,7 +35,7 @@ export class AppUser extends EventEmitter {
     constructor() {
         super()
         this.repo = new Promise(async (resolve) => {
-            const repo = new Repo("ambientUser")
+            const repo = new Repo('user')
             await repo.init({})
             await repo.open()
             resolve(repo)
