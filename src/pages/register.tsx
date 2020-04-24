@@ -110,7 +110,7 @@ export function RegisterPage() {
                 </form>
                 <Box mt={4}>
                     <RouterLink to="/Login">
-                        <Link as="text">Or Login</Link>
+                        Or Login
                     </RouterLink>
                 </Box>
             </Box>
