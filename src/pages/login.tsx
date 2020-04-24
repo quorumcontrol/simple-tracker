@@ -65,11 +65,17 @@ export function LoginPage() {
             <Box borderWidth="1px" rounded="lg" p={8} mt={2}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <FormControl isInvalid={!!errors.username}>
-                        <FormLabel htmlFor="username">Username</FormLabel>
+                        <FormLabel htmlFor="username">Email</FormLabel>
                         <Input
                             name="username"
-                            placeholder="Username"
-                            ref={register({ required: "Username is required" })}
+                            placeholder="Email"
+                            ref={register({
+                                required: "Email is required",
+                                pattern: {
+                                    value: /^\S+@\S+$/,
+                                    message: 'Please enter a valid email address',
+                                }
+                            })}
                         />
                         <FormErrorMessage>
                             {errors.username && (errors.username.message)}
