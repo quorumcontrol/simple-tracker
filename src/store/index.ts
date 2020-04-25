@@ -28,10 +28,13 @@ import { getAppCommunity } from './community';
 import { appUser } from './user';
 import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
+import debug from 'debug';
 const GraphQLJSON = require('graphql-type-json');
 
 export const userNamespace = 'givingchain'
 export const usernamePath = "givingchain/username"
+
+const log = debug("store.resolvers")
 
 AppUser.setUserNamespace(userNamespace)
 
@@ -123,7 +126,7 @@ const resolvers: Resolvers = {
             return {edges}
         },
         name: async (trackable: Trackable, _context): Promise<string> => {
-            console.log("name trackable: ", trackable)
+            log("name trackable: ", trackable)
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
             return (await tree.resolveData("name")).value
@@ -137,7 +140,7 @@ const resolvers: Resolvers = {
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
             let updates = await tree.resolveData("updates")
-            console.log("updates from resolve: ", updates.value)
+            log("updates from resolve: ", updates.value)
             if (updates.value) {
                 // updates is a map of timestamp to TrackableUpdate
                 let edges = await Promise.all(Object.keys(updates.value).map(async (timestamp)=> {
@@ -159,7 +162,7 @@ const resolvers: Resolvers = {
             const tree = await Tupelo.getLatest(collection.did)
             // this will be a map of timestamp to did
             const trackableResp = (await tree.resolveData("updates"))
-            console.log(trackableResp)
+            log(trackableResp)
             const trackables = trackableResp.value
             if (!trackables) {
                 return []
@@ -173,7 +176,7 @@ const resolvers: Resolvers = {
 
     Query: {
         getTrackable: async (_root, {did}:QueryGetTrackableArgs ,_ctx:TrackerContext) => {
-            console.log("get trackable: ", did)
+            log("get trackable: ", did)
             const tree = await Tupelo.getLatest(did)
             return {
                 did: await tree.id(),
@@ -198,6 +201,7 @@ const resolvers: Resolvers = {
     },
     Mutation: {
         createTrackable: async (_root, { input }: MutationCreateTrackableArgs, { communityPromise, cache }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
+            log('createTrackable')
             if (!appUser.userPromise) {
                 return undefined
             }
@@ -208,18 +212,16 @@ const resolvers: Resolvers = {
 
             let buf = Buffer.from(user.tree.key?.privateKey!).toString()
 
+            log("creating passphrase key")
             let passphrase = buf + "/trackables/" + input?.name
             let trackableKey = await EcdsaKey.passPhraseKey(Buffer.from(passphrase), Buffer.from(AppUser.userNamespace?.toString()!))
+            log("creating trackable tree")
             const c = await communityPromise
             let tree = await ChainTree.newEmptyTree(c.blockservice, trackableKey)
             const now = (new Date()).getTime()
 
-            const namespace = AppUser.userNamespace?.toString()!
-
-            console.log(await user.tree.resolveData(`/apps/${namespace}`))
-
-            const collectionDid = (await user.tree.resolveData(namespaceToPath(namespace))).value
-            console.log("getting: ", collectionDid)
+            const collectionDid = (await user.tree.resolveData(namespaceToPath(userNamespace))).value
+            log("getting: ", collectionDid)
             const collectionTree = await Tupelo.getLatest(collectionDid)
             collectionTree.key = user.tree.key
             let collaborators:{[key:string]:Boolean} = {}
@@ -329,7 +331,7 @@ const resolvers: Resolvers = {
                 userDid: user.did!,
                 userName: user.userName,
             }
-            console.log("update: ", update)
+            log("update: ", update)
             let c = await communityPromise
             await c.playTransactions(trackableTree, [setDataTransaction(`updates/${timestamp}`, update)])
             return {
@@ -364,13 +366,13 @@ const resolvers: Resolvers = {
             const c = await communityPromise
             let tree = await ChainTree.newEmptyTree(c.blockservice, appKey)
 
-            console.log('setting data')
+            log('setting data')
             await Promise.all([
                 c.playTransactions(user.tree, [setDataTransaction(pathToTree, await (await tree).id())]),
                 c.playTransactions(tree, [setOwnershipTransaction([await user.tree.key!.address()])])
             ])
 
-            console.log("post register resolve: ", await user.tree.resolveData(`/apps/${namespace}`))
+            log("post register resolve: ", await user.tree.resolveData(`/apps/${namespace}`))
             
             cache.writeQuery({
                 query: CURRENT_USER,
@@ -380,7 +382,7 @@ const resolvers: Resolvers = {
             return userObj
         },
         logout: async (_root, _variables, { cache }): Promise<User> => {
-            console.log("writing query")
+            log("writing query")
 
             const user = (await appUser.userPromise)
             await user?.load()
