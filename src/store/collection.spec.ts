@@ -41,7 +41,7 @@ describe('AppCollection', ()=> {
         expect(proof).to.not.be.undefined
         tree = await Tupelo.getLatest(await key.toDid())
         const resp = await tree.resolveData(`trackables/${trackable.did}`)
-        expect(resp.value).to.be.true
+        expect(resp.value).to.be.false // false means 'unowned'
     })
 
     it('resolves conflicts from two different collections writing', async ()=> {
@@ -68,6 +68,25 @@ describe('AppCollection', ()=> {
         await collection2.updateTree()
         expect(await collection1.getTrackables()).to.have.members([trackable1.did, trackable2.did])
         expect(await collection2.getTrackables()).to.have.members([trackable1.did, trackable2.did])
+    })
+
+    it('can own a trackable', async ()=> {
+        await getAppCommunity()
+        const name = `tree-${Math.random()}`
+        const collection = new AppCollection({name: name, namespace: namespace})
+
+        const trackable:Trackable = {
+            did: 'nonsense',
+            updates: {},
+        }
+
+        const proof = await collection.addTrackable(trackable)
+        expect(proof).to.not.be.undefined
+
+        expect(await collection.getTrackables()).to.include(trackable.did)
+
+        await collection.ownTrackable(trackable, {did: "did:test:userDid"})
+
     })
 
 })

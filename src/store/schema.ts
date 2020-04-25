@@ -8,7 +8,9 @@ type User {
     username: String
     namespace: String
     loggedIn: Boolean
-    collection: TrackableCollection
+    collection: TrackableCollection @deprecated(reason: "only drivers are users now and this field used to represent a collection a user owns")
+    pendingDeliveries: TrackableCollection
+    completedDeliveries: TrackableCollection
 }
 
 type Trackable {
@@ -81,8 +83,22 @@ input AddCollaboratorInput {
     username: String!
 }
 
+input AcceptJobInput {
+    user: ID!
+    trackable: ID!
+}
+
+type AcceptJobPayload {
+    trackable: Trackable
+}
+
+input GetTrackablesFilter {
+    owned: Boolean
+}
+
 type Query {
     getTrackable(did: ID!):Trackable
+    getTrackables(filters: GetTrackablesFilter):TrackableCollection
     me: User
 }
 
@@ -93,6 +109,7 @@ type Mutation {
     createTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload
+    acceptJob(input: AcceptJobInput!):AcceptJobPayload
 }
 `
 

@@ -1,5 +1,5 @@
 import { ChainTree, Tupelo, EcdsaKey, setDataTransaction, Community } from "tupelo-wasm-sdk"
-import { Trackable } from "../generated/graphql"
+import { Trackable, User } from "../generated/graphql"
 import { getAppCommunity } from "./community"
 import debug from 'debug'
 
@@ -80,6 +80,16 @@ export class AppCollection {
         let tree = await this.updateTree()
         
         const c = await getAppCommunity()
-        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, true)])
+        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, false)]) // false means "unowned"
+    }
+
+    async ownTrackable(trackable: Trackable, user: User) {
+        // TODO: as in addTrackable, this needs to retry but for now we'll assume low throughput
+        //  and just grab the latest
+        let tree = await this.updateTree()
+        
+        const c = await getAppCommunity()
+        // set the trackable DID to the DID of the driver picking it up
+        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, user.did)])
     }
 }
