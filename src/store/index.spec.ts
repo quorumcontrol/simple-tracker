@@ -30,8 +30,52 @@ describe('resolvers', () => {
         expect(resp.error).to.be.undefined
     })
 
-    it('queries trackables', async () => {
+    it('creates trackables', async ()=> {
+        const CREATE_TRACKABLE = gql`
+            mutation CreateTrackable($input: CreateTrackableInput!) {
+                createTrackable(input: $input) {
+                    collection {
+                        did
+                    }
+                    trackable {
+                        did
+                        name
+                        image
+                    }
+                }
+            }
+        `
 
+                // it adds to the app collection
+            const appTrackableQuery = gql`
+               {
+                    getTrackables {
+                        did
+                        trackables {
+                            did
+                            driver
+                        }
+                    }
+                }
+            `
+
+        const mutateResp = await client.mutate({
+            mutation: CREATE_TRACKABLE,
+            variables: {input: {name: "test1"}},
+            refetchQueries: [{query: appTrackableQuery}]
+        })
+        expect(mutateResp.error).to.be.undefined
+        expect(mutateResp.data.createTrackable.trackable.name).to.equal("test1")
+
+
+        const queryResp = await client.query({
+            query: appTrackableQuery,
+        })
+        expect(queryResp.errors).to.be.undefined
+        expect(queryResp.data.getTrackables.trackables.length).to.be.greaterThan(0)
+    })
+
+    it('queries trackables', async () => {
         const query = gql`
             query GetTrackables($filters: GetTrackablesFilter) {
                 getTrackables(filters: $filters) {

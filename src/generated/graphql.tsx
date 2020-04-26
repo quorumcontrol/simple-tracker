@@ -67,6 +67,12 @@ export type TrackableCollection = {
   trackables?: Maybe<Array<Trackable>>;
 };
 
+export type AppCollection = {
+   __typename?: 'AppCollection';
+  did: Scalars['ID'];
+  trackables?: Maybe<Array<Trackable>>;
+};
+
 export type CreateTrackableInput = {
   name: Scalars['String'];
   image?: Maybe<Scalars['String']>;
@@ -123,18 +129,13 @@ export type GetTrackablesFilter = {
 export type Query = {
    __typename?: 'Query';
   getTrackable?: Maybe<Trackable>;
-  getTrackables?: Maybe<TrackableCollection>;
+  getTrackables?: Maybe<AppCollection>;
   me?: Maybe<User>;
 };
 
 
 export type QueryGetTrackableArgs = {
   did: Scalars['ID'];
-};
-
-
-export type QueryGetTrackablesArgs = {
-  filters?: Maybe<GetTrackablesFilter>;
 };
 
 export type Mutation = {
@@ -271,6 +272,7 @@ export type ResolversTypes = {
   TrackableUpdate: ResolverTypeWrapper<TrackableUpdate>,
   MetadataEntry: ResolverTypeWrapper<MetadataEntry>,
   TrackableCollection: ResolverTypeWrapper<TrackableCollection>,
+  AppCollection: ResolverTypeWrapper<AppCollection>,
   CreateTrackableInput: CreateTrackableInput,
   MetadataEntryInput: MetadataEntryInput,
   AddUpdateInput: AddUpdateInput,
@@ -299,6 +301,7 @@ export type ResolversParentTypes = {
   TrackableUpdate: TrackableUpdate,
   MetadataEntry: MetadataEntry,
   TrackableCollection: TrackableCollection,
+  AppCollection: AppCollection,
   CreateTrackableInput: CreateTrackableInput,
   MetadataEntryInput: MetadataEntryInput,
   AddUpdateInput: AddUpdateInput,
@@ -371,6 +374,12 @@ export type TrackableCollectionResolvers<ContextType = any, ParentType extends R
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
+export type AppCollectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AppCollection'] = ResolversParentTypes['AppCollection']> = {
+  did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
+  trackables?: Resolver<Maybe<Array<ResolversTypes['Trackable']>>, ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
 export type CreateTrackablePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateTrackablePayload'] = ResolversParentTypes['CreateTrackablePayload']> = {
   collection?: Resolver<Maybe<ResolversTypes['TrackableCollection']>, ParentType, ContextType>,
   trackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType>,
@@ -395,7 +404,7 @@ export type AcceptJobPayloadResolvers<ContextType = any, ParentType extends Reso
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getTrackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType, RequireFields<QueryGetTrackableArgs, 'did'>>,
-  getTrackables?: Resolver<Maybe<ResolversTypes['TrackableCollection']>, ParentType, ContextType, RequireFields<QueryGetTrackablesArgs, never>>,
+  getTrackables?: Resolver<Maybe<ResolversTypes['AppCollection']>, ParentType, ContextType>,
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
 };
 
@@ -418,6 +427,7 @@ export type Resolvers<ContextType = any> = {
   TrackableUpdate?: TrackableUpdateResolvers<ContextType>,
   MetadataEntry?: MetadataEntryResolvers<ContextType>,
   TrackableCollection?: TrackableCollectionResolvers<ContextType>,
+  AppCollection?: AppCollectionResolvers<ContextType>,
   CreateTrackablePayload?: CreateTrackablePayloadResolvers<ContextType>,
   AddUpdatePayload?: AddUpdatePayloadResolvers<ContextType>,
   AddCollaboratorPayload?: AddCollaboratorPayloadResolvers<ContextType>,

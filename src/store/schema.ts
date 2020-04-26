@@ -49,6 +49,13 @@ type TrackableCollection {
     trackables: [Trackable!]
 }
 
+# AppCollection is kept as a separate type from TrackableCollection
+# because of how they are updated
+type AppCollection {
+    did: ID!
+    trackables: [Trackable!]
+}
+
 input CreateTrackableInput {
     name: String!
     image: String
@@ -100,7 +107,7 @@ input GetTrackablesFilter {
 
 type Query {
     getTrackable(did: ID!):Trackable
-    getTrackables(filters: GetTrackablesFilter):TrackableCollection
+    getTrackables:AppCollection
     me: User
 }
 
