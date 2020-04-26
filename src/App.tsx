@@ -14,6 +14,7 @@ import './store'; // for side effects only
 import { ApolloProvider, useQuery } from '@apollo/client';
 import {client} from './store/index';
 import { CURRENT_USER } from './store/queries';
+import { SummaryPage } from './pages/summary';
 
 // A wrapper for <Route> that redirects to the login
 // screen if you're not yet authenticated.
@@ -78,6 +79,9 @@ function App() {
             </Route>
             <AuthenticatedRoute path="/objects/:objectId">
               <ObjectPage />
+            </AuthenticatedRoute>
+            <AuthenticatedRoute path="/summary">
+              <SummaryPage />
             </AuthenticatedRoute>
             <AuthenticatedRoute path="/">
               <Index />

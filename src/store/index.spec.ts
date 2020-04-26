@@ -43,8 +43,7 @@ describe('resolvers', () => {
             }
         `
         const resp = await client.query({
-            query: query,
-            variables: {filters: {owned:false}}
+            query: query
         })
 
         expect(resp.data.getTrackables.trackables).to.be.an("Array")

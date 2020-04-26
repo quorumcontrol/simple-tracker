@@ -68,10 +68,22 @@ export class AppCollection {
         return this.treePromise
     }
 
-    async getTrackables() {
+    async getTrackables():Promise<Trackable[]> {
         const tree = await this.treePromise
         const dids = await tree.resolveData("trackables")
-        return Object.keys(dids.value)
+        return Object.keys(dids.value).map((did:string)=> {
+            const trackable:Trackable = {
+                did: did,
+                updates: {},
+            }
+            const driver = dids.value[did]
+            if (driver) {
+                trackable.driver = {
+                    did: driver,
+                }
+            }
+            return trackable
+        })
     }
 
     async addTrackable(trackable: Trackable) {

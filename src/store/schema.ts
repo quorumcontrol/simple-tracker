@@ -19,6 +19,7 @@ type Trackable {
     image: String #skynet URL for now
     updates: TrackableUpdateConnection!
     collaborators: TrackableCollaboratorConnection
+    driver: User # this is only available on trackables that are part of a collection
 }
 
 type TrackableCollaboratorConnection {
@@ -94,6 +95,7 @@ type AcceptJobPayload {
 
 input GetTrackablesFilter {
     owned: Boolean
+    ownedBy: String
 }
 
 type Query {

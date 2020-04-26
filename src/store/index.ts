@@ -179,15 +179,9 @@ const resolvers: Resolvers = {
 
     Query: {
         getTrackables: async(_root, {filters}:QueryGetTrackablesArgs, _ctx:TrackerContext) => {
-            let dids = await appCollection.getTrackables()
             return {
                 did: await (await appCollection.treePromise).id()!,
-                trackables: dids.map((did:string):Trackable => {
-                    return {
-                        did: did,
-                        updates: {},
-                    }
-                })
+                trackables: await appCollection.getTrackables(),
             } as TrackableCollection
         },
         getTrackable: async (_root, {did}:QueryGetTrackableArgs ,_ctx:TrackerContext) => {

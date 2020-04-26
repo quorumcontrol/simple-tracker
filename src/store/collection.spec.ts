@@ -21,7 +21,7 @@ describe('AppCollection', ()=> {
         const proof = await collection.addTrackable(trackable)
         expect(proof).to.not.be.undefined
 
-        expect(await collection.getTrackables()).to.include(trackable.did)
+        expect((await collection.getTrackables()).map((t)=> {return t.did})).to.include(trackable.did)
     })
 
     it('adds to an existing tree', async ()=> {
@@ -66,8 +66,8 @@ describe('AppCollection', ()=> {
         expect(proof2).to.not.be.undefined
         await collection1.updateTree()
         await collection2.updateTree()
-        expect(await collection1.getTrackables()).to.have.members([trackable1.did, trackable2.did])
-        expect(await collection2.getTrackables()).to.have.members([trackable1.did, trackable2.did])
+        expect((await collection1.getTrackables()).map((t)=>{return t.did})).to.have.members([trackable1.did,trackable2.did])
+        expect((await collection2.getTrackables()).map((t)=>{return t.did})).to.have.members([trackable1.did, trackable2.did])
     })
 
     it('can own a trackable', async ()=> {
@@ -83,10 +83,13 @@ describe('AppCollection', ()=> {
         const proof = await collection.addTrackable(trackable)
         expect(proof).to.not.be.undefined
 
-        expect(await collection.getTrackables()).to.include(trackable.did)
+
+
+        expect((await collection.getTrackables()).some((listTrackable)=> {
+            return listTrackable.did === trackable.did
+        })).to.be.true
 
         await collection.ownTrackable(trackable, {did: "did:test:userDid"})
-
     })
 
 })

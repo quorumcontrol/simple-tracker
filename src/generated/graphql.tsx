@@ -32,6 +32,7 @@ export type Trackable = {
   image?: Maybe<Scalars['String']>;
   updates: TrackableUpdateConnection;
   collaborators?: Maybe<TrackableCollaboratorConnection>;
+  driver?: Maybe<User>;
 };
 
 export type TrackableCollaboratorConnection = {
@@ -116,6 +117,7 @@ export type AcceptJobPayload = {
 
 export type GetTrackablesFilter = {
   owned?: Maybe<Scalars['Boolean']>;
+  ownedBy?: Maybe<Scalars['String']>;
 };
 
 export type Query = {
@@ -333,6 +335,7 @@ export type TrackableResolvers<ContextType = any, ParentType extends ResolversPa
   image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   updates?: Resolver<ResolversTypes['TrackableUpdateConnection'], ParentType, ContextType>,
   collaborators?: Resolver<Maybe<ResolversTypes['TrackableCollaboratorConnection']>, ParentType, ContextType>,
+  driver?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
