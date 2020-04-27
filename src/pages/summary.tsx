@@ -4,6 +4,9 @@ import { Box, Spinner, Heading, Image, Text, Flex, Button } from '@chakra-ui/cor
 import { Trackable, User } from '../generated/graphql'
 import { Link} from 'react-router-dom'
 import Header from '../components/header'
+import debug from 'debug'
+
+const log = debug("pages.summary")
 
 const SUMMARY_PAGE_QUERY = gql`
     query SummaryPage($filters: GetTrackablesFilter) {
@@ -45,7 +48,7 @@ export function SummaryPage() {
         )
     }
 
-    console.log("summary page data: ", data)
+    log("summary page data: ", data)
 
     const unowned = data.getTrackables.trackables.filter((trackable: Trackable) => {
         return !trackable.driver

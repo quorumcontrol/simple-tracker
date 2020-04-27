@@ -148,7 +148,7 @@ const resolvers: Resolvers = {
                 // updates is a map of timestamp to TrackableUpdate
                 let edges = await Promise.all(Object.keys(updates.value).map(async (timestamp)=> {
                     let update = (await tree.resolveData(`updates/${timestamp}`)).value
-                    console.log("resolved update: ", update)
+                    log("resolved update: ", update)
                     update.did = `${did}-${timestamp}`
                     return update
                 }))
