@@ -237,6 +237,7 @@ const resolvers: Resolvers = {
             let collaborators:{[key:string]:Boolean} = {}
             collaborators[(await user.tree.id())!] = true
 
+            log("playing transactions")
             await Promise.all([
                 c.playTransactions(tree, [
                     setDataTransaction("/", input),
@@ -245,6 +246,7 @@ const resolvers: Resolvers = {
                 ]),
                 c.playTransactions(collectionTree, [setDataTransaction(`updates/${now}`, await tree.id())])
             ])
+            log("transations played")
             const trackable = {
                 did: (await tree.id())!,
                 name: input.name,
@@ -252,6 +254,7 @@ const resolvers: Resolvers = {
             }
             // TODO: this might make adding too slow, consider doing this in the background
             await appCollection.addTrackable(trackable)
+            log("appCollection added trackable")
             return {
                 collection: {
                     did: (await collectionTree.id())!,
