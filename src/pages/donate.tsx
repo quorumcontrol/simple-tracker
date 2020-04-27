@@ -2,8 +2,7 @@ import { Box, Flex, Button, FormControl, Text, Input, FormErrorMessage, Stack, T
 import React, { useState } from 'react';
 import Header from "../components/header";
 import { useForm } from "react-hook-form";
-import { useMutation } from "@apollo/client";
-import { CREATE_TRACKABLE } from "./trackable";
+import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
 
 const log = debug("pages.donate")
@@ -18,8 +17,16 @@ type DonationData = {
   instructions: string;
 }
 
+const CREATE_DONATION_MUTATION = gql`
+  mutation DonatePageCreate($input: CreateTrackableInput!) {
+    createUnownedTrackable(input: $input) {
+      code
+    }
+  }
+`
+
 export function DonatePage() {
-  const [createTrackable, { error: createError }] = useMutation(CREATE_TRACKABLE)
+  const [createDonation, { error: createError }] = useMutation(CREATE_DONATION_MUTATION)
   const { handleSubmit, errors, setError, register, formState } = useForm<DonationData>();
 
   async function onSubmit({pickupAddr,instructions}:DonationData) {
@@ -28,7 +35,7 @@ export function DonatePage() {
 
     // first create the trackable
     // TODO: Add the image once that's working
-    await createTrackable({
+    await createDonation({
       variables: {input: {name: "donation"}}
     })
 

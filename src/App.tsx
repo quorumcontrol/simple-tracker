@@ -13,7 +13,7 @@ import { DonatePage } from './pages/donate'
 import { ObjectPage, LocationWidget } from './pages/object';
 import './store'; // for side effects only
 import { ApolloProvider, useQuery } from '@apollo/client';
-import {client} from './store/index';
+import { client } from './store/index';
 import { CURRENT_USER } from './store/queries';
 import { SummaryPage } from './pages/summary';
 

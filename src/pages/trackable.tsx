@@ -15,7 +15,7 @@ type AddTrackableFormData = {
     image: FileList
 }
 
-export const CREATE_TRACKABLE = gql`
+const CREATE_TRACKABLE = gql`
     mutation CreateTrackable($input: CreateTrackableInput!) {
         createTrackable(input: $input) {
             collection {

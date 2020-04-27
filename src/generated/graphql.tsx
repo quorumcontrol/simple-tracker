@@ -143,6 +143,7 @@ export type Mutation = {
   login?: Maybe<User>;
   register?: Maybe<User>;
   logout?: Maybe<User>;
+  createUnownedTrackable?: Maybe<CreateTrackablePayload>;
   createTrackable?: Maybe<CreateTrackablePayload>;
   addUpdate?: Maybe<AddUpdatePayload>;
   addCollaborator?: Maybe<AddCollaboratorPayload>;
@@ -166,6 +167,11 @@ export type MutationRegisterArgs = {
 
 export type MutationLogoutArgs = {
   did?: Maybe<Scalars['String']>;
+};
+
+
+export type MutationCreateUnownedTrackableArgs = {
+  input: CreateTrackableInput;
 };
 
 
@@ -412,6 +418,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   login?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationLoginArgs, 'namespace' | 'username' | 'password'>>,
   register?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationRegisterArgs, 'namespace' | 'username' | 'password'>>,
   logout?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationLogoutArgs, never>>,
+  createUnownedTrackable?: Resolver<Maybe<ResolversTypes['CreateTrackablePayload']>, ParentType, ContextType, RequireFields<MutationCreateUnownedTrackableArgs, 'input'>>,
   createTrackable?: Resolver<Maybe<ResolversTypes['CreateTrackablePayload']>, ParentType, ContextType, RequireFields<MutationCreateTrackableArgs, 'input'>>,
   addUpdate?: Resolver<Maybe<ResolversTypes['AddUpdatePayload']>, ParentType, ContextType, RequireFields<MutationAddUpdateArgs, 'input'>>,
   addCollaborator?: Resolver<Maybe<ResolversTypes['AddCollaboratorPayload']>, ParentType, ContextType, RequireFields<MutationAddCollaboratorArgs, 'input'>>,
