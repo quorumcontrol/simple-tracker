@@ -18,7 +18,7 @@ const LOGIN_USER = gql`
 type LoginFormData = {
     username: string;
     password: string;
-  };
+};
 
 export function LoginPage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<LoginFormData>();
@@ -67,6 +67,7 @@ export function LoginPage() {
                     <FormControl isInvalid={!!errors.username}>
                         <FormLabel htmlFor="username">Email</FormLabel>
                         <Input
+                            id="username"
                             name="username"
                             placeholder="Email"
                             ref={register({
@@ -84,6 +85,7 @@ export function LoginPage() {
                     <FormControl isInvalid={!!errors.password} mt={5}>
                         <FormLabel htmlFor="password">Password</FormLabel>
                         <Input
+                            id="password"
                             name="password"
                             placeholder="Password"
                             type="password"

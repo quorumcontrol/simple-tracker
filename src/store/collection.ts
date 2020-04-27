@@ -19,7 +19,6 @@ export class AppCollection {
     private namespace: Buffer
     treePromise: Promise<ChainTree>
 
-
     constructor({ name, namespace }: { name: string, namespace: string }) {
         this.name = Buffer.from(name)
         this.namespace = Buffer.from(namespace)
@@ -87,6 +86,7 @@ export class AppCollection {
     }
 
     async addTrackable(trackable: Trackable) {
+        log(`addTrackable ${trackable.did}`)
         // TODO: this needs to retry but for now we'll assume low throughput
         //  and just grab the latest
         let tree = await this.updateTree()

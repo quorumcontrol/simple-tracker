@@ -115,6 +115,7 @@ type Mutation {
     login(namespace: String!, username: String!, password: String!): User
     register(namespace: String!, username: String!, password: String!): User
     logout(did:String): User
+    createUnownedTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     createTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload

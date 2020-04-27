@@ -61,6 +61,7 @@ export function RegisterPage() {
                     <FormControl isInvalid={!!errors.username}>
                         <FormLabel htmlFor="username">Email</FormLabel>
                         <Input
+                            id="username"
                             name="username"
                             placeholder="Email"
                             ref={register({
@@ -78,6 +79,7 @@ export function RegisterPage() {
                     <FormControl isInvalid={!!errors.password} mt={5}>
                         <FormLabel htmlFor="password">Password</FormLabel>
                         <Input
+                            id="password"
                             name="password"
                             placeholder="Password"
                             type="password"
@@ -90,6 +92,7 @@ export function RegisterPage() {
                     <FormControl isInvalid={!!errors.passwordConfirmation} mt={5}>
                         <FormLabel htmlFor="passwordConfirmation">Re-Type your password</FormLabel>
                         <Input
+                            id="passwordConfirmation"
                             name="passwordConfirmation"
                             placeholder="Password Confirmation"
                             type="password"
@@ -110,7 +113,7 @@ export function RegisterPage() {
                 </form>
                 <Box mt={4}>
                     <RouterLink to="/Login">
-                        <Link as="text">Or Login</Link>
+                        Or Login
                     </RouterLink>
                 </Box>
             </Box>

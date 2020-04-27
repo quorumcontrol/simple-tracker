@@ -9,6 +9,7 @@ import {
     MutationRegisterArgs,
     TrackableCollection,
     Trackable,
+    MutationCreateUnownedTrackableArgs,
     MutationCreateTrackableArgs,
     CreateTrackablePayload,
     QueryGetTrackableArgs,
@@ -210,6 +211,30 @@ const resolvers: Resolvers = {
         }
     },
     Mutation: {
+        createUnownedTrackable: async (_root, { input }: MutationCreateUnownedTrackableArgs, { communityPromise, cache }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
+            log('createUnownedTrackable')
+            const key = await EcdsaKey.generate()
+            const c = await communityPromise
+            
+            log('creating trackable tree')
+            const tree = await ChainTree.newEmptyTree(c.blockservice, key)
+
+            await c.playTransactions(tree, [
+                setDataTransaction("/", input)
+            ])
+
+            log('adding trackable to app collection')
+            const trackable = {
+                did: (await tree.id())!,
+                name: input.name,
+                updates: {},
+            }
+            await appCollection.addTrackable(trackable)
+
+            return {
+                trackable: trackable,
+            }
+        },
         createTrackable: async (_root, { input }: MutationCreateTrackableArgs, { communityPromise, cache }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
             log('createTrackable')
             if (!appUser.userPromise) {
@@ -396,7 +421,6 @@ const resolvers: Resolvers = {
 
             const user = (await appUser.userPromise)
             await user?.load()
-
 
             await appUser.logout()
 
