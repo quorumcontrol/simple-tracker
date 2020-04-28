@@ -41,7 +41,7 @@ export class Drivers {
         const did = await this.did()
         return [
             did,
-            `${did}:/tree/data/${this.driversPath}`,
+            `${did}/tree/data/${this.driversPath}`,
         ]
     }
 
