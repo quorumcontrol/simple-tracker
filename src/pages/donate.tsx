@@ -49,38 +49,6 @@ export function DonatePage() {
 
   const { handleSubmit, errors, setError, register, formState } = useForm<DonationData>();
 
-  // const [pickupAddr, setPickupAddr] = useState({} as Address)
-
-  // useEffect(() => {
-  //   if (!donation) {
-  //     log("donation is nil")
-  //     return
-  //   }
-
-  //   log("createDonation result:", donation)
-
-  //   let metadata:MetadataEntry[] = []
-
-  //   metadata.push({key: "location", value: pickupAddr})
-
-  //   // TODO: Add the image once that's working
-  //   //metadata.push(key: "image", value: skylink)
-
-  //   log("adding metadata:", metadata)
-
-  //   // updateDonation({
-  //   //   variables: {
-  //   //     input: {
-  //   //       trackable: donation.trackable!.did, 
-  //   //       message: "ready for pickup",
-  //   //       metadata: metadata,
-  //   //     }}
-  //   // })
-
-  //   // TODO: Do this once the donation is updated
-  //   // setSubmitLoading(false)
-  // }, [pickupAddr, donation])
-
   async function onSubmit({pickupAddr,instructions}:DonationData) {
     setSubmitLoading(true)
     log("submitted:", pickupAddr, instructions);
@@ -91,8 +59,6 @@ export function DonatePage() {
 
     const payload:CreateTrackablePayload = result.data.createUnownedTrackable
     const donation:Trackable = payload.trackable!
-
-    // setPickupAddr(pickupAddr)
 
     log("createDonation result:", donation)
 
