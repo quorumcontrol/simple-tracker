@@ -8,7 +8,9 @@ type User {
     username: String
     namespace: String
     loggedIn: Boolean
-    collection: TrackableCollection
+    collection: TrackableCollection @deprecated(reason: "only drivers are users now and this field used to represent a collection a user owns")
+    pendingDeliveries: TrackableCollection
+    completedDeliveries: TrackableCollection
 }
 
 type Trackable {
@@ -17,6 +19,7 @@ type Trackable {
     image: String #skynet URL for now
     updates: TrackableUpdateConnection!
     collaborators: TrackableCollaboratorConnection
+    driver: User # this is only available on trackables that are part of a collection
 }
 
 type TrackableCollaboratorConnection {
@@ -42,6 +45,13 @@ type MetadataEntry {
 }
 
 type TrackableCollection {
+    did: ID!
+    trackables: [Trackable!]
+}
+
+# AppCollection is kept as a separate type from TrackableCollection
+# because of how they are updated
+type AppCollection {
     did: ID!
     trackables: [Trackable!]
 }
@@ -81,8 +91,23 @@ input AddCollaboratorInput {
     username: String!
 }
 
+input AcceptJobInput {
+    user: ID!
+    trackable: ID!
+}
+
+type AcceptJobPayload {
+    trackable: Trackable
+}
+
+input GetTrackablesFilter {
+    owned: Boolean
+    ownedBy: String
+}
+
 type Query {
     getTrackable(did: ID!):Trackable
+    getTrackables:AppCollection
     me: User
 }
 
@@ -90,9 +115,11 @@ type Mutation {
     login(namespace: String!, username: String!, password: String!): User
     register(namespace: String!, username: String!, password: String!): User
     logout(did:String): User
+    createUnownedTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     createTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload
+    acceptJob(input: AcceptJobInput!):AcceptJobPayload
 }
 `
 

@@ -9,11 +9,13 @@ import {
 import { Index } from './pages';
 import { LoginPage } from './pages/login'
 import { RegisterPage } from './pages/register'
+import { DonatePage } from './pages/donate'
 import { ObjectPage, LocationWidget } from './pages/object';
 import './store'; // for side effects only
 import { ApolloProvider, useQuery } from '@apollo/client';
 import { client } from './store/index';
 import { CURRENT_USER } from './store/queries';
+import { SummaryPage } from './pages/summary';
 
 // A wrapper for <Route> that redirects to the login
 // screen if you're not yet authenticated.
@@ -79,9 +81,15 @@ function App() {
             <AuthenticatedRoute path="/objects/:objectId">
               <ObjectPage />
             </AuthenticatedRoute>
-            <AuthenticatedRoute path="/">
-              <Index />
+            <AuthenticatedRoute path="/summary">
+              <SummaryPage />
             </AuthenticatedRoute>
+            <Route path="/donate">
+              <DonatePage />
+            </Route>
+            <Route path="/">
+              <Index />
+            </Route>
           </Switch>
         </Router>
       </ApolloProvider>

@@ -130,7 +130,7 @@ export function CollaboratorUI({did}:{did: Scalars['ID']}) {
             },
             update: (proxy, {data: {addCollaborator}})=> {
                 const data:any = proxy.readQuery({query: GET_COLLABORATORS, variables: {did: did}})
-                console.log("update called: ", addCollaborator, " readQuery: ", data)
+                log("update called: ", addCollaborator, " readQuery: ", data)
                 // data.me.collection.trackables.push(createTrackable.trackable)
                 // TODO: this should be a deep merge
                 proxy.writeQuery({
@@ -174,6 +174,7 @@ export function CollaboratorUI({did}:{did: Scalars['ID']}) {
                         <FormControl>
                             <FormLabel htmlFor="name">Name</FormLabel>
                             <Input
+                                id="name"
                                 name="name"
                                 placeholder="Name"
                                 ref={register({ required: "Name is required" })}
@@ -223,7 +224,7 @@ function ObjectUpdate({ update }: { update: TrackableUpdate }) {
             metadata[key] = value
         })
     }
-    console.log("metadata: ", metadata)
+    log("metadata: ", metadata)
 
     if (metadata.image) {
         img = <Image src={getUrl(metadata.image)} />
@@ -305,7 +306,7 @@ export function ObjectPage() {
             },
             update: (proxy, {data: {addUpdate}})=> {
                 const data:any = proxy.readQuery({query: GET_TRACKABLE, variables: {did: objectId}})
-                console.log("update called: ", addUpdate, " readQuery: ", data)
+                log("update called: ", addUpdate, " readQuery: ", data)
                 // data.me.collection.trackables.push(createTrackable.trackable)
                 // TODO: this should be a deep merge
                 proxy.writeQuery({
@@ -378,6 +379,7 @@ export function ObjectPage() {
                                 <FormControl>
                                     <FormLabel htmlFor="message">Message</FormLabel>
                                     <Input
+                                        id="message"
                                         name="message"
                                         placeholder="Message"
                                         ref={register()}

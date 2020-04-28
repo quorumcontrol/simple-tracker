@@ -9,6 +9,7 @@ import {
     MutationRegisterArgs,
     TrackableCollection,
     Trackable,
+    MutationCreateUnownedTrackableArgs,
     MutationCreateTrackableArgs,
     CreateTrackablePayload,
     QueryGetTrackableArgs,
@@ -19,6 +20,9 @@ import {
     TrackableCollaboratorConnection,
     MutationAddCollaboratorArgs,
     AddCollaboratorPayload,
+    AppCollection as GraphQLAppCollection,
+    AcceptJobPayload,
+    MutationAcceptJobArgs,
 } from '../generated/graphql'
 import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
 import { AppUser } from './user';
@@ -145,7 +149,7 @@ const resolvers: Resolvers = {
                 // updates is a map of timestamp to TrackableUpdate
                 let edges = await Promise.all(Object.keys(updates.value).map(async (timestamp)=> {
                     let update = (await tree.resolveData(`updates/${timestamp}`)).value
-                    console.log("resolved update: ", update)
+                    log("resolved update: ", update)
                     update.did = `${did}-${timestamp}`
                     return update
                 }))
@@ -175,6 +179,13 @@ const resolvers: Resolvers = {
     },
 
     Query: {
+        getTrackables: async(_root, _ctx:TrackerContext) => {
+            const trackables = await appCollection.getTrackables()
+            return {
+                did: await (await appCollection.treePromise).id()!,
+                trackables: trackables,
+            } as GraphQLAppCollection
+        },
         getTrackable: async (_root, {did}:QueryGetTrackableArgs ,_ctx:TrackerContext) => {
             log("get trackable: ", did)
             const tree = await Tupelo.getLatest(did)
@@ -200,6 +211,30 @@ const resolvers: Resolvers = {
         }
     },
     Mutation: {
+        createUnownedTrackable: async (_root, { input }: MutationCreateUnownedTrackableArgs, { communityPromise, cache }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
+            log('createUnownedTrackable')
+            const key = await EcdsaKey.generate()
+            const c = await communityPromise
+            
+            log('creating trackable tree')
+            const tree = await ChainTree.newEmptyTree(c.blockservice, key)
+
+            await c.playTransactions(tree, [
+                setDataTransaction("/", input)
+            ])
+
+            log('adding trackable to app collection')
+            const trackable = {
+                did: (await tree.id())!,
+                name: input.name,
+                updates: {},
+            }
+            await appCollection.addTrackable(trackable)
+
+            return {
+                trackable: trackable,
+            }
+        },
         createTrackable: async (_root, { input }: MutationCreateTrackableArgs, { communityPromise, cache }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
             log('createTrackable')
             if (!appUser.userPromise) {
@@ -387,13 +422,47 @@ const resolvers: Resolvers = {
             const user = (await appUser.userPromise)
             await user?.load()
 
-
             await appUser.logout()
 
             return {
                 did: user?.did!,
                 loggedIn: false,
             }
+        },
+        acceptJob: async (_root, {input: {user,trackable}}:MutationAcceptJobArgs, {cache,communityPromise}: TrackerContext): Promise<AcceptJobPayload|undefined> => {
+            if (!appUser.userPromise) {
+                return undefined
+            }
+            let loggedinUser = await appUser.userPromise
+            if (!loggedinUser || (loggedinUser.did !== user)) {
+                return undefined
+            }
+            await loggedinUser.load()
+    
+            // first we update the trackable
+            // TODO: DRY This up from the addUpdate resolver
+
+            // TODO: this needs to work on ChainTrees that are not owned by
+            // the user doing the owning - so the below won't quite work yet.
+
+            // let timestamp = (new Date()).toISOString()
+
+            // const trackableTree = await Tupelo.getLatest(trackable)
+            // trackableTree.key = loggedinUser.tree.key
+
+            // let update:TrackableUpdate = {
+            //     did: `${(await trackableTree.id())}-${timestamp}`,
+            //     timestamp: timestamp,
+            //     message: "Accepted the delivery",
+            //     userDid: loggedinUser.did!,
+            //     userName: loggedinUser.userName,
+            // }
+            // log("update: ", update)
+            // let c = await communityPromise
+            // await c.playTransactions(trackableTree, [setDataTransaction(`updates/${timestamp}`, update)])
+            
+            // then mark it owned on the appCollection
+            await appCollection.ownTrackable({did: trackable, updates: {}}, {did: user})
         }
     }
 }

@@ -1,12 +1,21 @@
 import React from "react";
 import { Box, Heading, Flex, Button } from "@chakra-ui/core";
 import { Link } from "react-router-dom";
-import { useMutation } from "@apollo/client";
-import { LOGOUT_USER } from "../store/queries";
+import { useMutation, useQuery } from "@apollo/client";
+import { LOGOUT_USER, CURRENT_USER } from "../store/queries";
 
 const Header = () => {
   const [show, setShow] = React.useState(false);
   const handleToggle = () => setShow(!show);
+
+  const userQuery = useQuery(CURRENT_USER)
+  const userLoading = userQuery.loading
+  const userError = userQuery.error
+
+  let user:any
+  if (!userLoading && !userError) {
+    user = userQuery.data.me
+  }
 
   const [logout,] = useMutation(LOGOUT_USER)
 
@@ -27,7 +36,7 @@ const Header = () => {
       <Flex align="center" mr={5}>
         <Heading as="h1" size="lg">
           <Link to="/">
-            Simple Track
+            GivingChain
           </Link>
         </Heading>
       </Flex>
@@ -52,6 +61,7 @@ const Header = () => {
       >
       </Box>
 
+      { !userLoading && !userError && user && user.loggedIn &&
       <Box
         display={{ sm: show ? "block" : "none", md: "block" }}
         mt={{ base: 4, md: 0 }}
@@ -60,6 +70,7 @@ const Header = () => {
           Logout
         </Button>
       </Box>
+      }
     </Flex>
   );
 };

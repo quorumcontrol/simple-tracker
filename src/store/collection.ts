@@ -1,5 +1,5 @@
 import { ChainTree, Tupelo, EcdsaKey, setDataTransaction, Community } from "tupelo-wasm-sdk"
-import { Trackable } from "../generated/graphql"
+import { Trackable, User } from "../generated/graphql"
 import { getAppCommunity } from "./community"
 import debug from 'debug'
 
@@ -18,7 +18,6 @@ export class AppCollection {
     private name: Buffer
     private namespace: Buffer
     treePromise: Promise<ChainTree>
-
 
     constructor({ name, namespace }: { name: string, namespace: string }) {
         this.name = Buffer.from(name)
@@ -68,18 +67,41 @@ export class AppCollection {
         return this.treePromise
     }
 
-    async getTrackables() {
+    async getTrackables():Promise<Trackable[]> {
         const tree = await this.treePromise
         const dids = await tree.resolveData("trackables")
-        return Object.keys(dids.value)
+        return Object.keys(dids.value).map((did:string)=> {
+            const trackable:Trackable = {
+                did: did,
+                updates: {},
+            }
+            const driver = dids.value[did]
+            if (driver) {
+                trackable.driver = {
+                    did: driver,
+                }
+            }
+            return trackable
+        })
     }
 
     async addTrackable(trackable: Trackable) {
+        log(`addTrackable ${trackable.did}`)
         // TODO: this needs to retry but for now we'll assume low throughput
         //  and just grab the latest
         let tree = await this.updateTree()
         
         const c = await getAppCommunity()
-        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, true)])
+        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, false)]) // false means "unowned"
+    }
+
+    async ownTrackable(trackable: Trackable, user: User) {
+        // TODO: as in addTrackable, this needs to retry but for now we'll assume low throughput
+        //  and just grab the latest
+        let tree = await this.updateTree()
+        
+        const c = await getAppCommunity()
+        // set the trackable DID to the DID of the driver picking it up
+        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, user.did)])
     }
 }
