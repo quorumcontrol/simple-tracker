@@ -1,10 +1,21 @@
-import { Box, Flex, Button, FormControl, Text, Input, FormErrorMessage, Stack, Textarea } from "@chakra-ui/core";
+import { 
+  Box, 
+  Flex, 
+  Button, 
+  FormControl, 
+  Text, 
+  Input, 
+  FormErrorMessage, 
+  Stack, 
+  Textarea,
+ } from "@chakra-ui/core";
 import React, { useState, useEffect } from 'react';
 import Header from "../components/header";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
 import { Trackable, MetadataEntry, CreateTrackablePayload } from '../generated/graphql'
+import { useHistory } from "react-router-dom"
 
 const log = debug("pages.donate")
 
@@ -47,7 +58,9 @@ export function DonatePage() {
   const [createDonation, { error: createError }] = useMutation(CREATE_DONATION_MUTATION)
   const [updateDonation, { error: updateError }] = useMutation(UPDATE_DONATION_MUTATION)
 
-  const { handleSubmit, errors, setError, register, formState } = useForm<DonationData>();
+  const { handleSubmit, errors, register } = useForm<DonationData>();
+
+  const history = useHistory()
 
   async function onSubmit({pickupAddr,instructions}:DonationData) {
     setSubmitLoading(true)
@@ -84,7 +97,7 @@ export function DonatePage() {
         }}
     })
 
-    setSubmitLoading(false)
+    history.push(`/donation/${donation.did}/thanks`)
   }
 
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -95,8 +108,8 @@ export function DonatePage() {
       <Flex mt={5} p={10} flexDirection="column" align="center">
         <Button>Take a Picture</Button>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Stack spacing={3}>
-            <Text mt={10}>Address for Pickup</Text>
+          <Stack mt={10} spacing={3}>
+            <Text>Address for Pickup</Text>
             <FormControl isInvalid={!!errors.pickupAddr?.street}>
               <Input
                 name="pickupAddr.street"
@@ -130,6 +143,7 @@ export function DonatePage() {
             <Button type="submit" isLoading={submitLoading}>Done</Button>
             <FormErrorMessage>
               {createError && (createError.message)}
+              {updateError && (updateError.message)}
             </FormErrorMessage>
           </Stack>
         </form>
