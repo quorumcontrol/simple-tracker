@@ -21,6 +21,11 @@ enum TrackableStatus {
     Delivered
 }
 
+type EcdsaKey {
+    publicKey: JSON
+    privateKey: JSON
+}
+
 type Trackable {
     did: ID!
     name: String
@@ -29,6 +34,7 @@ type Trackable {
     collaborators: TrackableCollaboratorConnection
     status: TrackableStatus
     driver: User # this is only available on trackables that are part of a collection
+    ownerKey: EcdsaKey
 }
 
 type TrackableCollaboratorConnection {
@@ -44,8 +50,8 @@ type TrackableUpdate {
     timestamp: String! # ISO standard string
     message: String
     metadata: [MetadataEntry!]
-    userDid: String!
-    userName: String!
+    userDid: String
+    userName: String
 }
 
 type MetadataEntry {
@@ -75,8 +81,14 @@ input MetadataEntryInput {
     value: JSON
 }
 
+input EcdsaKeyInput {
+    privateKey: JSON
+    publicKey: JSON
+}
+
 input AddUpdateInput {
     trackable: ID!
+    ownerKey: EcdsaKeyInput
     message: String!
     metadata: [MetadataEntryInput!]
 }

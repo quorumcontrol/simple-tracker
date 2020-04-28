@@ -247,6 +247,11 @@ const resolvers: Resolvers = {
             log('adding trackable to app collection')
             await appCollection.addTrackable(trackable)
 
+            trackable.ownerKey = {
+                privateKey: key.privateKey,
+                publicKey: key.publicKey,
+            }
+
             return {
                 trackable: trackable,
             }
@@ -310,28 +315,42 @@ const resolvers: Resolvers = {
             }
 
         },
-        addUpdate: async (_root, { input: {trackable,message,metadata} }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
-            if (!appUser.userPromise) {
-                return undefined
+        addUpdate: async (_root, { input: {trackable,ownerKey,message,metadata} }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
+            let user
+            if (appUser.userPromise) {
+                log("loading current user")
+                const userResp = await appUser.userPromise
+                if (userResp !== undefined) {
+                    user = userResp!
+                    await user.load()
+                }
             }
-            let user = await appUser.userPromise
-            if (!user) {
-                return undefined
-            }
-            await user.load()
 
             let timestamp = (new Date()).toISOString()
 
             const trackableTree = await Tupelo.getLatest(trackable)
-            trackableTree.key = user.tree.key
+            let trackableTreeKey:EcdsaKey
+            if (ownerKey !== undefined) {
+                log("using supplied ownerKey for trackable update")
+                const privateKey = ownerKey?.privateKey!
+                const publicKey = ownerKey?.publicKey!
+                trackableTreeKey = new EcdsaKey(publicKey, privateKey)
+            } else if (user !== undefined) {
+                log("using user key for trackable update")
+                trackableTreeKey = user.tree.key!
+            } else {
+                log("error: need either logged-in user or ownerKey")
+                return undefined
+            }
+            trackableTree.key = trackableTreeKey
 
             let update:TrackableUpdate = {
                 did: `${(await trackableTree.id())}-${timestamp}`,
                 timestamp: timestamp,
                 message: message,
                 metadata: metadata,
-                userDid: user.did!,
-                userName: user.userName,
+                userDid: user?.did,
+                userName: user?.userName,
             }
             log("update: ", update)
             let c = await communityPromise

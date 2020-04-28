@@ -8,7 +8,8 @@ import { Trackable, MetadataEntry, CreateTrackablePayload } from '../generated/g
 
 const log = debug("pages.donate")
 
-type Address = {
+// TODO: There's probably a better place to define this
+export type Address = {
   street:       string;
   cityStateZip: string;
 }
@@ -21,7 +22,13 @@ type DonationData = {
 const CREATE_DONATION_MUTATION = gql`
   mutation DonatePageCreate($input: CreateTrackableInput!) {
     createTrackable(input: $input) {
-      code
+      trackable {
+        did
+        ownerKey {
+          publicKey
+          privateKey
+        }
+      }
     }
   }
 `
@@ -37,18 +44,55 @@ const UPDATE_DONATION_MUTATION = gql`
 `
 
 export function DonatePage() {
-  const [createDonation, { error: createError, data: donation }] = useMutation(CREATE_DONATION_MUTATION)
+  const [createDonation, { error: createError }] = useMutation(CREATE_DONATION_MUTATION)
   const [updateDonation, { error: updateError }] = useMutation(UPDATE_DONATION_MUTATION)
 
   const { handleSubmit, errors, setError, register, formState } = useForm<DonationData>();
 
-  const [pickupAddr, setPickupAddr] = useState({} as Address)
+  // const [pickupAddr, setPickupAddr] = useState({} as Address)
 
-  useEffect(() => {
-    if (!donation) {
-      log("donation is nil")
-      return
-    }
+  // useEffect(() => {
+  //   if (!donation) {
+  //     log("donation is nil")
+  //     return
+  //   }
+
+  //   log("createDonation result:", donation)
+
+  //   let metadata:MetadataEntry[] = []
+
+  //   metadata.push({key: "location", value: pickupAddr})
+
+  //   // TODO: Add the image once that's working
+  //   //metadata.push(key: "image", value: skylink)
+
+  //   log("adding metadata:", metadata)
+
+  //   // updateDonation({
+  //   //   variables: {
+  //   //     input: {
+  //   //       trackable: donation.trackable!.did, 
+  //   //       message: "ready for pickup",
+  //   //       metadata: metadata,
+  //   //     }}
+  //   // })
+
+  //   // TODO: Do this once the donation is updated
+  //   // setSubmitLoading(false)
+  // }, [pickupAddr, donation])
+
+  async function onSubmit({pickupAddr,instructions}:DonationData) {
+    setSubmitLoading(true)
+    log("submitted:", pickupAddr, instructions);
+
+    const result = await createDonation({
+      variables: {input: {name: "donation"}}
+    })
+
+    const payload:CreateTrackablePayload = result.data.createUnownedTrackable
+    const donation:Trackable = payload.trackable!
+
+    // setPickupAddr(pickupAddr)
 
     log("createDonation result:", donation)
 
@@ -61,28 +105,20 @@ export function DonatePage() {
 
     log("adding metadata:", metadata)
 
-    // updateDonation({
-    //   variables: {
-    //     input: {
-    //       trackable: donation.trackable!.did, 
-    //       message: "ready for pickup",
-    //       metadata: metadata,
-    //     }}
-    // })
-
-    // TODO: Do this once the donation is updated
-    // setSubmitLoading(false)
-  }, [pickupAddr, donation])
-
-  async function onSubmit({pickupAddr,instructions}:DonationData) {
-    setSubmitLoading(true)
-    log("submitted:", pickupAddr, instructions);
-
-    await createDonation({
-      variables: {input: {name: "donation"}}
+    await updateDonation({
+      variables: {
+        input: {
+          trackable: donation.did,
+          ownerKey: {
+            privateKey: donation.ownerKey?.privateKey,
+            publicKey: donation.ownerKey?.publicKey,
+          },
+          message: "ready for pickup",
+          metadata: metadata,
+        }}
     })
 
-    setPickupAddr(pickupAddr)
+    setSubmitLoading(false)
   }
 
   const [submitLoading, setSubmitLoading] = useState(false)
