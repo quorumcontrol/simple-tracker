@@ -1,6 +1,6 @@
 import debug from 'debug';
 import React from 'react';
-import { Box, Flex, Text, Stack, Button } from '@chakra-ui/core';
+import { Box, Flex, Text, Stack, Button, Link } from '@chakra-ui/core';
 import Header from '../components/header';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -27,6 +27,10 @@ export function Index() {
             leaving it and our volunteers will be there to pick it up and get
             it where it is needed.
           </Text>
+
+          <Link href="https://www.netlify.com/" mt={10} isExternal>
+            This site is powered by Netlify
+          </Link>
         </Stack>
       </Flex>
     </Box> 
