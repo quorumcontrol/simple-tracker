@@ -47,7 +47,7 @@ export function RegisterPage() {
         return (
             <Redirect
                 to={{
-                    pathname: "/",
+                    pathname: "/summary",
                 }}
             />
         )
