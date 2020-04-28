@@ -8,19 +8,22 @@ const log = debug("Drivers")
 export class Drivers {
     private namespace: Buffer
     private region: Buffer
+    private driversPath: string
+    private _key?: EcdsaKey
     treePromise: Promise<ChainTree>
 
     constructor({ region, namespace }: { region: string, namespace: string }) {
         this.region = Buffer.from(region)
         this.namespace = Buffer.from(namespace)
         this.treePromise = this.findOrCreateTree()
+        this.driversPath = "drivers"
     }
 
     private async findOrCreateTree(): Promise<ChainTree> {
         const c = await getAppCommunity()
 
-        const key = await EcdsaKey.passPhraseKey(this.region, this.namespace)
-        const did = await key.toDid()
+        const key = await this.key()
+        const did = await this.did()
         try {
             const tree = await Tupelo.getLatest(did)
             tree.key = key
@@ -32,6 +35,25 @@ export class Drivers {
             }
             throw err
         }
+    }
+
+    async graftableOwnership() {
+        const did = await this.did()
+        return [
+            did,
+            `${did}:/tree/data/${this.driversPath}`,
+        ]
+    }
+
+    async did() {
+        return (await this.key()).toDid()
+    }
+
+    async key() {
+        if(!this._key) {
+            this._key = await EcdsaKey.passPhraseKey(this.region, this.namespace)
+        }
+        return this._key
     }
 
     updateTree() {
@@ -61,11 +83,11 @@ export class Drivers {
     async addDriver(driver: User) {
         let tree = await this.updateTree()
         const c = await getAppCommunity()
-        let dids = (await tree.resolveData("drivers")).value
+        let dids = (await tree.resolveData(this.driversPath)).value
         if (!dids) {
             dids = []
         }
         dids.push(driver.did)
-        return c.playTransactions(tree, [setDataTransaction('drivers', dids)])
+        return c.playTransactions(tree, [setDataTransaction(this.driversPath, dids)])
     }
 }

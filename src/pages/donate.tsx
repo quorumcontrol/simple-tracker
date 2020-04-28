@@ -19,7 +19,7 @@ type DonationData = {
 
 const CREATE_DONATION_MUTATION = gql`
   mutation DonatePageCreate($input: CreateTrackableInput!) {
-    createUnownedTrackable(input: $input) {
+    createTrackable(input: $input) {
       code
     }
   }
