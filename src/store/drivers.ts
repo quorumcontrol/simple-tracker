@@ -9,12 +9,13 @@ export class Drivers {
     private namespace: Buffer
     private region: Buffer
     private driversPath: string
-    private _key?: EcdsaKey
+    private _key: Promise<EcdsaKey>
     treePromise: Promise<ChainTree>
 
     constructor({ region, namespace }: { region: string, namespace: string }) {
         this.region = Buffer.from(region)
         this.namespace = Buffer.from(namespace)
+        this._key = EcdsaKey.passPhraseKey(this.region, this.namespace)
         this.treePromise = this.findOrCreateTree()
         this.driversPath = "drivers"
     }
@@ -49,10 +50,7 @@ export class Drivers {
         return (await this.key()).toDid()
     }
 
-    async key() {
-        if(!this._key) {
-            this._key = await EcdsaKey.passPhraseKey(this.region, this.namespace)
-        }
+    key() {
         return this._key
     }
 
