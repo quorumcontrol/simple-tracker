@@ -13,12 +13,21 @@ type User {
     completedDeliveries: TrackableCollection
 }
 
+enum TrackableStatus {
+    Created
+    Published
+    Accepted
+    PickedUp
+    Delivered
+}
+
 type Trackable {
     did: ID!
     name: String
     image: String #skynet URL for now
     updates: TrackableUpdateConnection!
     collaborators: TrackableCollaboratorConnection
+    status: TrackableStatus
     driver: User # this is only available on trackables that are part of a collection
 }
 
