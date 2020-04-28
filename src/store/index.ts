@@ -33,6 +33,7 @@ import { appUser } from './user';
 import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
 import debug from 'debug';
+import { Drivers } from './drivers';
 const GraphQLJSON = require('graphql-type-json');
 
 export const userNamespace = 'givingchain'
@@ -52,6 +53,8 @@ function namespaceToPath(namespace: string) {
 }
 
 const appCollection = new AppCollection({name: `${userNamespace}/trackables`, namespace: userNamespace})
+
+const drivers = new Drivers({region: 'princeton, nj',  namespace: `${userNamespace}/drivers`})
 
 /**
  * Looks up the user account chaintree for the given username, returning it if
@@ -404,7 +407,8 @@ const resolvers: Resolvers = {
             log('setting data')
             await Promise.all([
                 c.playTransactions(user.tree, [setDataTransaction(pathToTree, await (await tree).id())]),
-                c.playTransactions(tree, [setOwnershipTransaction([await user.tree.key!.address()])])
+                c.playTransactions(tree, [setOwnershipTransaction([await user.tree.key!.address()])]),
+                drivers.addDriver(user),
             ])
 
             log("post register resolve: ", await user.tree.resolveData(`/apps/${namespace}`))
