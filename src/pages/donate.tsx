@@ -1,9 +1,10 @@
 import { Box, Flex, Button, FormControl, Text, Input, FormErrorMessage, Stack, Textarea } from "@chakra-ui/core";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from "../components/header";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
+import { Trackable, MetadataEntry, CreateTrackablePayload } from '../generated/graphql'
 
 const log = debug("pages.donate")
 
@@ -25,24 +26,63 @@ const CREATE_DONATION_MUTATION = gql`
   }
 `
 
+const UPDATE_DONATION_MUTATION = gql`
+  mutation UpdateDonation($input: AddUpdateInput!) {
+    addUpdate(input: $input) {
+      did
+      message
+      metadata
+    }
+  }
+`
+
 export function DonatePage() {
-  const [createDonation, { error: createError }] = useMutation(CREATE_DONATION_MUTATION)
+  const [createDonation, { error: createError, data: donation }] = useMutation(CREATE_DONATION_MUTATION)
+  const [updateDonation, { error: updateError }] = useMutation(UPDATE_DONATION_MUTATION)
+
   const { handleSubmit, errors, setError, register, formState } = useForm<DonationData>();
+
+  const [pickupAddr, setPickupAddr] = useState({} as Address)
+
+  useEffect(() => {
+    if (!donation) {
+      log("donation is nil")
+      return
+    }
+
+    log("createDonation result:", donation)
+
+    let metadata:MetadataEntry[] = []
+
+    metadata.push({key: "location", value: pickupAddr})
+
+    // TODO: Add the image once that's working
+    //metadata.push(key: "image", value: skylink)
+
+    log("adding metadata:", metadata)
+
+    // updateDonation({
+    //   variables: {
+    //     input: {
+    //       trackable: donation.trackable!.did, 
+    //       message: "ready for pickup",
+    //       metadata: metadata,
+    //     }}
+    // })
+
+    // TODO: Do this once the donation is updated
+    // setSubmitLoading(false)
+  }, [pickupAddr, donation])
 
   async function onSubmit({pickupAddr,instructions}:DonationData) {
     setSubmitLoading(true)
     log("submitted:", pickupAddr, instructions);
 
-    // first create the trackable
-    // TODO: Add the image once that's working
     await createDonation({
       variables: {input: {name: "donation"}}
     })
 
-    // TODO: add the location in an update
-    // How do we get the new trackable?
-
-    setSubmitLoading(false)
+    setPickupAddr(pickupAddr)
   }
 
   const [submitLoading, setSubmitLoading] = useState(false)
