@@ -50,6 +50,19 @@ export function SummaryPage() {
 
     log("summary page data: ", data)
 
+    if (data.getTrackables?.trackables?.length == 0) {
+        return (<Box>
+            <Header />
+            <Flex mt={5} p={10} flexDirection="column">
+                <Box>
+                    <Box>
+                        <Heading>No donations available for pickup.</Heading>
+                    </Box>
+                </Box>
+            </Flex>
+        </Box>)
+    }
+
     const unowned = data.getTrackables.trackables.filter((trackable: Trackable) => {
         return !trackable.driver
     })
