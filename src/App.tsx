@@ -7,9 +7,11 @@ import {
   Redirect,
 } from "react-router-dom";
 import { Index } from './pages';
-import { LoginPage } from './pages/login'
-import { RegisterPage } from './pages/register'
-import { DonatePage } from './pages/donate'
+import { LoginPage } from './pages/login';
+import { RegisterPage } from './pages/register';
+import { DonatePage } from './pages/donate';
+import { DonationThanksPage } from './pages/donationThanks';
+import { DonationStatusPage } from './pages/donationStatus';
 import { ObjectPage, LocationWidget } from './pages/object';
 import './store'; // for side effects only
 import { ApolloProvider, useQuery } from '@apollo/client';
@@ -86,6 +88,12 @@ function App() {
             </AuthenticatedRoute>
             <Route path="/donate">
               <DonatePage />
+            </Route>
+            <Route path="/donation/:trackableId/thanks">
+              <DonationThanksPage />
+            </Route>
+            <Route path="/donation/:trackableId">
+              <DonationStatusPage />
             </Route>
             <Route path="/">
               <Index />

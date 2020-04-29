@@ -44,8 +44,8 @@ type TrackableUpdate {
     timestamp: String! # ISO standard string
     message: String
     metadata: [MetadataEntry!]
-    userDid: String!
-    userName: String!
+    userDid: String
+    userName: String
 }
 
 type MetadataEntry {

@@ -1,13 +1,26 @@
-import { Box, Flex, Button, FormControl, Text, Input, FormErrorMessage, Stack, Textarea } from "@chakra-ui/core";
-import React, { useState } from 'react';
+import { 
+  Box, 
+  Flex, 
+  Button, 
+  FormControl, 
+  Text, 
+  Input, 
+  FormErrorMessage, 
+  Stack, 
+  Textarea,
+ } from "@chakra-ui/core";
+import React, { useState, useEffect } from 'react';
 import Header from "../components/header";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
+import { Trackable, MetadataEntry, CreateTrackablePayload } from '../generated/graphql'
+import { useHistory } from "react-router-dom"
 
 const log = debug("pages.donate")
 
-type Address = {
+// TODO: There's probably a better place to define this
+export type Address = {
   street:       string;
   cityStateZip: string;
 }
@@ -20,29 +33,63 @@ type DonationData = {
 const CREATE_DONATION_MUTATION = gql`
   mutation DonatePageCreate($input: CreateTrackableInput!) {
     createTrackable(input: $input) {
-      code
+      trackable {
+        did
+      }
+    }
+  }
+`
+
+const UPDATE_DONATION_MUTATION = gql`
+  mutation UpdateDonation($input: AddUpdateInput!) {
+    addUpdate(input: $input) {
+      did
+      message
+      metadata
     }
   }
 `
 
 export function DonatePage() {
   const [createDonation, { error: createError }] = useMutation(CREATE_DONATION_MUTATION)
-  const { handleSubmit, errors, setError, register, formState } = useForm<DonationData>();
+  const [updateDonation, { error: updateError }] = useMutation(UPDATE_DONATION_MUTATION)
+
+  const { handleSubmit, errors, register } = useForm<DonationData>();
+
+  const history = useHistory()
 
   async function onSubmit({pickupAddr,instructions}:DonationData) {
     setSubmitLoading(true)
     log("submitted:", pickupAddr, instructions);
 
-    // first create the trackable
-    // TODO: Add the image once that's working
-    await createDonation({
+    const result = await createDonation({
       variables: {input: {name: "donation"}}
     })
 
-    // TODO: add the location in an update
-    // How do we get the new trackable?
+    const payload:CreateTrackablePayload = result.data.createTrackable
+    const donation:Trackable = payload.trackable!
 
-    setSubmitLoading(false)
+    log("createDonation result:", donation)
+
+    let metadata:MetadataEntry[] = []
+
+    metadata.push({key: "location", value: pickupAddr})
+
+    // TODO: Add the image once that's working
+    //metadata.push(key: "image", value: skylink)
+
+    log("adding metadata:", metadata)
+
+    await updateDonation({
+      variables: {
+        input: {
+          trackable: donation.did,
+          message: "ready for pickup",
+          metadata: metadata,
+        }}
+    })
+
+    history.push(`/donation/${donation.did}/thanks`)
   }
 
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -53,8 +100,8 @@ export function DonatePage() {
       <Flex mt={5} p={10} flexDirection="column" align="center">
         <Button>Take a Picture</Button>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Stack spacing={3}>
-            <Text mt={10}>Address for Pickup</Text>
+          <Stack mt={10} spacing={3}>
+            <Text>Address for Pickup</Text>
             <FormControl isInvalid={!!errors.pickupAddr?.street}>
               <Input
                 name="pickupAddr.street"
@@ -88,6 +135,7 @@ export function DonatePage() {
             <Button type="submit" isLoading={submitLoading}>Done</Button>
             <FormErrorMessage>
               {createError && (createError.message)}
+              {updateError && (updateError.message)}
             </FormErrorMessage>
           </Stack>
         </form>

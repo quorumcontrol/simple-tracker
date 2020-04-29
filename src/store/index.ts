@@ -234,9 +234,12 @@ const resolvers: Resolvers = {
             log('creating trackable tree')
             const tree = await ChainTree.newEmptyTree(c.blockservice, key)
 
-            let trackable:Trackable = Object.create(input)
+            log("creating trackable from input:", input)
+            let trackable:Trackable = Object.assign(Object.create({}), input)
+
             trackable.status = TrackableStatus.Published
 
+            log("playing Tupelo transactions for trackable")
             await c.playTransactions(tree, [
                 setDataTransaction("/", trackable),
                 setOwnershipTransaction(await drivers.graftableOwnership())
@@ -247,6 +250,7 @@ const resolvers: Resolvers = {
             log('adding trackable to app collection')
             await appCollection.addTrackable(trackable)
 
+            log("returning new trackable:", trackable)
             return {
                 trackable: trackable,
             }
@@ -311,27 +315,28 @@ const resolvers: Resolvers = {
 
         },
         addUpdate: async (_root, { input: {trackable,message,metadata} }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
-            if (!appUser.userPromise) {
-                return undefined
+            let user
+            if (appUser.userPromise) {
+                log("loading current user")
+                const userResp = await appUser.userPromise
+                if (userResp !== undefined) {
+                    user = userResp!
+                    await user.load()
+                }
             }
-            let user = await appUser.userPromise
-            if (!user) {
-                return undefined
-            }
-            await user.load()
 
             let timestamp = (new Date()).toISOString()
 
             const trackableTree = await Tupelo.getLatest(trackable)
-            trackableTree.key = user.tree.key
+            trackableTree.key = await drivers.key()
 
             let update:TrackableUpdate = {
                 did: `${(await trackableTree.id())}-${timestamp}`,
                 timestamp: timestamp,
                 message: message,
                 metadata: metadata,
-                userDid: user.did!,
-                userName: user.userName,
+                userDid: user?.did,
+                userName: user?.userName,
             }
             log("update: ", update)
             let c = await communityPromise

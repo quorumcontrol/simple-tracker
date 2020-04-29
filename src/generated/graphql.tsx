@@ -60,8 +60,8 @@ export type TrackableUpdate = {
   timestamp: Scalars['String'];
   message?: Maybe<Scalars['String']>;
   metadata?: Maybe<Array<MetadataEntry>>;
-  userDid: Scalars['String'];
-  userName: Scalars['String'];
+  userDid?: Maybe<Scalars['String']>;
+  userName?: Maybe<Scalars['String']>;
 };
 
 export type MetadataEntry = {
@@ -369,8 +369,8 @@ export type TrackableUpdateResolvers<ContextType = any, ParentType extends Resol
   timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   metadata?: Resolver<Maybe<Array<ResolversTypes['MetadataEntry']>>, ParentType, ContextType>,
-  userDid?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
-  userName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  userDid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  userName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
