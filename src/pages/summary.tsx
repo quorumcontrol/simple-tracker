@@ -50,9 +50,10 @@ export function SummaryPage() {
     const { data, loading, error } = useQuery(SUMMARY_PAGE_QUERY)
     if (loading) {
         return (
-            <Box>
+            <Flex align="center" justify="center" h="100%">
                 <Spinner />
-            </Box>
+                <Text ml="1rem">Loading donations</Text>
+            </Flex>
         )
     }
 
@@ -164,7 +165,7 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
 function Updates({ trackable }: { trackable: Trackable }) {
     const updateElements = trackable.updates?.edges?.map((update: TrackableUpdate) => {
         return (
-            <ListItem>
+            <ListItem key={update.timestamp}>
                 {update.message} <Metadata metadata={update.metadata!} />
             </ListItem>
         )
@@ -196,7 +197,7 @@ function isAddress(val: any | undefined): boolean {
 function Metadata({ metadata }: { metadata: MetadataEntry[] }) {
     const mdElements = metadata.map((m: MetadataEntry) => {
         return (
-            <ListItem>{m.key}: {isAddress(m.value) ? <AddressElement address={m.value as Address} /> : '???'}</ListItem>
+            <ListItem key={m.key}>{m.key}: {isAddress(m.value) ? <AddressElement address={m.value as Address} />: '???'}</ListItem>
         )
     })
 
