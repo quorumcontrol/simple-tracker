@@ -98,7 +98,7 @@ export function SummaryPage() {
                     </Box>
                     <Box>
                         <Heading mb={3}>Deliveries needing pickup</Heading>
-                        <TrackableCollection trackables={available} user={data.me}/>
+                        <TrackableCollection trackables={available} user={data.me} />
                     </Box>
                 </Box>
             </Flex>
@@ -106,10 +106,10 @@ export function SummaryPage() {
     )
 }
 
-function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
+function AcceptJobButton({ trackable, user }: { trackable: Trackable, user: User }) {
     const [acceptJob] = useMutation(ACCEPT_JOB_MUTATION)
 
-    const onClick = async ()=> {
+    const onClick = async () => {
         await acceptJob({
             variables: {
                 input: {
@@ -117,7 +117,7 @@ function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
                     user: user.did,
                 }
             },
-            refetchQueries: [{query: SUMMARY_PAGE_QUERY}]
+            refetchQueries: [{ query: SUMMARY_PAGE_QUERY }]
         })
     }
 
@@ -126,7 +126,7 @@ function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
     )
 }
 
-function TrackableCollection({ trackables,user }: { trackables: Trackable[],user:User }) {
+function TrackableCollection({ trackables, user }: { trackables: Trackable[], user: User }) {
 
     const trackableElements = trackables.map((trackable: Trackable) => {
         return (
@@ -145,12 +145,12 @@ function TrackableCollection({ trackables,user }: { trackables: Trackable[],user
                     {trackable.name}
                 </Box>
                 <Box mt="2" color="gray.600" fontSize="sm">
-                    <Link to={`/objects/${trackable.did}`}>{trackable.did}</Link> 
+                    <Link to={`/objects/${trackable.did}`}>{trackable.did}</Link>
                 </Box>
                 <Box mt="2">
                     <Updates trackable={trackable} />
                 </Box>
-                {!trackable.driver && <AcceptJobButton trackable={trackable} user={user}/>}
+                {!trackable.driver && <AcceptJobButton trackable={trackable} user={user} />}
             </Box>
         )
     })
@@ -178,7 +178,7 @@ function Updates({ trackable }: { trackable: Trackable }) {
 }
 
 // TODO: There's probably a better way to do this
-function isAddress(val: any|undefined): boolean {
+function isAddress(val: any | undefined): boolean {
     if (val === undefined) {
         return false
     }
@@ -195,11 +195,11 @@ function isAddress(val: any|undefined): boolean {
 
 function Metadata({ metadata }: { metadata: MetadataEntry[] }) {
     const mdElements = metadata.map((m: MetadataEntry) => {
-            return (
-                <ListItem>{m.key}: {isAddress(m.value) ? <AddressElement address={m.value as Address} />: '???'}</ListItem>
-            )
+        return (
+            <ListItem>{m.key}: {isAddress(m.value) ? <AddressElement address={m.value as Address} /> : '???'}</ListItem>
+        )
     })
-    
+
     return (
         // TODO: Not sure why this isn't nesting inside its containing list
         <List styleType="circle">
@@ -211,7 +211,7 @@ function Metadata({ metadata }: { metadata: MetadataEntry[] }) {
 function AddressElement({ address }: { address: Address }) {
     return (
         <>
-        {address.street}, {address.cityStateZip}
+            {address.street}, {address.cityStateZip}
         </>
     )
 }

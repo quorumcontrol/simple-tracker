@@ -58,22 +58,22 @@ export class Drivers {
         let treeP = this.treePromise
 
         this.treePromise = new Promise<ChainTree>(async (resolve, reject) => {
-                let tree = await treeP
-                const key = tree.key
-                try {
-                    const latestTree = await Tupelo.getLatest((await tree.id())!)
-                    tree = latestTree // doesn't get here on error
-                    tree.key = key
-                } catch(err) {
-                    // if we go to get latest and it's not found, we'll
-                    // just assume we're still at a blank tree (which is fine)
-                    // and just fall back to the original 
-                    if (!err.message.includes("not found")) {
-                        reject(err)
-                        return
-                    }
+            let tree = await treeP
+            const key = tree.key
+            try {
+                const latestTree = await Tupelo.getLatest((await tree.id())!)
+                tree = latestTree // doesn't get here on error
+                tree.key = key
+            } catch (err) {
+                // if we go to get latest and it's not found, we'll
+                // just assume we're still at a blank tree (which is fine)
+                // and just fall back to the original 
+                if (!err.message.includes("not found")) {
+                    reject(err)
+                    return
                 }
-                resolve(tree)
+            }
+            resolve(tree)
         })
         return this.treePromise
     }
