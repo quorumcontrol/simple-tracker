@@ -80,11 +80,16 @@ export function DonatePage() {
 
         log("adding metadata:", metadata)
 
+        let message = "ready for pickup"
+        if (instructions.trim().length > 0) {
+            message = `${message}: ${instructions.trim()}`
+        }
+
         await updateDonation({
             variables: {
                 input: {
                     trackable: donation.did,
-                    message: "ready for pickup",
+                    message: message,
                     metadata: metadata,
                 }
             }
