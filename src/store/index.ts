@@ -137,6 +137,14 @@ const resolvers: Resolvers = {
             const tree = await Tupelo.getLatest(did)
             return (await tree.resolveData("name")).value
         },
+        driver: async (trackable: Trackable, _context): Promise<User | null> => {
+            const tree = await Tupelo.getLatest(trackable.did)
+            const driver = (await tree.resolveData("driver")).value
+            if (!driver) {
+                return null
+            }
+            return { did: driver }
+        },
         image: async (trackable: Trackable, _context): Promise<string> => {
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
@@ -410,6 +418,7 @@ const resolvers: Resolvers = {
             let c = await communityPromise
 
             await c.playTransactions(trackableTree, [
+                setDataTransaction('driver', loggedinUser.did!),
                 setDataTransaction(`updates/${timestamp}`, update),
                 setOwnershipTransaction([loggedinUser.did])
             ])

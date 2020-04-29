@@ -17,7 +17,9 @@ const SUMMARY_PAGE_QUERY = gql`
             did
             trackables {
                 did
-                driver
+                driver {
+                    did
+                }
             }
         }
     }
@@ -68,7 +70,7 @@ export function SummaryPage() {
     })
 
     const myTrackables = data.getTrackables.trackables.filter((trackable: Trackable) => {
-        return trackable.driver === data.me.did
+        return trackable.driver?.did === data.me.did
     })
 
     return (
