@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link} from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
-import { Redirect, Link as RouterLink} from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import { useMutation,gql } from '@apollo/client';
 import {userNamespace} from '../store/index'
 
@@ -105,10 +105,6 @@ export function LoginPage() {
                     </Button>
                 </form>
             </Box>
-
-            <Link href="https://www.netlify.com/" mt={10} isExternal>
-                This site is powered by Netlify
-            </Link>
         </Flex>
     )
 }

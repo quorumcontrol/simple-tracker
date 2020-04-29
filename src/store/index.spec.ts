@@ -34,9 +34,6 @@ describe('resolvers', () => {
         const CREATE_TRACKABLE = gql`
             mutation CreateTrackable($input: CreateTrackableInput!) {
                 createTrackable(input: $input) {
-                    collection {
-                        did
-                    }
                     trackable {
                         did
                         name
@@ -46,18 +43,18 @@ describe('resolvers', () => {
             }
         `
 
-                // it adds to the app collection
-            const appTrackableQuery = gql`
-               {
-                    getTrackables {
+        // it adds to the app collection
+        const appTrackableQuery = gql`
+            {
+                getTrackables {
+                    did
+                    trackables {
                         did
-                        trackables {
-                            did
-                            driver
-                        }
+                        driver
                     }
                 }
-            `
+            }
+        `
 
         const mutateResp = await client.mutate({
             mutation: CREATE_TRACKABLE,

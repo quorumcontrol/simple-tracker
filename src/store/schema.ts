@@ -13,12 +13,21 @@ type User {
     completedDeliveries: TrackableCollection
 }
 
+enum TrackableStatus {
+    Created
+    Published
+    Accepted
+    PickedUp
+    Delivered
+}
+
 type Trackable {
     did: ID!
     name: String
     image: String #skynet URL for now
     updates: TrackableUpdateConnection!
     collaborators: TrackableCollaboratorConnection
+    status: TrackableStatus
     driver: User # this is only available on trackables that are part of a collection
 }
 
@@ -35,8 +44,8 @@ type TrackableUpdate {
     timestamp: String! # ISO standard string
     message: String
     metadata: [MetadataEntry!]
-    userDid: String!
-    userName: String!
+    userDid: String
+    userName: String
 }
 
 type MetadataEntry {
@@ -115,7 +124,6 @@ type Mutation {
     login(namespace: String!, username: String!, password: String!): User
     register(namespace: String!, username: String!, password: String!): User
     logout(did:String): User
-    createUnownedTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     createTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload
