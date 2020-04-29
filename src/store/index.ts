@@ -22,6 +22,7 @@ import {
     AppCollection as GraphQLAppCollection,
     AcceptJobPayload,
     MutationAcceptJobArgs,
+    TrackableStatus,
 } from '../generated/graphql'
 import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
 import { AppUser } from './user';
@@ -137,6 +138,10 @@ const resolvers: Resolvers = {
             const tree = await Tupelo.getLatest(did)
             return (await tree.resolveData("name")).value
         },
+        status: async (trackable: Trackable, _context): Promise<TrackableStatus | null> => {
+            const tree = await Tupelo.getLatest(trackable.did)
+            return (await tree.resolveData("status")).value
+        },
         driver: async (trackable: Trackable, _context): Promise<User | null> => {
             const tree = await Tupelo.getLatest(trackable.did)
             const driver = (await tree.resolveData("driver")).value
@@ -229,17 +234,17 @@ const resolvers: Resolvers = {
             log('creating trackable tree')
             const tree = await ChainTree.newEmptyTree(c.blockservice, key)
 
+            let trackable:Trackable = Object.create(input)
+            trackable.status = TrackableStatus.Published
+
             await c.playTransactions(tree, [
-                setDataTransaction("/", input),
+                setDataTransaction("/", trackable),
                 setOwnershipTransaction(await drivers.graftableOwnership())
             ])
 
+            trackable.did = (await tree.id())!
+
             log('adding trackable to app collection')
-            const trackable = {
-                did: (await tree.id())!,
-                name: input.name,
-                updates: {},
-            }
             await appCollection.addTrackable(trackable)
 
             return {
@@ -419,6 +424,7 @@ const resolvers: Resolvers = {
 
             await c.playTransactions(trackableTree, [
                 setDataTransaction('driver', loggedinUser.did!),
+                setDataTransaction('status', TrackableStatus.Accepted),
                 setDataTransaction(`updates/${timestamp}`, update),
                 setOwnershipTransaction([loggedinUser.did])
             ])

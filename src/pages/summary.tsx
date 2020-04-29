@@ -1,7 +1,7 @@
 import React from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Box, Spinner, Heading, Image, Text, Flex, Button } from '@chakra-ui/core'
-import { Trackable, User } from '../generated/graphql'
+import { Trackable, User, TrackableStatus } from '../generated/graphql'
 import { Link} from 'react-router-dom'
 import Header from '../components/header'
 import debug from 'debug'
@@ -17,6 +17,7 @@ const SUMMARY_PAGE_QUERY = gql`
             did
             trackables {
                 did
+                status
                 driver {
                     did
                 }
@@ -65,12 +66,12 @@ export function SummaryPage() {
         </Box>)
     }
 
-    const unowned = data.getTrackables.trackables.filter((trackable: Trackable) => {
-        return !trackable.driver
+    const available = data.getTrackables.trackables.filter((trackable: Trackable) => {
+        return trackable.status == TrackableStatus.Published
     })
 
     const myTrackables = data.getTrackables.trackables.filter((trackable: Trackable) => {
-        return trackable.driver?.did === data.me.did
+        return trackable.driver?.did === data.me.did && [TrackableStatus.Accepted, TrackableStatus.PickedUp].includes(trackable.status!)
     })
 
     return (
@@ -84,7 +85,7 @@ export function SummaryPage() {
                     </Box>
                     <Box>
                         <Heading>Deliveries needing pickup</Heading>
-                        <TrackableCollection trackables={unowned} user={data.me}/>
+                        <TrackableCollection trackables={available} user={data.me}/>
                     </Box>
                 </Box>
             </Flex>

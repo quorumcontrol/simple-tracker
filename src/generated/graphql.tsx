@@ -25,6 +25,14 @@ export type User = {
   completedDeliveries?: Maybe<TrackableCollection>;
 };
 
+export enum TrackableStatus {
+  Created = 'Created',
+  Published = 'Published',
+  Accepted = 'Accepted',
+  PickedUp = 'PickedUp',
+  Delivered = 'Delivered'
+}
+
 export type Trackable = {
    __typename?: 'Trackable';
   did: Scalars['ID'];
@@ -32,6 +40,7 @@ export type Trackable = {
   image?: Maybe<Scalars['String']>;
   updates: TrackableUpdateConnection;
   collaborators?: Maybe<TrackableCollaboratorConnection>;
+  status?: Maybe<TrackableStatus>;
   driver?: Maybe<User>;
 };
 
@@ -266,6 +275,7 @@ export type ResolversTypes = {
   JSON: ResolverTypeWrapper<Scalars['JSON']>,
   User: ResolverTypeWrapper<User>,
   ID: ResolverTypeWrapper<Scalars['ID']>,
+  TrackableStatus: TrackableStatus,
   Trackable: ResolverTypeWrapper<Trackable>,
   TrackableCollaboratorConnection: ResolverTypeWrapper<TrackableCollaboratorConnection>,
   TrackableUpdateConnection: ResolverTypeWrapper<TrackableUpdateConnection>,
@@ -295,6 +305,7 @@ export type ResolversParentTypes = {
   JSON: Scalars['JSON'],
   User: User,
   ID: Scalars['ID'],
+  TrackableStatus: TrackableStatus,
   Trackable: Trackable,
   TrackableCollaboratorConnection: TrackableCollaboratorConnection,
   TrackableUpdateConnection: TrackableUpdateConnection,
@@ -338,6 +349,7 @@ export type TrackableResolvers<ContextType = any, ParentType extends ResolversPa
   image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   updates?: Resolver<ResolversTypes['TrackableUpdateConnection'], ParentType, ContextType>,
   collaborators?: Resolver<Maybe<ResolversTypes['TrackableCollaboratorConnection']>, ParentType, ContextType>,
+  status?: Resolver<Maybe<ResolversTypes['TrackableStatus']>, ParentType, ContextType>,
   driver?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
