@@ -33,12 +33,6 @@ export enum TrackableStatus {
   Delivered = 'Delivered'
 }
 
-export type EcdsaKey = {
-   __typename?: 'EcdsaKey';
-  publicKey?: Maybe<Scalars['JSON']>;
-  privateKey?: Maybe<Scalars['JSON']>;
-};
-
 export type Trackable = {
    __typename?: 'Trackable';
   did: Scalars['ID'];
@@ -48,7 +42,6 @@ export type Trackable = {
   collaborators?: Maybe<TrackableCollaboratorConnection>;
   status?: Maybe<TrackableStatus>;
   driver?: Maybe<User>;
-  ownerKey?: Maybe<EcdsaKey>;
 };
 
 export type TrackableCollaboratorConnection = {
@@ -99,14 +92,8 @@ export type MetadataEntryInput = {
   value?: Maybe<Scalars['JSON']>;
 };
 
-export type EcdsaKeyInput = {
-  privateKey?: Maybe<Scalars['JSON']>;
-  publicKey?: Maybe<Scalars['JSON']>;
-};
-
 export type AddUpdateInput = {
   trackable: Scalars['ID'];
-  ownerKey?: Maybe<EcdsaKeyInput>;
   message: Scalars['String'];
   metadata?: Maybe<Array<MetadataEntryInput>>;
 };
@@ -289,7 +276,6 @@ export type ResolversTypes = {
   User: ResolverTypeWrapper<User>,
   ID: ResolverTypeWrapper<Scalars['ID']>,
   TrackableStatus: TrackableStatus,
-  EcdsaKey: ResolverTypeWrapper<EcdsaKey>,
   Trackable: ResolverTypeWrapper<Trackable>,
   TrackableCollaboratorConnection: ResolverTypeWrapper<TrackableCollaboratorConnection>,
   TrackableUpdateConnection: ResolverTypeWrapper<TrackableUpdateConnection>,
@@ -299,7 +285,6 @@ export type ResolversTypes = {
   AppCollection: ResolverTypeWrapper<AppCollection>,
   CreateTrackableInput: CreateTrackableInput,
   MetadataEntryInput: MetadataEntryInput,
-  EcdsaKeyInput: EcdsaKeyInput,
   AddUpdateInput: AddUpdateInput,
   CreateTrackablePayload: ResolverTypeWrapper<CreateTrackablePayload>,
   AddUpdatePayload: ResolverTypeWrapper<AddUpdatePayload>,
@@ -321,7 +306,6 @@ export type ResolversParentTypes = {
   User: User,
   ID: Scalars['ID'],
   TrackableStatus: TrackableStatus,
-  EcdsaKey: EcdsaKey,
   Trackable: Trackable,
   TrackableCollaboratorConnection: TrackableCollaboratorConnection,
   TrackableUpdateConnection: TrackableUpdateConnection,
@@ -331,7 +315,6 @@ export type ResolversParentTypes = {
   AppCollection: AppCollection,
   CreateTrackableInput: CreateTrackableInput,
   MetadataEntryInput: MetadataEntryInput,
-  EcdsaKeyInput: EcdsaKeyInput,
   AddUpdateInput: AddUpdateInput,
   CreateTrackablePayload: CreateTrackablePayload,
   AddUpdatePayload: AddUpdatePayload,
@@ -360,12 +343,6 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
-export type EcdsaKeyResolvers<ContextType = any, ParentType extends ResolversParentTypes['EcdsaKey'] = ResolversParentTypes['EcdsaKey']> = {
-  publicKey?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>,
-  privateKey?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>,
-  __isTypeOf?: isTypeOfResolverFn<ParentType>,
-};
-
 export type TrackableResolvers<ContextType = any, ParentType extends ResolversParentTypes['Trackable'] = ResolversParentTypes['Trackable']> = {
   did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
@@ -374,7 +351,6 @@ export type TrackableResolvers<ContextType = any, ParentType extends ResolversPa
   collaborators?: Resolver<Maybe<ResolversTypes['TrackableCollaboratorConnection']>, ParentType, ContextType>,
   status?: Resolver<Maybe<ResolversTypes['TrackableStatus']>, ParentType, ContextType>,
   driver?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
-  ownerKey?: Resolver<Maybe<ResolversTypes['EcdsaKey']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
@@ -457,7 +433,6 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 export type Resolvers<ContextType = any> = {
   JSON?: GraphQLScalarType,
   User?: UserResolvers<ContextType>,
-  EcdsaKey?: EcdsaKeyResolvers<ContextType>,
   Trackable?: TrackableResolvers<ContextType>,
   TrackableCollaboratorConnection?: TrackableCollaboratorConnectionResolvers<ContextType>,
   TrackableUpdateConnection?: TrackableUpdateConnectionResolvers<ContextType>,

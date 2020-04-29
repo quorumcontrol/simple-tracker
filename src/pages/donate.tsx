@@ -35,10 +35,6 @@ const CREATE_DONATION_MUTATION = gql`
     createTrackable(input: $input) {
       trackable {
         did
-        ownerKey {
-          publicKey
-          privateKey
-        }
       }
     }
   }
@@ -70,7 +66,7 @@ export function DonatePage() {
       variables: {input: {name: "donation"}}
     })
 
-    const payload:CreateTrackablePayload = result.data.createUnownedTrackable
+    const payload:CreateTrackablePayload = result.data.createTrackable
     const donation:Trackable = payload.trackable!
 
     log("createDonation result:", donation)
@@ -88,10 +84,6 @@ export function DonatePage() {
       variables: {
         input: {
           trackable: donation.did,
-          ownerKey: {
-            privateKey: donation.ownerKey?.privateKey,
-            publicKey: donation.ownerKey?.publicKey,
-          },
           message: "ready for pickup",
           metadata: metadata,
         }}

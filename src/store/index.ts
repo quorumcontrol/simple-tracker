@@ -234,9 +234,12 @@ const resolvers: Resolvers = {
             log('creating trackable tree')
             const tree = await ChainTree.newEmptyTree(c.blockservice, key)
 
-            let trackable:Trackable = Object.create(input)
+            log("creating trackable from input:", input)
+            let trackable:Trackable = Object.assign(Object.create({}), input)
+
             trackable.status = TrackableStatus.Published
 
+            log("playing Tupelo transactions for trackable")
             await c.playTransactions(tree, [
                 setDataTransaction("/", trackable),
                 setOwnershipTransaction(await drivers.graftableOwnership())
@@ -247,11 +250,7 @@ const resolvers: Resolvers = {
             log('adding trackable to app collection')
             await appCollection.addTrackable(trackable)
 
-            trackable.ownerKey = {
-                privateKey: key.privateKey,
-                publicKey: key.publicKey,
-            }
-
+            log("returning new trackable:", trackable)
             return {
                 trackable: trackable,
             }
@@ -315,7 +314,7 @@ const resolvers: Resolvers = {
             }
 
         },
-        addUpdate: async (_root, { input: {trackable,ownerKey,message,metadata} }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
+        addUpdate: async (_root, { input: {trackable,message,metadata} }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
             let user
             if (appUser.userPromise) {
                 log("loading current user")
@@ -329,20 +328,7 @@ const resolvers: Resolvers = {
             let timestamp = (new Date()).toISOString()
 
             const trackableTree = await Tupelo.getLatest(trackable)
-            let trackableTreeKey:EcdsaKey
-            if (ownerKey !== undefined) {
-                log("using supplied ownerKey for trackable update")
-                const privateKey = ownerKey?.privateKey!
-                const publicKey = ownerKey?.publicKey!
-                trackableTreeKey = new EcdsaKey(publicKey, privateKey)
-            } else if (user !== undefined) {
-                log("using user key for trackable update")
-                trackableTreeKey = user.tree.key!
-            } else {
-                log("error: need either logged-in user or ownerKey")
-                return undefined
-            }
-            trackableTree.key = trackableTreeKey
+            trackableTree.key = await drivers.key()
 
             let update:TrackableUpdate = {
                 did: `${(await trackableTree.id())}-${timestamp}`,
