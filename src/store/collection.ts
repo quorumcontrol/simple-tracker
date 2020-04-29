@@ -70,6 +70,10 @@ export class AppCollection {
     async getTrackables():Promise<Trackable[]> {
         const tree = await this.treePromise
         const dids = await tree.resolveData("trackables")
+        if (!dids.value) {
+            return []
+        }
+
         return Object.keys(dids.value).map((did:string)=> {
             const trackable:Trackable = {
                 did: did,
