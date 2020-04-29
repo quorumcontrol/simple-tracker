@@ -23,5 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 public/tupelo.wasm
 
-/ambientUser
-/tupelolocal
+/ambientUser/*
+/tupelolocal/*
+/user/*
