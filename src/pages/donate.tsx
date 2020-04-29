@@ -8,26 +8,29 @@ import {
     FormErrorMessage,
     Stack,
     Textarea,
+    Icon,
 } from "@chakra-ui/core";
 import React, { useState, useEffect } from 'react';
 import Header from "../components/header";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
-import { Trackable, MetadataEntry, CreateTrackablePayload } from '../generated/graphql'
-import { useHistory } from "react-router-dom"
+import { Trackable, MetadataEntry, CreateTrackablePayload, CreateTrackableInput } from '../generated/graphql';
+import { useHistory } from "react-router-dom";
+import { upload } from "../lib/skynet";
 
 const log = debug("pages.donate")
 
 // TODO: There's probably a better place to define this
 export type Address = {
-    street: string;
-    cityStateZip: string;
+    street: string
+    cityStateZip: string
 }
 
 type DonationData = {
-    pickupAddr: Address;
-    instructions: string;
+    pickupAddr: Address
+    instructions: string
+    image: FileList
 }
 
 const CREATE_DONATION_MUTATION = gql`
@@ -58,12 +61,21 @@ export function DonatePage() {
 
     const history = useHistory()
 
-    async function onSubmit({ pickupAddr, instructions }: DonationData) {
+    async function onSubmit({ pickupAddr, instructions, image }: DonationData) {
         setSubmitLoading(true)
         log("submitted:", pickupAddr, instructions);
 
+        let donationInput:CreateTrackableInput = {
+            name: "donation",
+        }
+
+        if (image && image.length > 0) {
+            const { skylink } = await upload(image, {})
+            donationInput.image = skylink
+        }
+
         const result = await createDonation({
-            variables: { input: { name: "donation" } }
+            variables: { input: donationInput }
         })
 
         const payload: CreateTrackablePayload = result.data.createTrackable
@@ -74,9 +86,6 @@ export function DonatePage() {
         let metadata: MetadataEntry[] = []
 
         metadata.push({ key: "location", value: pickupAddr })
-
-        // TODO: Add the image once that's working
-        //metadata.push(key: "image", value: skylink)
 
         log("adding metadata:", metadata)
 
@@ -98,14 +107,42 @@ export function DonatePage() {
         history.push(`/donation/${donation.did}/thanks`)
     }
 
+    let imageFileField: HTMLInputElement
+    const imageRefHandler = (el: HTMLInputElement) => {
+        register()(el)
+        imageFileField = el
+    }
+
+    const [imageAdded, setImageAdded] = useState(false)
+
+    const handleAddedImage = () => {
+        setImageAdded(true)
+    }
+
     const [submitLoading, setSubmitLoading] = useState(false)
 
     return (
         <Box>
             <Header />
-            <Flex mt={5} p={10} flexDirection="column" align="center">
-                <Button>Take a Picture</Button>
+            <Flex mt={5} p={10} flexDirection="column" align="center" justify="center">
                 <form onSubmit={handleSubmit(onSubmit)}>
+                    {
+                        imageAdded ?
+                        <Box display="inline-flex"><Icon color="green" name="check" mr={5} /> Picture attached</Box>
+                        :
+                        <Button leftIcon="attachment" onClick={() => imageFileField.click()}>Take a Picture</Button>
+                    }
+                    <Input
+                        hidden
+                        id="imageFileField"
+                        name="image"
+                        type="file"
+                        ref={imageRefHandler}
+                        onChange={handleAddedImage}
+                    />
+                    <FormErrorMessage>
+                        {errors.image && "There was a problem uploading your picture"}
+                    </FormErrorMessage>
                     <Stack mt={10} spacing={3}>
                         <Text>Address for Pickup</Text>
                         <FormControl isInvalid={!!errors.pickupAddr?.street}>

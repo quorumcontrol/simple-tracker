@@ -201,8 +201,9 @@ const resolvers: Resolvers = {
                 trackables: trackables,
             } as GraphQLAppCollection
         },
-        getTrackable: async (_root, { did }: QueryGetTrackableArgs, _ctx: TrackerContext) => {
+        getTrackable: async (_root, { did }: QueryGetTrackableArgs, { communityPromise }: TrackerContext) => {
             log("get trackable: ", did)
+            await communityPromise
             const tree = await Tupelo.getLatest(did)
             return {
                 did: await tree.id(),
