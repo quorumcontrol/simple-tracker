@@ -72,7 +72,7 @@ export function TrackablePage() {
         }
 
         await createTrackable({
-            variables: {input: {name}},
+            variables: { input: { name } },
             optimisticResponse: {
                 __typename: "Mutation",
                 createTrackable: {
@@ -88,21 +88,23 @@ export function TrackablePage() {
                     }
                 }
             },
-            update: (proxy, {data: {createTrackable}})=> {
-                const data:any = proxy.readQuery({query: GET_TRACKABLES})
+            update: (proxy, { data: { createTrackable } }) => {
+                const data: any = proxy.readQuery({ query: GET_TRACKABLES })
                 console.log("update called: ", createTrackable, " readQuery: ", data)
                 // data.me.collection.trackables.push(createTrackable.trackable)
                 // TODO: this should be a deep merge
-                proxy.writeQuery({query: GET_TRACKABLES, data: {
-                    ...data,
-                    me: {
-                        ...data.me,
-                        collection: {
-                            ...data.me.collection,
-                            trackables: data.me.collection.trackables.concat([createTrackable.trackable])
+                proxy.writeQuery({
+                    query: GET_TRACKABLES, data: {
+                        ...data,
+                        me: {
+                            ...data.me,
+                            collection: {
+                                ...data.me.collection,
+                                trackables: data.me.collection.trackables.concat([createTrackable.trackable])
+                            }
                         }
                     }
-                }})
+                })
             }
         })
         // await addTrackable(dispatch, user!, name, skylink)
@@ -126,7 +128,7 @@ export function TrackablePage() {
 
     if (query.data && query.data.me.collection) {
         const trackableState = query.data.me.collection.trackables
-        trackables = trackableState.map((trackable:Trackable) => {
+        trackables = trackableState.map((trackable: Trackable) => {
             return (
 
                 <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did} onClick={() => { history.push(`/objects/${trackable.did}`) }}>
@@ -155,9 +157,9 @@ export function TrackablePage() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
-                    {!show && 
-                    <Button isLoading={addLoading} onClick={handleToggle}>
-                        Add Object
+                    {!show &&
+                        <Button isLoading={addLoading} onClick={handleToggle}>
+                            Add Object
                     </Button>}
                     <Collapse mt={4} isOpen={show}>
                         <form onSubmit={handleSubmit(onSubmit)}>

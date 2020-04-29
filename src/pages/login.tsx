@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link} from '@chakra-ui/core'
+import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link } from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
 import { Redirect } from 'react-router-dom';
-import { useMutation,gql } from '@apollo/client';
-import {userNamespace} from '../store/index'
+import { useMutation, gql } from '@apollo/client';
+import { userNamespace } from '../store/index'
 
 const LOGIN_USER = gql`
     mutation LoginUser($namespace: String!, $username: String!, $password: String!) {
@@ -26,7 +26,7 @@ export function LoginPage() {
     const [loginUser, resp] = useMutation(LOGIN_USER)
     const data = resp.data
 
-    useEffect(()=> {
+    useEffect(() => {
         if (resp.loading || !resp.called) {
             return
         }
@@ -37,13 +37,13 @@ export function LoginPage() {
         setLoginSuccess(true)
     }, [resp.called, resp.loading, data, setError])
 
-   
-    // const { login } = useAmbientUser()
-    const [loginSuccess,setLoginSuccess] = useState(false)
 
-    async function onSubmit({username,password}:LoginFormData) {
+    // const { login } = useAmbientUser()
+    const [loginSuccess, setLoginSuccess] = useState(false)
+
+    async function onSubmit({ username, password }: LoginFormData) {
         try {
-            await loginUser({variables: {username, password, namespace: userNamespace.toString()! }})
+            await loginUser({ variables: { username, password, namespace: userNamespace.toString()! } })
         } catch (e) {
             setError("username", "unknown", `Could not create that user: ${e.message}`)
         }
@@ -61,7 +61,7 @@ export function LoginPage() {
 
     return (
         <Flex align="center" justify="center" h="100%" flexDir="column">
-            <Heading>Giving Chain<br/>Driver Login</Heading>
+            <Heading>Giving Chain<br />Driver Login</Heading>
             <Box borderWidth="1px" rounded="lg" p={8} mt={2}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <FormControl isInvalid={!!errors.username}>
