@@ -9,6 +9,7 @@ import {
     Stack,
     Textarea,
     Icon,
+    Spinner,
 } from "@chakra-ui/core";
 import React, { useState, useEffect } from 'react';
 import Header from "../components/header";
@@ -18,6 +19,7 @@ import debug from "debug";
 import { Trackable, AddressInput, CreateTrackablePayload, CreateTrackableInput } from '../generated/graphql';
 import { useHistory } from "react-router-dom";
 import { upload } from "../lib/skynet";
+import Resizer from 'react-image-file-resizer';
 
 const log = debug("pages.donate")
 
@@ -44,7 +46,11 @@ export function DonatePage() {
 
     const history = useHistory()
 
-    async function onSubmit({ pickupAddr, instructions, image }: DonationData) {
+    const [image, setImage] = useState(new Blob())
+    const [imageURL, setImageURL] = useState("")
+    const [imageUploading, setImageUploading] = useState(false)
+
+    async function onSubmit({ pickupAddr, instructions }: DonationData) {
         setSubmitLoading(true)
         log("submitted:", pickupAddr, instructions);
 
@@ -54,9 +60,8 @@ export function DonatePage() {
             instructions: instructions,
         }
 
-        if (image && image.length > 0) {
-            const { skylink } = await upload(image, {})
-            donationInput.image = skylink
+        if (imageURL.length > 0) {
+            donationInput.image = imageURL
         }
 
         const result = await createDonation({
@@ -77,11 +82,39 @@ export function DonatePage() {
         imageFileField = el
     }
 
-    const [imageAdded, setImageAdded] = useState(false)
-
     const handleAddedImage = () => {
-        setImageAdded(true)
+        if (imageFileField.files?.length === 0) {
+            return
+        }
+
+        log("resizing and compressing image")
+        Resizer.imageFileResizer(
+            imageFileField.files?.item(0)!,
+            300,
+            300,
+            "JPEG",
+            90,
+            0,
+            (resized: Blob) => { setImage(resized) },
+            'blob'
+        )
+        log("image resize and compression complete")
     }
+
+    useEffect(() => {
+        const uploadToSkynet = async (file: Blob) => {
+            setImageUploading(true)
+            log("uploading image to Skynet")
+            const { skylink } = await upload(file, {})
+            log("upload complete")
+            setImageURL(skylink)
+            setImageUploading(false)
+        }
+
+        if (image.size > 0) {
+            uploadToSkynet(image)
+        }
+    }, [image])
 
     const [submitLoading, setSubmitLoading] = useState(false)
 
@@ -91,10 +124,14 @@ export function DonatePage() {
             <Flex mt={5} p={10} flexDirection="column" align="center" justify="center">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     {
-                        imageAdded ?
-                        <Box display="inline-flex"><Icon color="green" name="check" mr={5} /> Picture attached</Box>
-                        :
+                        image.size === 0 ?
                         <Button leftIcon="attachment" onClick={() => imageFileField.click()}>Take a Picture</Button>
+                        :
+                        (imageUploading ? 
+                            <Flex><Spinner mr={5} /> Picture uploading</Flex>
+                            :
+                            <Box display="inline-flex"><Icon color="green" name="check" mr={5} /> Picture attached</Box>
+                        )
                     }
                     <Input
                         hidden
@@ -139,7 +176,7 @@ export function DonatePage() {
                                 ref={register()}>
                             </Textarea>
                         </FormControl>
-                        <Button type="submit" isLoading={submitLoading}>Done</Button>
+                        <Button type="submit" isLoading={submitLoading} isDisabled={imageUploading}>Done</Button>
                         <FormErrorMessage>
                             {createError && (createError.message)}
                         </FormErrorMessage>

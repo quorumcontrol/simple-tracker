@@ -3,15 +3,10 @@ import axios from "axios";
 
 const PORTAL_URI = "https://siasky.net"
 
-export async function upload(fileList: FileList, options = {}) {
+export async function upload(file: Blob|File, options = {}) {
     const formData = new FormData();
-    if (fileList.length === 0) {
-        throw new Error("you must have a file to upload")
-    }
 
-    const file = fileList.item(0)?.slice()
-
-    formData.append("file", file!);
+    formData.append("file", file);
 
     const parsed = parse(PORTAL_URI);
 
