@@ -2,7 +2,7 @@ import React from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Box, Spinner, Heading, Image, Text, Flex, Button, Icon } from '@chakra-ui/core'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
-import { Link} from 'react-router-dom'
+import { getUrl } from '../lib/skynet'
 import { useHistory } from "react-router-dom";
 import Header from '../components/header'
 import debug from 'debug'
@@ -18,6 +18,7 @@ const PICKUPS_PAGE_QUERY = gql`
             did
             trackables {
                 did
+                image
                 status
             }
         }
@@ -108,14 +109,14 @@ function TrackableCollection({ trackables,user }: { trackables: Trackable[],user
 
     const trackableElements = trackables.map((trackable: Trackable) => {
         return (
-          <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did}>
-              {/* {trackable.image &&
-                  <Image src={getUrl(trackable.image)} />
-              } */}
-              <Text> TODO: Pick Up Address </Text>
-              <Text> TODO: Drop Off Address </Text>
-              { AcceptJobButton({trackable, user}) }
-          </Box>
+            <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did}>
+                {trackable.image &&
+                    <Image src={getUrl(trackable.image)} />
+                }
+                <Text> TODO: Pick Up Address </Text>
+                <Text> TODO: Drop Off Address </Text>
+                { AcceptJobButton({trackable, user}) }
+            </Box>
         )
     })
     return (
