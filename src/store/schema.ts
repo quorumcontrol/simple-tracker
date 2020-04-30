@@ -58,6 +58,11 @@ type TrackableCollection {
     trackables: [Trackable!]
 }
 
+type Address {
+    street: String
+    cityStateZip: String
+}
+
 # AppCollection is kept as a separate type from TrackableCollection
 # because of how they are updated
 type AppCollection {
@@ -68,6 +73,13 @@ type AppCollection {
 input CreateTrackableInput {
     name: String!
     image: String
+    address: AddressInput
+    instructions: String
+}
+
+input AddressInput {
+    street: String!
+    cityStateZip: String!
 }
 
 input MetadataEntryInput {
