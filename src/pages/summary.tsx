@@ -1,7 +1,8 @@
 import React from 'react'
 import { gql, useQuery } from '@apollo/client'
-import { Box, Spinner, Heading, Image, Text, Flex } from '@chakra-ui/core'
+import { Box, Spinner, Heading, Image, Icon, Text, Flex } from '@chakra-ui/core'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
+import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
 import Header from '../components/header'
 import debug from 'debug'

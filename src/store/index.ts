@@ -237,11 +237,11 @@ const resolvers: Resolvers = {
             const tree = await ChainTree.newEmptyTree(c.blockservice, key)
 
             log("creating trackable from input:", input)
-            let trackable:Trackable = Object.assign(Object.create({}), {
+            let trackableObj = {
                 name: input.name,
                 image: input.image,
                 status: TrackableStatus.Published,
-            })
+            }
 
             let metadata: MetadataEntry[] = []
             metadata.push({ key: "location", value: input.address })
@@ -261,20 +261,26 @@ const resolvers: Resolvers = {
 
             log("playing Tupelo transactions for trackable")
             await c.playTransactions(tree, [
-                setDataTransaction("/", trackable),
+                setDataTransaction("/", trackableObj),
                 setDataTransaction(`updates/${timestamp}`, update),
                 setOwnershipTransaction(await drivers.graftableOwnership())
             ])
 
-            trackable.did = (await tree.id())!
+            let trackable:Trackable = {
+                did: (await tree.id())!,
+                updates: {
+                    edges: [
+                        update
+                    ]
+                },
+                ...trackableObj
+            }
 
             log('adding trackable to app collection')
             await appCollection.addTrackable(trackable)
 
             log("returning new trackable:", trackable)
-            return {
-                trackable: trackable,
-            }
+            return { trackable }
         },
         login: async (_root, { username, password }: MutationRegisterArgs, { cache, communityPromise }): Promise<User | undefined> => {
             await communityPromise
