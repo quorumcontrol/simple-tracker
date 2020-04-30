@@ -1,8 +1,8 @@
 import React from 'react'
 import { gql, useQuery } from '@apollo/client'
-import { Box, Spinner, Heading, Image, Text, Flex, Icon } from '@chakra-ui/core'
-import { Link } from "react-router-dom";
+import { Box, Spinner, Heading, Image, Icon, Text, Flex } from '@chakra-ui/core'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
+import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
 import Header from '../components/header'
 import debug from 'debug'
@@ -21,16 +21,6 @@ const SUMMARY_PAGE_QUERY = gql`
                 status
                 name
                 image
-                updates {
-                    edges {
-                        timestamp
-                        message
-                        metadata {
-                            key
-                            value
-                        }
-                    }
-                }
                 driver {
                     did
                 }

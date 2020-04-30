@@ -15,20 +15,14 @@ import Header from "../components/header";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
-import { Trackable, MetadataEntry, CreateTrackablePayload, CreateTrackableInput } from '../generated/graphql';
+import { Trackable, AddressInput, CreateTrackablePayload, CreateTrackableInput } from '../generated/graphql';
 import { useHistory } from "react-router-dom";
 import { upload } from "../lib/skynet";
 
 const log = debug("pages.donate")
 
-// TODO: There's probably a better place to define this
-export type Address = {
-    street: string
-    cityStateZip: string
-}
-
 type DonationData = {
-    pickupAddr: Address
+    pickupAddr: AddressInput
     instructions: string
     image: FileList
 }
@@ -43,19 +37,8 @@ const CREATE_DONATION_MUTATION = gql`
   }
 `
 
-const UPDATE_DONATION_MUTATION = gql`
-  mutation UpdateDonation($input: AddUpdateInput!) {
-    addUpdate(input: $input) {
-      did
-      message
-      metadata
-    }
-  }
-`
-
 export function DonatePage() {
     const [createDonation, { error: createError }] = useMutation(CREATE_DONATION_MUTATION)
-    const [updateDonation, { error: updateError }] = useMutation(UPDATE_DONATION_MUTATION)
 
     const { handleSubmit, errors, register } = useForm<DonationData>();
 
@@ -67,6 +50,8 @@ export function DonatePage() {
 
         let donationInput:CreateTrackableInput = {
             name: "donation",
+            address: pickupAddr,
+            instructions: instructions,
         }
 
         if (image && image.length > 0) {
@@ -82,27 +67,6 @@ export function DonatePage() {
         const donation: Trackable = payload.trackable!
 
         log("createDonation result:", donation)
-
-        let metadata: MetadataEntry[] = []
-
-        metadata.push({ key: "location", value: pickupAddr })
-
-        log("adding metadata:", metadata)
-
-        let message = "ready for pickup"
-        if (instructions.trim().length > 0) {
-            message = `${message}: ${instructions.trim()}`
-        }
-
-        await updateDonation({
-            variables: {
-                input: {
-                    trackable: donation.did,
-                    message: message,
-                    metadata: metadata,
-                }
-            }
-        })
 
         history.push(`/donation/${donation.did}/thanks`)
     }
@@ -178,7 +142,6 @@ export function DonatePage() {
                         <Button type="submit" isLoading={submitLoading}>Done</Button>
                         <FormErrorMessage>
                             {createError && (createError.message)}
-                            {updateError && (updateError.message)}
                         </FormErrorMessage>
                     </Stack>
                 </form>
