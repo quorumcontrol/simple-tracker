@@ -18,6 +18,7 @@ import { ApolloProvider, useQuery } from '@apollo/client';
 import { client } from './store/index';
 import { CURRENT_USER } from './store/queries';
 import { SummaryPage } from './pages/summary';
+import { PickUpsPage } from './pages/pickups';
 
 // A wrapper for <Route> that redirects to the login
 // screen if you're not yet authenticated.
@@ -85,6 +86,9 @@ function App() {
                         </AuthenticatedRoute>
                         <AuthenticatedRoute path="/summary">
                             <SummaryPage />
+                        </AuthenticatedRoute>
+                        <AuthenticatedRoute path="/pickups">
+                            <PickUpsPage />
                         </AuthenticatedRoute>
                         <Route path="/donate">
                             <DonatePage />

@@ -1,11 +1,11 @@
 import React from 'react'
-import { gql, useQuery, useMutation } from '@apollo/client'
-import { Box, Spinner, Heading, Image, Text, Flex, Button, List, ListItem } from '@chakra-ui/core'
-import { Trackable, User, TrackableStatus, TrackableUpdate, MetadataEntry } from '../generated/graphql'
-import { Link } from 'react-router-dom'
+import { gql, useQuery } from '@apollo/client'
+import { Box, Spinner, Heading, Image, Text, Flex, Icon } from '@chakra-ui/core'
+import { Link } from "react-router-dom";
+import { Trackable, User, TrackableStatus } from '../generated/graphql'
+import { getUrl } from '../lib/skynet'
 import Header from '../components/header'
 import debug from 'debug'
-import { Address } from './donate'
 
 const log = debug("pages.summary")
 
@@ -20,6 +20,7 @@ const SUMMARY_PAGE_QUERY = gql`
                 did
                 status
                 name
+                image
                 updates {
                     edges {
                         timestamp
@@ -34,14 +35,6 @@ const SUMMARY_PAGE_QUERY = gql`
                     did
                 }
             }
-        }
-    }
-`
-
-const ACCEPT_JOB_MUTATION = gql`
-    mutation SummaryPageAccept($input: AcceptJobInput!) {
-        acceptJob(input: $input) {
-            code
         }
     }
 `
@@ -88,131 +81,60 @@ export function SummaryPage() {
         return trackable.driver?.did === data.me.did && [TrackableStatus.Accepted, TrackableStatus.PickedUp].includes(trackable.status!)
     })
 
+    console.log(myTrackables)
+
     return (
         <Box>
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
+                    <Box mt="2" color="gray.600" fontSize="sm">
+                        <Link to={`/pickups`}>Find more Deliveries <br /> ({available.length} Available) </Link> 
+                    </Box>
                     <Box>
                         <Heading mb={3}>Your current deliveries</Heading>
                         <TrackableCollection trackables={myTrackables} user={data.me} />
                     </Box>
-                    <Box>
-                        <Heading mb={3}>Deliveries needing pickup</Heading>
-                        <TrackableCollection trackables={available} user={data.me} />
-                    </Box>
+
                 </Box>
             </Flex>
         </Box>
     )
 }
 
-function AcceptJobButton({ trackable, user }: { trackable: Trackable, user: User }) {
-    const [acceptJob] = useMutation(ACCEPT_JOB_MUTATION)
-
-    const onClick = async () => {
-        await acceptJob({
-            variables: {
-                input: {
-                    trackable: trackable.did,
-                    user: user.did,
-                }
-            },
-            refetchQueries: [{ query: SUMMARY_PAGE_QUERY }]
-        })
-    }
-
-    return (
-        <Button mt="2" onClick={onClick}>Accept Job</Button>
-    )
-}
-
 function TrackableCollection({ trackables, user }: { trackables: Trackable[], user: User }) {
-
     const trackableElements = trackables.map((trackable: Trackable) => {
-        return (
+        let link:string = ""
+        switch(trackable.status) {
+            case TrackableStatus.Accepted: {
+                link = `/objects/${trackable.did}/pickup`
+                break;
+            }
+            case TrackableStatus.PickedUp: {
+                link = `/objects/${trackable.did}/dropoff`
+                break;
+            }
+        }
 
-            <Box p="5" mb="3" ml="2" maxW="md" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did}>
-                {/* {trackable.image &&
-                    <Image src={getUrl(trackable.image)} />
-                } */}
-                <Box
-                    mt="1"
-                    fontWeight="semibold"
-                    as="h4"
-                    lineHeight="tight"
-                    isTruncated
-                >
-                    {trackable.name}
+        return (
+            <Link to={link} key={trackable.did}>
+                <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden">
+                    {trackable.image &&
+                        <Image src={getUrl(trackable.image)} />
+                    }
+                    { trackable.status == TrackableStatus.PickedUp ?
+                        <Text> <Icon name="check" /> Picked Up</Text>
+                    :
+                        <Text> TODO: Pick Up Address </Text>
+                    }
+                    <Text> TODO: Drop Off Address </Text>
                 </Box>
-                <Box mt="2" color="gray.600" fontSize="sm">
-                    <Link to={`/objects/${trackable.did}`}>{trackable.did}</Link>
-                </Box>
-                <Box mt="2">
-                    <Updates trackable={trackable} />
-                </Box>
-                {!trackable.driver && <AcceptJobButton trackable={trackable} user={user} />}
-            </Box>
+            </Link>
         )
     })
     return (
         <>
             {trackableElements}
-        </>
-    )
-}
-
-function Updates({ trackable }: { trackable: Trackable }) {
-    const updateElements = trackable.updates?.edges?.map((update: TrackableUpdate) => {
-        return (
-            <ListItem key={update.timestamp}>
-                {update.message} <Metadata metadata={update.metadata!} />
-            </ListItem>
-        )
-    })
-
-    return (
-        <List styleType="disc">
-            {updateElements}
-        </List>
-    )
-}
-
-// TODO: There's probably a better way to do this
-function isAddress(val: any | undefined): boolean {
-    if (val === undefined) {
-        return false
-    }
-
-    if (typeof val === "object") {
-        const obj = val as Object
-        if (obj.hasOwnProperty("street") && obj.hasOwnProperty("cityStateZip")) {
-            return true
-        }
-    }
-
-    return false
-}
-
-function Metadata({ metadata }: { metadata: MetadataEntry[] }) {
-    const mdElements = metadata.map((m: MetadataEntry) => {
-        return (
-            <ListItem key={m.key}>{m.key}: {isAddress(m.value) ? <AddressElement address={m.value as Address} />: '???'}</ListItem>
-        )
-    })
-
-    return (
-        // TODO: Not sure why this isn't nesting inside its containing list
-        <List styleType="circle">
-            {mdElements}
-        </List>
-    )
-}
-
-function AddressElement({ address }: { address: Address }) {
-    return (
-        <>
-            {address.street}, {address.cityStateZip}
         </>
     )
 }
