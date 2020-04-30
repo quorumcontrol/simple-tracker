@@ -287,7 +287,7 @@ export function ObjectPage() {
             metadata.push({ key: "location", value: geoPositonToPojo(location.coords) })
         }
         if (data.image && data.image.length > 0) {
-            const { skylink } = await upload(data.image, {});
+            const { skylink } = await upload(data.image.item(0)!, {});
             metadata.push({ key: "image", value: skylink })
         }
         setShow(false)
