@@ -1,7 +1,7 @@
 import { debug } from "debug";
 import { ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, Tupelo, Community } from "tupelo-wasm-sdk";
 import { EventEmitter } from "events";
-import {getAppCommunity} from './community';
+import { getAppCommunity } from './community';
 
 const log = debug("identity")
 
@@ -17,11 +17,11 @@ export const usernamePath = "givingchain/username"
  * Generates a public/private keypair from an *insecure* passphrase (username).
  * The generated ChainTree will have a known name derived from the username
  * argument. The very first thing you do with the ChainTree should be to
- * ChangeOwner 
+ * ChangeOwner
  * @param username - the username
  * @param appNamespace - a namespace to drop the users into (a user is globally unique to their username/appNamespace combination eg: tobowers/clownfahrt.de is different than tobowers/differentNamespace.whatever)
  */
-const insecureUsernameKey = async (username: string, appNamespace:Uint8Array) => {
+const insecureUsernameKey = async (username: string, appNamespace: Uint8Array) => {
     return EcdsaKey.passPhraseKey(Buffer.from(username), appNamespace)
 }
 
@@ -45,14 +45,14 @@ const didFromKey = async (key: EcdsaKey) => {
  * Looks up the user account chaintree for the given username, returning it if
  * it exists.
  */
-export const findUserAccount = async (username: string, appNamespace:Uint8Array):Promise<ChainTree|undefined> => {
+export const findUserAccount = async (username: string, appNamespace: Uint8Array): Promise<ChainTree | undefined> => {
     const community = await getAppCommunity()
 
     const insecureKey = await insecureUsernameKey(username, appNamespace)
     const did = await didFromKey(insecureKey)
 
     let tip
-    let tree:ChainTree|undefined = undefined
+    let tree: ChainTree | undefined = undefined
 
     try {
         tip = await community.getTip(did)
@@ -77,7 +77,7 @@ export const findUserAccount = async (username: string, appNamespace:Uint8Array)
  * Verifies that the secure password key generated with the provided username
  * and password matches one of the owner keys for the provided chaintree.
  */
-export const verifyAccount = async (username: string, password: string, appNamespace:Uint8Array): Promise<[boolean, User?]> => {
+export const verifyAccount = async (username: string, password: string, appNamespace: Uint8Array): Promise<[boolean, User?]> => {
     let secureKey = await securePasswordKey(username, password)
     let secureAddr = await secureKey.address()
     const community = await getAppCommunity()
@@ -169,12 +169,12 @@ export const resolveUsername = async (tree: ChainTree) => {
 
 export class User extends EventEmitter {
     tree: ChainTree
-    did?:string
+    did?: string
     community: Community
     userName: string
 
     //TODO: error handling
-    static async find(userName: string, appNamespace:Uint8Array, community: Community, ) {
+    static async find(userName: string, appNamespace: Uint8Array, community: Community, ) {
         const tree = await findUserAccount(userName, appNamespace)
         if (!tree) {
             throw new Error("no tree found")
@@ -194,7 +194,7 @@ export class User extends EventEmitter {
         return this
     }
 
-    private async setDid():Promise<string> {
+    private async setDid(): Promise<string> {
         const did = await this.tree.id()
         if (did === null) {
             throw new Error("invalid did")
@@ -203,4 +203,3 @@ export class User extends EventEmitter {
         return did
     }
 }
-

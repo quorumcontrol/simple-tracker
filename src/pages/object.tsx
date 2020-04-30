@@ -10,7 +10,7 @@ import { QRCode } from 'react-qrcode-logo';
 import { Map, Marker, Popup, TileLayer } from 'react-leaflet'
 import { LatLngTuple } from 'leaflet'
 import { gql, useQuery, useMutation } from '@apollo/client'
-import {Trackable, TrackableUpdate, MetadataEntry, Scalars, User} from '../generated/graphql'
+import { Trackable, TrackableUpdate, MetadataEntry, Scalars, User } from '../generated/graphql'
 
 const log = debug("pages.object")
 
@@ -20,7 +20,7 @@ type TrackableFormData = {
     location: Position
 }
 
-const GET_COLLABORATORS=gql`
+const GET_COLLABORATORS = gql`
     query GetCollaborators($did: ID!) {
         getTrackable(did: $did) {
             did
@@ -34,7 +34,7 @@ const GET_COLLABORATORS=gql`
     }
 `
 
-const GET_TRACKABLE=gql`
+const GET_TRACKABLE = gql`
     query GetTrackable($did: ID!) {
         getTrackable(did: $did) {
             did
@@ -98,14 +98,14 @@ type CollaboratorFormData = {
     name: string
 }
 
-export function CollaboratorUI({did}:{did: Scalars['ID']}) {
+export function CollaboratorUI({ did }: { did: Scalars['ID'] }) {
     const [show, setShow] = useState(false)
     const [addLoading, setAddLoading] = useState(false)
     const { handleSubmit, errors, reset, register } = useForm<CollaboratorFormData>();
-    const query = useQuery(GET_COLLABORATORS, {variables: {did: did}})
+    const query = useQuery(GET_COLLABORATORS, { variables: { did: did } })
     log("getcollaborator results: ", query)
 
-    let collaborators:User[] = []
+    let collaborators: User[] = []
     if (!query.loading && !query.error) {
         collaborators = query.data.getTrackable.collaborators.edges
     }
@@ -117,7 +117,7 @@ export function CollaboratorUI({did}:{did: Scalars['ID']}) {
         setAddLoading(true)
         setShow(!show)
         await addCollaborator({
-            variables: {input: {username: data.name, trackable: did}},
+            variables: { input: { username: data.name, trackable: did } },
             optimisticResponse: {
                 __typename: "Mutation",
                 addCollaborator: {
@@ -128,14 +128,14 @@ export function CollaboratorUI({did}:{did: Scalars['ID']}) {
                     }
                 }
             },
-            update: (proxy, {data: {addCollaborator}})=> {
-                const data:any = proxy.readQuery({query: GET_COLLABORATORS, variables: {did: did}})
+            update: (proxy, { data: { addCollaborator } }) => {
+                const data: any = proxy.readQuery({ query: GET_COLLABORATORS, variables: { did: did } })
                 log("update called: ", addCollaborator, " readQuery: ", data)
                 // data.me.collection.trackables.push(createTrackable.trackable)
                 // TODO: this should be a deep merge
                 proxy.writeQuery({
-                    query: GET_COLLABORATORS, 
-                    variables: {did: did},
+                    query: GET_COLLABORATORS,
+                    variables: { did: did },
                     data: {
                         ...data,
                         getTrackable: {
@@ -195,21 +195,21 @@ export function LocationWidget({ latitude, longitude }: { latitude: number, long
     const [show, setShow] = useState(false)
     const handleToggle = () => setShow(!show);
 
-    const position:LatLngTuple = [latitude, longitude]
+    const position: LatLngTuple = [latitude, longitude]
 
     return (
         <Box p={5}>
             <Text onClick={handleToggle}>{latitude},{longitude}</Text>
             <Collapse mt={4} isOpen={show}>
-                    <Map center={position} zoom={12} style={{height: "300px", width: "300px"}}>
-                        <TileLayer
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
-                        />
-                        <Marker position={position}>
-                            <Popup>A pretty CSS3 popup.<br />Easily customizable.</Popup>
-                        </Marker>
-                    </Map> 
+                <Map center={position} zoom={12} style={{ height: "300px", width: "300px" }}>
+                    <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+                    />
+                    <Marker position={position}>
+                        <Popup>A pretty CSS3 popup.<br />Easily customizable.</Popup>
+                    </Marker>
+                </Map>
             </Collapse>
         </Box>
     )
@@ -218,9 +218,9 @@ export function LocationWidget({ latitude, longitude }: { latitude: number, long
 function ObjectUpdate({ update }: { update: TrackableUpdate }) {
     let img: ReturnType<typeof Image> = null
 
-    let metadata:{[key:string]:any} = {}
+    let metadata: { [key: string]: any } = {}
     if (update.metadata) {
-        update.metadata.forEach(({key,value}, _i)=> {
+        update.metadata.forEach(({ key, value }, _i) => {
             metadata[key] = value
         })
     }
@@ -252,9 +252,9 @@ function ObjectUpdate({ update }: { update: TrackableUpdate }) {
 export function ObjectPage() {
     const { objectId } = useParams()
 
-    const query = useQuery(GET_TRACKABLE, {variables: {did: objectId!}})
+    const query = useQuery(GET_TRACKABLE, { variables: { did: objectId! } })
     log("object page query: ", query)
-    let trackable:Trackable = { name: "Loading", did: objectId!, image: "", updates: {} }
+    let trackable: Trackable = { name: "Loading", did: objectId!, image: "", updates: {} }
     if (query.error) {
         throw query.error
     }
@@ -262,7 +262,7 @@ export function ObjectPage() {
         trackable = query.data.getTrackable
     }
 
-    const [addUpdate,result] = useMutation(ADD_UPDATE)
+    const [addUpdate, result] = useMutation(ADD_UPDATE)
     log("mutation result: ", result)
 
     const [show, setShow] = useState(false)
@@ -278,18 +278,18 @@ export function ObjectPage() {
 
     const onSubmit = async (data: TrackableFormData) => {
         setAddLoading(true)
-        let metadata:MetadataEntry[] = []
+        let metadata: MetadataEntry[] = []
         if (location) {
-            metadata.push({key: "location", value: geoPositonToPojo(location.coords)})
+            metadata.push({ key: "location", value: geoPositonToPojo(location.coords) })
         }
         if (data.image && data.image.length > 0) {
             const { skylink } = await upload(data.image, {});
-            metadata.push({key: "image", value: skylink})
+            metadata.push({ key: "image", value: skylink })
         }
         setShow(false)
         reset()
         await addUpdate({
-            variables: {input: {trackable: objectId, message: data.message, metadata: metadata}},
+            variables: { input: { trackable: objectId, message: data.message, metadata: metadata } },
             optimisticResponse: {
                 __typename: "Mutation",
                 addUpdate: {
@@ -304,14 +304,14 @@ export function ObjectPage() {
                     }
                 }
             },
-            update: (proxy, {data: {addUpdate}})=> {
-                const data:any = proxy.readQuery({query: GET_TRACKABLE, variables: {did: objectId}})
+            update: (proxy, { data: { addUpdate } }) => {
+                const data: any = proxy.readQuery({ query: GET_TRACKABLE, variables: { did: objectId } })
                 log("update called: ", addUpdate, " readQuery: ", data)
                 // data.me.collection.trackables.push(createTrackable.trackable)
                 // TODO: this should be a deep merge
                 proxy.writeQuery({
-                    query: GET_TRACKABLE, 
-                    variables: {did: objectId},
+                    query: GET_TRACKABLE,
+                    variables: { did: objectId },
                     data: {
                         ...data,
                         getTrackable: {

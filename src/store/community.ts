@@ -1,11 +1,11 @@
-import {Community, EcdsaKey, ChainTree, setDataTransaction} from 'tupelo-wasm-sdk'
+import { Community, EcdsaKey, ChainTree, setDataTransaction } from 'tupelo-wasm-sdk'
 import debug from 'debug'
 
 const log = debug("appCommunity")
 
 let _appCommunityPromise: Promise<Community>
 
-declare const Go:any;
+declare const Go: any;
 
 // TODO: we can use named chaintrees, but that requires an sdk change
 const devCommunityConfig = `

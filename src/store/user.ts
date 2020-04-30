@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import {getAppCommunity} from './community'
+import { getAppCommunity } from './community'
 import { User, verifyAccount, register } from './identity';
 import { EcdsaKey, Repo } from 'tupelo-wasm-sdk';
 import debug from 'debug';
@@ -19,18 +19,18 @@ export class AppUser extends EventEmitter {
     userPromise?: Promise<User | undefined>
     repo: Promise<Repo>
 
-    static userNamespace?:Buffer
+    static userNamespace?: Buffer
     static events = new EventEmitter()
     private static namespaceSet = false
 
-    static setUserNamespace = (namespace:string) => {
+    static setUserNamespace = (namespace: string) => {
         log("userNamespace set to: ", namespace)
         AppUser.userNamespace = Buffer.from(namespace)
         AppUser.namespaceSet = true
         AppUser.events.emit('_usernamespace_set')
     }
 
-    static afterRegister?:(user:User)=>Promise<User>
+    static afterRegister?: (user: User) => Promise<User>
 
     constructor() {
         super()
@@ -43,7 +43,7 @@ export class AppUser extends EventEmitter {
         if (AppUser.namespaceSet) {
             this.loadFromRepo()
         } else {
-            AppUser.events.once('_usernamespace_set', ()=> {
+            AppUser.events.once('_usernamespace_set', () => {
                 this.loadFromRepo()
             })
         }

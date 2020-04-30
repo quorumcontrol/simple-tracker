@@ -47,35 +47,35 @@ export class AppCollection {
         let treeP = this.treePromise
 
         this.treePromise = new Promise<ChainTree>(async (resolve, reject) => {
-                let tree = await treeP
-                const key = tree.key
-                try {
-                    const latestTree = await Tupelo.getLatest((await tree.id())!)
-                    tree = latestTree // doesn't get here on error
-                    tree.key = key
-                } catch(err) {
-                    // if we go to get latest and it's not found, we'll
-                    // just assume we're still at a blank tree (which is fine)
-                    // and just fall back to the original 
-                    if (!err.message.includes("not found")) {
-                        reject(err)
-                        return
-                    }
+            let tree = await treeP
+            const key = tree.key
+            try {
+                const latestTree = await Tupelo.getLatest((await tree.id())!)
+                tree = latestTree // doesn't get here on error
+                tree.key = key
+            } catch (err) {
+                // if we go to get latest and it's not found, we'll
+                // just assume we're still at a blank tree (which is fine)
+                // and just fall back to the original 
+                if (!err.message.includes("not found")) {
+                    reject(err)
+                    return
                 }
-                resolve(tree)
+            }
+            resolve(tree)
         })
         return this.treePromise
     }
 
-    async getTrackables():Promise<Trackable[]> {
+    async getTrackables(): Promise<Trackable[]> {
         const tree = await this.treePromise
         const dids = await tree.resolveData("trackables")
         if (!dids.value) {
             return []
         }
 
-        return Object.keys(dids.value).map((did:string)=> {
-            const trackable:Trackable = {
+        return Object.keys(dids.value).map((did: string) => {
+            const trackable: Trackable = {
                 did: did,
                 updates: {},
             }
@@ -94,7 +94,7 @@ export class AppCollection {
         // TODO: this needs to retry but for now we'll assume low throughput
         //  and just grab the latest
         let tree = await this.updateTree()
-        
+
         const c = await getAppCommunity()
         return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, false)]) // false means "unowned"
     }
@@ -103,7 +103,7 @@ export class AppCollection {
         // TODO: as in addTrackable, this needs to retry but for now we'll assume low throughput
         //  and just grab the latest
         let tree = await this.updateTree()
-        
+
         const c = await getAppCommunity()
         // set the trackable DID to the DID of the driver picking it up
         return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, user.did)])

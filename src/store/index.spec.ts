@@ -12,7 +12,7 @@ describe('resolvers', () => {
     const userEmail = `tester-${Math.random()}@testhead.eth`
     const password = 'password' // I like to live dangerously
 
-    before(async ()=> {
+    before(async () => {
         const registerMutation = gql`
             mutation RegisterUser($namespace: String!, $username: String!, $password: String!) {
                 register(namespace: $namespace, username: $username, password: $password) {
@@ -25,12 +25,12 @@ describe('resolvers', () => {
 
         const resp = await client.mutate({
             mutation: registerMutation,
-            variables: {namespace: userNamespace, username: userEmail, password: password}
+            variables: { namespace: userNamespace, username: userEmail, password: password }
         })
         expect(resp.error).to.be.undefined
     })
 
-    it('creates trackables', async ()=> {
+    it('creates trackables', async () => {
         const CREATE_TRACKABLE = gql`
             mutation CreateTrackable($input: CreateTrackableInput!) {
                 createTrackable(input: $input) {
@@ -58,8 +58,8 @@ describe('resolvers', () => {
 
         const mutateResp = await client.mutate({
             mutation: CREATE_TRACKABLE,
-            variables: {input: {name: "test1"}},
-            refetchQueries: [{query: appTrackableQuery}]
+            variables: { input: { name: "test1" } },
+            refetchQueries: [{ query: appTrackableQuery }]
         })
         expect(mutateResp.error).to.be.undefined
         expect(mutateResp.data.createTrackable.trackable.name).to.equal("test1")
@@ -90,7 +90,7 @@ describe('resolvers', () => {
         expect(resp.data.getTrackables.trackables).to.be.an("Array")
     })
 
-    it('can accept jobs', async ()=> {
+    it('can accept jobs', async () => {
         const acceptMutation = gql`
             mutation AcceptJob($input: AcceptJobInput) {
                 acceptJob(input: $input) {
@@ -111,18 +111,18 @@ describe('resolvers', () => {
         }
     `
 
-        const currUserResp = await client.query({query: CURRENT_USER})
+        const currUserResp = await client.query({ query: CURRENT_USER })
         expect(currUserResp.errors).to.be.undefined
 
         const createTrackableResp = await client.mutate({
             mutation: createTrackableMutation,
-            variables: {input: {name: "testtrackable"}}
-        }) 
+            variables: { input: { name: "testtrackable" } }
+        })
         expect(createTrackableResp.error).to.be.undefined
 
         const resp = await client.mutate({
             mutation: acceptMutation,
-            variables: {input: {user: currUserResp.data.me.did, trackable: createTrackableResp.data.createTrackable.trackable.did}}
+            variables: { input: { user: currUserResp.data.me.did, trackable: createTrackableResp.data.createTrackable.trackable.did } }
         })
 
         expect(resp.error).to.be.undefined
