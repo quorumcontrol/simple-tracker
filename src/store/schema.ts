@@ -1,4 +1,4 @@
-import {gql} from '@apollo/client'
+import { gql } from '@apollo/client'
 
 export const schema = gql`
 scalar JSON
@@ -19,6 +19,13 @@ enum TrackableStatus {
     Accepted
     PickedUp
     Delivered
+}
+
+type Recipient {
+    did: ID!
+    name: String
+    address: String
+    instructions: String
 }
 
 type Trackable {
@@ -124,6 +131,7 @@ type Mutation {
     login(namespace: String!, username: String!, password: String!): User
     register(namespace: String!, username: String!, password: String!): User
     logout(did:String): User
+    createRecipient(name: String!, password: String!, address: String!, instructions: String!): Recipient
     createTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload

@@ -33,6 +33,14 @@ export enum TrackableStatus {
   Delivered = 'Delivered'
 }
 
+export type Recipient = {
+   __typename?: 'Recipient';
+  did: Scalars['ID'];
+  name?: Maybe<Scalars['String']>;
+  address?: Maybe<Scalars['String']>;
+  instructions?: Maybe<Scalars['String']>;
+};
+
 export type Trackable = {
    __typename?: 'Trackable';
   did: Scalars['ID'];
@@ -152,6 +160,7 @@ export type Mutation = {
   login?: Maybe<User>;
   register?: Maybe<User>;
   logout?: Maybe<User>;
+  createRecipient?: Maybe<Recipient>;
   createTrackable?: Maybe<CreateTrackablePayload>;
   addUpdate?: Maybe<AddUpdatePayload>;
   addCollaborator?: Maybe<AddCollaboratorPayload>;
@@ -175,6 +184,14 @@ export type MutationRegisterArgs = {
 
 export type MutationLogoutArgs = {
   did?: Maybe<Scalars['String']>;
+};
+
+
+export type MutationCreateRecipientArgs = {
+  name: Scalars['String'];
+  password: Scalars['String'];
+  address: Scalars['String'];
+  instructions: Scalars['String'];
 };
 
 
@@ -276,6 +293,7 @@ export type ResolversTypes = {
   User: ResolverTypeWrapper<User>,
   ID: ResolverTypeWrapper<Scalars['ID']>,
   TrackableStatus: TrackableStatus,
+  Recipient: ResolverTypeWrapper<Recipient>,
   Trackable: ResolverTypeWrapper<Trackable>,
   TrackableCollaboratorConnection: ResolverTypeWrapper<TrackableCollaboratorConnection>,
   TrackableUpdateConnection: ResolverTypeWrapper<TrackableUpdateConnection>,
@@ -306,6 +324,7 @@ export type ResolversParentTypes = {
   User: User,
   ID: Scalars['ID'],
   TrackableStatus: TrackableStatus,
+  Recipient: Recipient,
   Trackable: Trackable,
   TrackableCollaboratorConnection: TrackableCollaboratorConnection,
   TrackableUpdateConnection: TrackableUpdateConnection,
@@ -340,6 +359,14 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
   collection?: Resolver<Maybe<ResolversTypes['TrackableCollection']>, ParentType, ContextType>,
   pendingDeliveries?: Resolver<Maybe<ResolversTypes['TrackableCollection']>, ParentType, ContextType>,
   completedDeliveries?: Resolver<Maybe<ResolversTypes['TrackableCollection']>, ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
+export type RecipientResolvers<ContextType = any, ParentType extends ResolversParentTypes['Recipient'] = ResolversParentTypes['Recipient']> = {
+  did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  address?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  instructions?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
@@ -424,6 +451,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   login?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationLoginArgs, 'namespace' | 'username' | 'password'>>,
   register?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationRegisterArgs, 'namespace' | 'username' | 'password'>>,
   logout?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationLogoutArgs, never>>,
+  createRecipient?: Resolver<Maybe<ResolversTypes['Recipient']>, ParentType, ContextType, RequireFields<MutationCreateRecipientArgs, 'name' | 'password' | 'address' | 'instructions'>>,
   createTrackable?: Resolver<Maybe<ResolversTypes['CreateTrackablePayload']>, ParentType, ContextType, RequireFields<MutationCreateTrackableArgs, 'input'>>,
   addUpdate?: Resolver<Maybe<ResolversTypes['AddUpdatePayload']>, ParentType, ContextType, RequireFields<MutationAddUpdateArgs, 'input'>>,
   addCollaborator?: Resolver<Maybe<ResolversTypes['AddCollaboratorPayload']>, ParentType, ContextType, RequireFields<MutationAddCollaboratorArgs, 'input'>>,
@@ -433,6 +461,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 export type Resolvers<ContextType = any> = {
   JSON?: GraphQLScalarType,
   User?: UserResolvers<ContextType>,
+  Recipient?: RecipientResolvers<ContextType>,
   Trackable?: TrackableResolvers<ContextType>,
   TrackableCollaboratorConnection?: TrackableCollaboratorConnectionResolvers<ContextType>,
   TrackableUpdateConnection?: TrackableUpdateConnectionResolvers<ContextType>,

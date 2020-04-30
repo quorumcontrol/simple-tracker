@@ -99,6 +99,45 @@ export const verifyAccount = async (username: string, password: string, appNames
     }
 }
 
+export const createNamedTree = async (name: string, password: string, appNamespace: Uint8Array) => {
+    const c = await getAppCommunity()
+
+    log('creating key')
+    const insecureKey = await insecureUsernameKey(name, appNamespace)
+    const secureKey = await securePasswordKey(name, password)
+    const secureKeyAddress = await secureKey.address()
+    const treeDid = await insecureKey.toDid()
+
+    try {
+        let tip = await c.getTip(treeDid)
+        if (tip) {
+            throw new Error("account already exists")
+        }
+    } catch (e) {
+        if (!(e.message.includes("not found"))) {
+            throw e
+        }
+        // otherwise we didn't find the user so we can proceed
+    }
+
+    log("creating named chaintree")
+    const namedTree = await ChainTree.newEmptyTree(c.blockservice, insecureKey)
+
+    log("transferring ownership of user chaintree and registering tweet feed")
+    await c.playTransactions(namedTree, [
+        // Set the ownership of the user chaintree to our secure key (thus
+        // owning the username)
+        setOwnershipTransaction([secureKeyAddress]),
+
+        // Cache the username inside of the chaintree for easier access later
+        setDataTransaction(usernamePath, name),
+    ])
+
+    namedTree.key = secureKey
+
+    return namedTree
+}
+
 /**
  * Registers a username-password pair by creating a new account chaintree
  * corresponding to the username, and transferring ownership to the secure key
@@ -106,45 +145,13 @@ export const verifyAccount = async (username: string, password: string, appNames
  *
  * Returns a handle for the created * chaintree
  */
-export const register = async (username: string, password: string, appNamespace:Uint8Array) => {
+export const register = async (username: string, password: string, appNamespace: Uint8Array) => {
     log("register")
     const c = await getAppCommunity()
-    log('creating key')
-    const insecureKey = await insecureUsernameKey(username, appNamespace)
-    const secureKey = await securePasswordKey(username, password)
-    const secureKeyAddress = await secureKey.address()
-    const treeDid = await insecureKey.toDid()
 
-    try {
-        let tip = await c.getTip(treeDid)
-        if (tip) {
-            throw new Error("user already exists")
-        }
-    } catch(e) {
-        if (!(e.message.includes("not found"))) {
-            throw e
-        }
-        // otherwise we didn't find the user so we can proceed
-    }
+    let userTree = await createNamedTree(username, password, appNamespace)
 
-    log("creating user chaintree")
-    const userTree = await ChainTree.newEmptyTree(c.blockservice, insecureKey)
-
-    log("transferring ownership of user chaintree and registering tweet feed")
-    await c.playTransactions(userTree, [
-        // Set the ownership of the user chaintree to our secure key (thus
-        // owning the username)
-        setOwnershipTransaction([secureKeyAddress]),
-
-        // Cache the username inside of the chaintree for easier access later
-        setDataTransaction(usernamePath, username),
-    ])
-
-    userTree.key = secureKey
-
-    const user = new User(username, userTree, c)
-
-    return user
+    return new User(username, userTree, c)
 }
 
 /**

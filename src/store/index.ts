@@ -7,6 +7,8 @@ import {
 import {
     User,
     MutationRegisterArgs,
+    Recipient,
+    MutationCreateRecipientArgs,
     TrackableCollection,
     Trackable,
     MutationCreateTrackableArgs,
@@ -34,10 +36,12 @@ import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
 import debug from 'debug';
 import { Drivers } from './drivers';
+import { recipientNamePath, recipientAddressPath, recipientInstructionsPath } from './appRecipient'
+
 const GraphQLJSON = require('graphql-type-json');
 
 export const userNamespace = 'givingchain'
-export const usernamePath = "givingchain/username"
+export const usernamePath = `${userNamespace}/username`
 
 const log = debug("store.resolvers")
 
@@ -437,6 +441,20 @@ const resolvers: Resolvers = {
             // then mark it owned on the appCollection
             await appCollection.ownTrackable({did: trackable, updates: {}}, {did: user})
         }
+
+        createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, { communityPromise }: TrackerContext): Promise<Recipient> => {
+            log("createRecipient")
+
+            let recipientTree = await createRecipientTree(userNamespace, name, password, address, instructions)
+            const id = await recipientTree.id()
+
+            return {
+                did: id!,
+                name: name,
+                address: address,
+                instructions: instructions,
+            }
+        },
     }
 }
 
