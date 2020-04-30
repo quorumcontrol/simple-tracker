@@ -195,6 +195,10 @@ export function LocationWidget({ latitude, longitude }: { latitude: number, long
     const [show, setShow] = useState(false)
     const handleToggle = () => setShow(!show);
 
+    if (!latitude || !longitude) {
+        return <></>
+    }
+
     const position: LatLngTuple = [latitude, longitude]
 
     return (
