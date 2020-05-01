@@ -66,7 +66,7 @@ export function TrackablePage() {
         let skylink: string | undefined = undefined
 
         if (image && image.length > 0) {
-            const resp = await upload(image, {});
+            const resp = await upload(image.item(0)!, {});
             log("skylink: ", resp.skylink)
             skylink = resp.skylink
         }

@@ -84,6 +84,12 @@ export type TrackableCollection = {
     trackables?: Maybe<Array<Trackable>>;
 };
 
+export type Address = {
+    __typename?: 'Address';
+    street?: Maybe<Scalars['String']>;
+    cityStateZip?: Maybe<Scalars['String']>;
+};
+
 export type AppCollection = {
     __typename?: 'AppCollection';
     did: Scalars['ID'];
@@ -93,6 +99,13 @@ export type AppCollection = {
 export type CreateTrackableInput = {
     name: Scalars['String'];
     image?: Maybe<Scalars['String']>;
+    address?: Maybe<AddressInput>;
+    instructions?: Maybe<Scalars['String']>;
+};
+
+export type AddressInput = {
+    street: Scalars['String'];
+    cityStateZip: Scalars['String'];
 };
 
 export type MetadataEntryInput = {
@@ -300,8 +313,10 @@ export type ResolversTypes = {
     TrackableUpdate: ResolverTypeWrapper<TrackableUpdate>,
     MetadataEntry: ResolverTypeWrapper<MetadataEntry>,
     TrackableCollection: ResolverTypeWrapper<TrackableCollection>,
+    Address: ResolverTypeWrapper<Address>,
     AppCollection: ResolverTypeWrapper<AppCollection>,
     CreateTrackableInput: CreateTrackableInput,
+    AddressInput: AddressInput,
     MetadataEntryInput: MetadataEntryInput,
     AddUpdateInput: AddUpdateInput,
     CreateTrackablePayload: ResolverTypeWrapper<CreateTrackablePayload>,
@@ -331,8 +346,10 @@ export type ResolversParentTypes = {
     TrackableUpdate: TrackableUpdate,
     MetadataEntry: MetadataEntry,
     TrackableCollection: TrackableCollection,
+    Address: Address,
     AppCollection: AppCollection,
     CreateTrackableInput: CreateTrackableInput,
+    AddressInput: AddressInput,
     MetadataEntryInput: MetadataEntryInput,
     AddUpdateInput: AddUpdateInput,
     CreateTrackablePayload: CreateTrackablePayload,
@@ -413,6 +430,12 @@ export type TrackableCollectionResolvers<ContextType = any, ParentType extends R
     __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
+export type AddressResolvers<ContextType = any, ParentType extends ResolversParentTypes['Address'] = ResolversParentTypes['Address']> = {
+    street?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+    cityStateZip?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+    __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
 export type AppCollectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AppCollection'] = ResolversParentTypes['AppCollection']> = {
     did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
     trackables?: Resolver<Maybe<Array<ResolversTypes['Trackable']>>, ParentType, ContextType>,
@@ -468,6 +491,7 @@ export type Resolvers<ContextType = any> = {
     TrackableUpdate?: TrackableUpdateResolvers<ContextType>,
     MetadataEntry?: MetadataEntryResolvers<ContextType>,
     TrackableCollection?: TrackableCollectionResolvers<ContextType>,
+    Address?: AddressResolvers<ContextType>,
     AppCollection?: AppCollectionResolvers<ContextType>,
     CreateTrackablePayload?: CreateTrackablePayloadResolvers<ContextType>,
     AddUpdatePayload?: AddUpdatePayloadResolvers<ContextType>,
