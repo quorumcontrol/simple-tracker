@@ -37,7 +37,7 @@ import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
 import debug from 'debug';
 import { Drivers } from './drivers';
-import { recipientNamePath, recipientAddressPath, recipientInstructionsPath } from './appRecipient'
+import { createRecipientTree, recipientNamePath, recipientAddressPath, recipientInstructionsPath } from './recipient'
 
 const GraphQLJSON = require('graphql-type-json');
 
@@ -197,7 +197,20 @@ const resolvers: Resolvers = {
             })
         }
     },
-
+    Recipient: {
+        name: async (recipient: Recipient, _context): Promise<String> => {
+            const tree = await Tupelo.getLatest(recipient.did)
+            return (await tree.resolveData(recipientNamePath)).value
+        },
+        address: async (recipient: Recipient, _context): Promise<String> => {
+            const tree = await Tupelo.getLatest(recipient.did)
+            return (await tree.resolveData(recipientAddressPath)).value
+        },
+        instructions: async (recipient: Recipient, _context): Promise<String> => {
+            const tree = await Tupelo.getLatest(recipient.did)
+            return (await tree.resolveData(recipientInstructionsPath)).value
+        },
+    },
     Query: {
         getTrackables: async (_root, _ctx: TrackerContext) => {
             const trackables = await appCollection.getTrackables()
@@ -270,7 +283,7 @@ const resolvers: Resolvers = {
                 setOwnershipTransaction(await drivers.graftableOwnership())
             ])
 
-            let trackable:Trackable = {
+            let trackable: Trackable = {
                 did: (await tree.id())!,
                 updates: {
                     edges: [
@@ -467,12 +480,12 @@ const resolvers: Resolvers = {
 
             // then mark it owned on the appCollection
             await appCollection.ownTrackable({ did: trackable, updates: {} }, { did: user })
-        }
+        },
 
         createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, { communityPromise }: TrackerContext): Promise<Recipient> => {
             log("createRecipient")
 
-            let recipientTree = await createRecipientTree(userNamespace, name, password, address, instructions)
+            let recipientTree = await createRecipientTree(name, password, address, instructions)
             const id = await recipientTree.id()
 
             return {
