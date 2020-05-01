@@ -68,12 +68,14 @@ export class AppCollection {
     }
 
     async getTrackables(): Promise<Trackable[]> {
+        log('getTrackables')
         const tree = await this.treePromise
         const dids = await tree.resolveData("trackables")
         if (!dids.value) {
             return []
         }
 
+        log('mapping trackables')
         return Object.keys(dids.value).map((did: string) => {
             const trackable: Trackable = {
                 did: did,

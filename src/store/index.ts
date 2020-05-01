@@ -53,6 +53,8 @@ function namespaceToPath(namespace: string) {
     return `/apps/${namespace}/collection`
 }
 
+Tupelo.setLogLevel("*", "error")
+
 const appCollection = new AppCollection({ name: `${userNamespace}/trackables`, namespace: userNamespace })
 
 const drivers = new Drivers({ region: 'princeton, nj', namespace: `${userNamespace}/drivers` })
@@ -150,17 +152,26 @@ const resolvers: Resolvers = {
             return { edges }
         },
         name: async (trackable: Trackable, _context): Promise<string> => {
+            if (trackable.name) {
+                return trackable.name
+            }
             log("name trackable: ", trackable)
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
             return (await resolveWithUndefined(tree, "name")).value
         },
         status: async (trackable: Trackable, _context): Promise<TrackableStatus | null> => {
+            if (trackable.status) {
+                return trackable.status
+            }
             log("status trackable: ", trackable)
             const tree = await Tupelo.getLatest(trackable.did)
             return (await resolveWithUndefined(tree, "status")).value
         },
         driver: async (trackable: Trackable, _context): Promise<User | null> => {
+            if (trackable.driver) {
+                return trackable.driver
+            }
             log("driver trackable: ", trackable)
             const tree = await Tupelo.getLatest(trackable.did)
             const driver = (await resolveWithUndefined(tree, "driver")).value
@@ -170,6 +181,9 @@ const resolvers: Resolvers = {
             return { did: driver }
         },
         image: async (trackable: Trackable, _context): Promise<string | null> => {
+            if (trackable.image) {
+                return trackable.image
+            }
             log("image trackable: ", trackable)
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
@@ -216,12 +230,12 @@ const resolvers: Resolvers = {
     },
 
     Query: {
-        getTrackables: async (_root, _ctx: TrackerContext) => {
+        getTrackables: async (_root, _ctx: TrackerContext):Promise<GraphQLAppCollection> => {
             const trackables = await appCollection.getTrackables()
             return {
-                did: await (await appCollection.treePromise).id()!,
+                did: (await (await appCollection.treePromise).id())!,
                 trackables: trackables,
-            } as GraphQLAppCollection
+            }
         },
         getTrackable: async (_root, { did }: QueryGetTrackableArgs, { communityPromise }: TrackerContext) => {
             log("get trackable: ", did)
