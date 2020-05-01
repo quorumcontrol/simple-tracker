@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Box, Spinner, Heading, Image, Text, Flex, Button, Icon } from '@chakra-ui/core'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
@@ -10,16 +10,25 @@ import debug from 'debug'
 const log = debug("pages.pickups")
 
 const PICKUPS_PAGE_QUERY = gql`
-    query PickUpsPage($filters: GetTrackablesFilter) {
+     {
         me {
             did
         }
-        getTrackables(filters: $filters) {
+        getTrackables {
             did
             trackables {
                 did
                 image
                 status
+                updates {
+                    edges {
+                        did
+                        metadata {
+                            key
+                            value
+                        }
+                    }
+                }
             }
         }
     }
@@ -38,18 +47,25 @@ export function PickUpsPage() {
     if (loading) {
         return (
             <Box>
-                <Spinner />
+                <Header />
+                <Flex align="center" justify="center" h="100%">
+                    <Spinner />
+                    <Text ml="1rem">Loading pickups</Text>
+                </Flex>
             </Box>
         )
     }
 
     if (error) {
+        console.error(error)
         return (
             <Box>
-                <Text>{error}</Text>
+                <Text>{error.message}:</Text>
+                <code>{error.stack}</code>
             </Box>
         )
     }
+
 
     log("pickups page data: ", data)
 
@@ -87,8 +103,10 @@ export function PickUpsPage() {
 function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
     const [acceptJob] = useMutation(ACCEPT_JOB_MUTATION)
     const history = useHistory()
+    const [loading,setLoading] = useState(false)
 
     const onClick = async ()=> {
+        setLoading(true)
         await acceptJob({
             variables: {
                 input: {
@@ -101,19 +119,39 @@ function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
     }
 
     return (
-        <Button onClick={onClick}>Accept Job</Button>
+        <Button isLoading={loading} onClick={onClick}>Accept Job</Button>
+    )
+}
+
+function PickupAddr({addr}:{addr:{street:string,cityStateZip:string}|undefined}) {
+    if (!addr) {
+        return <Text>Unknown pickup address</Text>
+    }
+    return (
+        <Text> 
+            {addr.street}<br/>
+            {addr.cityStateZip}
+        </Text>
     )
 }
 
 function TrackableCollection({ trackables,user }: { trackables: Trackable[],user:User }) {
 
+
     const trackableElements = trackables.map((trackable: Trackable) => {
+        const firstUpdate = (trackable.updates!.edges!)[0]
+        if (!firstUpdate) {
+            throw new Error("trackable was completed without a first update")
+        }
+
+        const pickupAddr = firstUpdate.metadata?.find((m) => m.key === "location")?.value
+        console.log("pickupAddr: ", pickupAddr, " first update: ", firstUpdate)
         return (
             <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did}>
                 {trackable.image &&
                     <Image src={getUrl(trackable.image)} />
                 }
-                <Text> TODO: Pick Up Address </Text>
+                <PickupAddr addr={pickupAddr}/>
                 <Text> TODO: Drop Off Address </Text>
                 { AcceptJobButton({trackable, user}) }
             </Box>
