@@ -1,6 +1,8 @@
+import { ChainTree, Tupelo, EcdsaKey, setDataTransaction, Community } from "tupelo-wasm-sdk"
 import { getAppCommunity } from './community';
 import { createNamedTree } from './identity';
-import { setDataTransaction } from 'tupelo-wasm-sdk'
+import { findOrCreateTree, updateTree } from "./openTree"
+import { Recipient } from '../generated/graphql'
 import debug from 'debug';
 
 const log = debug("store.recipient")
@@ -9,6 +11,7 @@ export const recipientNamespace = 'givingchain/recipient'
 export const recipientNamePath = `${recipientNamespace}/name`
 export const recipientAddressPath = `${recipientNamespace}/address`
 export const recipientInstructionsPath = `${recipientNamespace}/instructions`
+export const recipientListPath = `${recipientNamespace}/collection`
 
 export async function createRecipientTree(name: string, password: string, address: string, instructions: string) {
     const c = await getAppCommunity()
@@ -22,4 +25,40 @@ export async function createRecipientTree(name: string, password: string, addres
     await c.playTransactions(recipientTree, [addressTx, instructionsTx])
 
     return recipientTree
+}
+
+export class RecipientCollection {
+    private region: Buffer
+    private _key: Promise<EcdsaKey>
+    treePromise: Promise<ChainTree>
+
+    constructor(region: string) {
+        this.region = Buffer.from(region)
+        this._key = EcdsaKey.passPhraseKey(this.region, Buffer.from(recipientNamespace))
+        this.treePromise = findOrCreateTree(this.region, Buffer.from(recipientNamespace))
+    }
+
+    updateTree() {
+        this.treePromise = updateTree(this.treePromise)
+        return this.treePromise
+    }
+
+    async did() {
+        return (await this.key()).toDid()
+    }
+
+    key() {
+        return this._key
+    }
+
+    async addRecipient(recipient: Recipient) {
+        let tree = await this.updateTree()
+        const c = await getAppCommunity()
+        let dids = (await tree.resolveData(recipientListPath)).value
+        if (!dids) {
+            dids = []
+        }
+        dids.push(recipient.did)
+        return c.playTransactions(tree, [setDataTransaction(recipientListPath, dids)])
+    }
 }
