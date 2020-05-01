@@ -27,7 +27,7 @@ import {
     TrackableStatus,
     MetadataEntry,
 } from '../generated/graphql'
-import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction } from 'tupelo-wasm-sdk'
+import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, IResolveResponse } from 'tupelo-wasm-sdk'
 import { AppUser } from './user';
 import { makeExecutableSchema } from 'graphql-tools';
 import { SchemaLink } from '@apollo/link-schema';
@@ -60,6 +60,22 @@ function namespaceToPath(namespace: string) {
 const appCollection = new AppCollection({ name: `${userNamespace}/trackables`, namespace: userNamespace })
 
 const drivers = new Drivers({ region: 'princeton, nj', namespace: `${userNamespace}/drivers` })
+
+// there is a crappy IPLD bug where if you're resolving to something that has a value of undefined
+// then IPLD will error with 'Cannot convert undefined or null to object'
+const resolveWithUndefined = async (tree:ChainTree, path:string):Promise<IResolveResponse> => {
+    try {
+        return await tree.resolveData(path)
+    } catch(err) {
+        if (err.message.includes('Cannot convert undefined or null to object')) {
+            return {
+                remainderPath: [],
+                value: undefined,
+            }
+        }
+        throw err
+    }
+}
 
 /**
  * Looks up the user account chaintree for the given username, returning it if
@@ -141,26 +157,31 @@ const resolvers: Resolvers = {
             log("name trackable: ", trackable)
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
-            return (await tree.resolveData("name")).value
+            return (await resolveWithUndefined(tree, "name")).value
         },
         status: async (trackable: Trackable, _context): Promise<TrackableStatus | null> => {
+            log("status trackable: ", trackable)
             const tree = await Tupelo.getLatest(trackable.did)
-            return (await tree.resolveData("status")).value
+            return (await resolveWithUndefined(tree, "status")).value
         },
         driver: async (trackable: Trackable, _context): Promise<User | null> => {
+            log("driver trackable: ", trackable)
             const tree = await Tupelo.getLatest(trackable.did)
-            const driver = (await tree.resolveData("driver")).value
+            const driver = (await resolveWithUndefined(tree, "driver")).value
             if (!driver) {
                 return null
             }
             return { did: driver }
         },
-        image: async (trackable: Trackable, _context): Promise<string> => {
+        image: async (trackable: Trackable, _context): Promise<string | null> => {
+            log("image trackable: ", trackable)
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
-            return (await tree.resolveData("image")).value
+            return (await resolveWithUndefined(tree, "image")).value 
         },
         updates: async (trackable: Trackable, _context): Promise<TrackableUpdateConnection> => {
+            log("updates trackable: ", trackable)
+
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
             let updates = await tree.resolveData("updates")
@@ -185,7 +206,7 @@ const resolvers: Resolvers = {
         trackables: async (collection: TrackableCollection, _context): Promise<Trackable[]> => {
             const tree = await Tupelo.getLatest(collection.did)
             // this will be a map of timestamp to did
-            const trackableResp = (await tree.resolveData("updates"))
+            const trackableResp = (await resolveWithUndefined(tree, "updates"))
             log(trackableResp)
             const trackables = trackableResp.value
             if (!trackables) {
