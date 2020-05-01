@@ -121,11 +121,6 @@ type AcceptJobPayload {
     trackable: Trackable
 }
 
-input GetTrackablesFilter {
-    owned: Boolean
-    ownedBy: String
-}
-
 type Query {
     getTrackable(did: ID!):Trackable
     getTrackables:AppCollection

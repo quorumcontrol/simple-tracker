@@ -10,11 +10,11 @@ import debug from 'debug'
 const log = debug("pages.summary")
 
 const SUMMARY_PAGE_QUERY = gql`
-    query SummaryPage($filters: GetTrackablesFilter) {
+    {
         me {
             did
         }
-        getTrackables(filters: $filters) {
+        getTrackables {
             did
             trackables {
                 did
@@ -33,24 +33,29 @@ export function SummaryPage() {
     const { data, loading, error } = useQuery(SUMMARY_PAGE_QUERY)
     if (loading) {
         return (
-            <Flex align="center" justify="center" h="100%">
-                <Spinner />
-                <Text ml="1rem">Loading donations</Text>
-            </Flex>
+            <Box>
+                <Header />
+                <Flex align="center" justify="center" h="100%">
+                    <Spinner />
+                    <Text ml="1rem">Loading donations</Text>
+                </Flex>
+            </Box>
         )
     }
 
     if (error) {
+        console.error(error)
         return (
             <Box>
-                <Text>{error}</Text>
+                <Text>{error.message}:</Text>
+                <code>{error.stack}</code>
             </Box>
         )
     }
 
     log("summary page data: ", data)
 
-    if (data.getTrackables?.trackables?.length == 0) {
+    if (data.getTrackables?.trackables?.length === 0) {
         return (<Box>
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
@@ -64,14 +69,14 @@ export function SummaryPage() {
     }
 
     const available = data.getTrackables.trackables.filter((trackable: Trackable) => {
-        return trackable.status == TrackableStatus.Published
+        return trackable.status === TrackableStatus.Published
     })
 
     const myTrackables = data.getTrackables.trackables.filter((trackable: Trackable) => {
         return trackable.driver?.did === data.me.did && [TrackableStatus.Accepted, TrackableStatus.PickedUp].includes(trackable.status!)
     })
 
-    console.log(myTrackables)
+    log("myTrackables: ", myTrackables)
 
     return (
         <Box>
@@ -79,7 +84,7 @@ export function SummaryPage() {
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
                     <Box mt="2" color="gray.600" fontSize="sm">
-                        <Link to={`/pickups`}>Find more Deliveries <br /> ({available.length} Available) </Link> 
+                        <Link to="/pickups">Find more Deliveries <br /> ({available.length} Available) </Link> 
                     </Box>
                     <Box>
                         <Heading mb={3}>Your current deliveries</Heading>
