@@ -143,11 +143,6 @@ export type AcceptJobPayload = {
     trackable?: Maybe<Trackable>;
 };
 
-export type GetTrackablesFilter = {
-    owned?: Maybe<Scalars['Boolean']>;
-    ownedBy?: Maybe<Scalars['String']>;
-};
-
 export type Query = {
     __typename?: 'Query';
     getTrackable?: Maybe<Trackable>;
@@ -308,7 +303,6 @@ export type ResolversTypes = {
     AddCollaboratorInput: AddCollaboratorInput,
     AcceptJobInput: AcceptJobInput,
     AcceptJobPayload: ResolverTypeWrapper<AcceptJobPayload>,
-    GetTrackablesFilter: GetTrackablesFilter,
     Query: ResolverTypeWrapper<{}>,
     Mutation: ResolverTypeWrapper<{}>,
 };
@@ -340,7 +334,6 @@ export type ResolversParentTypes = {
     AddCollaboratorInput: AddCollaboratorInput,
     AcceptJobInput: AcceptJobInput,
     AcceptJobPayload: AcceptJobPayload,
-    GetTrackablesFilter: GetTrackablesFilter,
     Query: {},
     Mutation: {},
 };
