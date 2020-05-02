@@ -5,7 +5,9 @@ import { Trackable, User, TrackableStatus } from '../generated/graphql'
 import { getUrl } from '../lib/skynet'
 import { useHistory } from "react-router-dom";
 import Header from '../components/header'
+import { SUMMARY_PAGE_QUERY } from './summary'
 import debug from 'debug'
+import PickupAddr from '../components/pickupaddr'
 
 const log = debug("pages.pickups")
 
@@ -20,14 +22,9 @@ const PICKUPS_PAGE_QUERY = gql`
                 did
                 image
                 status
-                updates {
-                    edges {
-                        did
-                        metadata {
-                            key
-                            value
-                        }
-                    }
+                metadata {
+                    key
+                    value
                 }
             }
         }
@@ -114,6 +111,7 @@ function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
                     user: user.did,
                 }
             },
+            refetchQueries: [{query: PICKUPS_PAGE_QUERY}, {query: SUMMARY_PAGE_QUERY}]
         })
         history.push('/summary')
     }
@@ -123,29 +121,12 @@ function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
     )
 }
 
-function PickupAddr({addr}:{addr:{street:string,cityStateZip:string}|undefined}) {
-    if (!addr) {
-        return <Text>Unknown pickup address</Text>
-    }
-    return (
-        <Text> 
-            {addr.street}<br/>
-            {addr.cityStateZip}
-        </Text>
-    )
-}
-
 function TrackableCollection({ trackables,user }: { trackables: Trackable[],user:User }) {
 
 
     const trackableElements = trackables.map((trackable: Trackable) => {
-        const firstUpdate = (trackable.updates!.edges!)[0]
-        if (!firstUpdate) {
-            throw new Error("trackable was completed without a first update")
-        }
-
-        const pickupAddr = firstUpdate.metadata?.find((m) => m.key === "location")?.value
-        console.log("pickupAddr: ", pickupAddr, " first update: ", firstUpdate)
+        const pickupAddr = trackable.metadata?.find((m) => m.key === "location")?.value
+        log("pickupAddr: ", pickupAddr)
         return (
             <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden" key={trackable.did}>
                 {trackable.image &&

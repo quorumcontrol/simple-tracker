@@ -189,6 +189,14 @@ const resolvers: Resolvers = {
             const tree = await Tupelo.getLatest(did)
             return (await resolveWithUndefined(tree, "image")).value 
         },
+        metadata: async (trackable: Trackable, _context): Promise<MetadataEntry[]> => {
+            if (trackable.metadata) {
+                return trackable.metadata
+            }
+            log("trackable metadata")
+            const tree = await Tupelo.getLatest(trackable.did)
+            return (await resolveWithUndefined(tree, "metadata")).value 
+        },
         updates: async (trackable: Trackable, _context): Promise<TrackableUpdateConnection> => {
             log("updates trackable: ", trackable)
 
@@ -276,10 +284,8 @@ const resolvers: Resolvers = {
                 name: input.name,
                 image: input.image,
                 status: TrackableStatus.Published,
+                metadata: [{ key: "location", value: input.address }],
             }
-
-            let metadata: MetadataEntry[] = []
-            metadata.push({ key: "location", value: input.address })
 
             let message = "ready for pickup"
             if ((input?.instructions?.trim() || "").length > 0) {
@@ -291,7 +297,6 @@ const resolvers: Resolvers = {
                 did: `${(await tree.id())}-${timestamp}`,
                 timestamp: timestamp,
                 message: message,
-                metadata: metadata,
             }
 
             log("playing Tupelo transactions for trackable")
@@ -486,7 +491,7 @@ const resolvers: Resolvers = {
                 userDid: loggedinUser.did!,
                 userName: loggedinUser.userName,
             }
-            console.log("update: ", update)
+            log("update: ", update)
             let c = await communityPromise
 
             await c.playTransactions(trackableTree, [

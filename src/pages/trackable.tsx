@@ -90,7 +90,7 @@ export function TrackablePage() {
             },
             update: (proxy, { data: { createTrackable } }) => {
                 const data: any = proxy.readQuery({ query: GET_TRACKABLES })
-                console.log("update called: ", createTrackable, " readQuery: ", data)
+                log("update called: ", createTrackable, " readQuery: ", data)
                 // data.me.collection.trackables.push(createTrackable.trackable)
                 // TODO: this should be a deep merge
                 proxy.writeQuery({
