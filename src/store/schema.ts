@@ -29,6 +29,7 @@ type Trackable {
     collaborators: TrackableCollaboratorConnection
     status: TrackableStatus
     driver: User # this is only available on trackables that are part of a collection
+    metadata: [MetadataEntry!]
 }
 
 type TrackableCollaboratorConnection {
