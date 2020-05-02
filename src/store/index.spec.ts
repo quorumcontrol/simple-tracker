@@ -74,8 +74,8 @@ describe('resolvers', () => {
 
     it('queries trackables', async () => {
         const query = gql`
-            query GetTrackables($filters: GetTrackablesFilter) {
-                getTrackables(filters: $filters) {
+            query GetTrackables {
+                getTrackables {
                     did
                     trackables {
                         did
