@@ -45,18 +45,14 @@ export function DonationStatusPage() {
     }
 
     const enhancedUpdates = trackable.updates.edges?.map((u: TrackableUpdate) => {
-        let eu = Object.assign(Object.create({}), u)
-        
-        eu.timestampDate = new Date(u.timestamp)
-
-        const image = u.metadata?.find((m) => m.key === "image")?.value
-
-        eu.image = image
-
-        return eu
+        return {
+            ...u,
+            timestampDate: new Date(u.timestamp),
+            image: u.metadata?.find((m) => m.key === "image")?.value,
+        }
     })
 
-    const sortedUpdates = enhancedUpdates?.sort((a, b) => b.timestampDate - a.timestampDate)
+    const sortedUpdates = enhancedUpdates?.sort((a, b) => b.timestampDate.getTime() - a.timestampDate.getTime())
     const firstUpdate = sortedUpdates && sortedUpdates[0]
     const restUpdates = sortedUpdates?.slice(1)
 
