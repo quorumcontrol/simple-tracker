@@ -37,7 +37,7 @@ import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
 import debug from 'debug';
 import { Drivers } from './drivers';
-import { createRecipientTree, recipientNamePath, recipientAddressPath, recipientInstructionsPath } from './recipient'
+import { RecipientCollection, createRecipientTree, recipientNamePath, recipientAddressPath, recipientInstructionsPath } from './recipient'
 
 const GraphQLJSON = require('graphql-type-json');
 
@@ -62,6 +62,7 @@ Tupelo.setLogLevel("*", "error")
 const appCollection = new AppCollection({ name: `${userNamespace}/trackables`, namespace: userNamespace })
 
 const drivers = new Drivers({ region: 'princeton, nj', namespace: `${userNamespace}/drivers` })
+const recipients = new RecipientCollection('princeton, nj')
 
 // there is a crappy IPLD bug where if you're resolving to something that has a value of undefined
 // then IPLD will error with 'Cannot convert undefined or null to object'
@@ -522,13 +523,16 @@ const resolvers: Resolvers = {
 
             let recipientTree = await createRecipientTree(name, password, address, instructions)
             const id = await recipientTree.id()
-
-            return {
+            let newRecipient = {
                 did: id!,
                 name: name,
                 address: address,
                 instructions: instructions,
             }
+
+            recipients.add(newRecipient)
+
+            return newRecipient
         },
     }
 }

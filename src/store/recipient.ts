@@ -51,7 +51,7 @@ export class RecipientCollection {
         return this._key
     }
 
-    async addRecipient(recipient: Recipient) {
+    async add(recipient: Recipient) {
         let tree = await this.updateTree()
         const c = await getAppCommunity()
         let dids = (await tree.resolveData(recipientListPath)).value
