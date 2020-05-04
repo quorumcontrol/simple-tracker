@@ -6,8 +6,6 @@ import { useParams } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 import { Trackable, TrackableUpdate } from "../generated/graphql";
 import { getUrl } from "../lib/skynet";
-import { getAppCommunity } from "../store/community";
-import { Tupelo } from "tupelo-wasm-sdk";
 
 const log = debug("pages.donationStatus")
 
@@ -52,7 +50,9 @@ export function DonationStatusPage() {
         }
     })
 
-    const sortedUpdates = enhancedUpdates?.sort((a, b) => b.timestampDate.getTime() - a.timestampDate.getTime())
+    log('enhancedUpdates: ', enhancedUpdates)
+
+    const sortedUpdates = enhancedUpdates?.sort((a, b) => a.timestampDate.getTime() - b.timestampDate.getTime())
     const firstUpdate = sortedUpdates && sortedUpdates[0]
     const restUpdates = sortedUpdates?.slice(1)
 
@@ -61,11 +61,11 @@ export function DonationStatusPage() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column" align="center">
                 <Stack spacing={5}>
-                    <Text>Donation Status for {trackableId}</Text>
+                    <Text>Donation Status for<br/>{trackableId}</Text>
                     { query.loading && <Spinner />}
                     <Flex>
                         {
-                            trackable.image && trackable.image.length > 0 &&
+                            trackable.image &&
                             <Image src={getUrl(trackable.image!)} size="150px" rounded="lg" />
                         }
                         {
@@ -78,10 +78,10 @@ export function DonationStatusPage() {
                     {
                         restUpdates && restUpdates.map((u) => {
                             return (
-                                <Flex>
+                                <Flex key={u.did}>
                                     { 
-                                        u.image && u.image.length > 0 &&
-                                        <Image src={getUrl(u.image)} size="150px" rounded="lg" />
+                                        u.image && 
+                                        <Image fallbackSrc="https://via.placeholder.com/150" src={getUrl(u.image)} size="150px" rounded="lg" />
                                     }
                                     <Flex alignItems="center">
                                         <Text ml={4}>

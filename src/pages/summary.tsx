@@ -88,11 +88,12 @@ export function SummaryPage() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
-                    <Box mt="2" color="gray.600" fontSize="sm">
-                        <Link to="/pickups">Find more Deliveries <br /> ({available.length} Available) </Link> 
-                    </Box>
-                    <Box>
-                        <Heading mb={3}>Your current deliveries</Heading>
+                    <Flex p="5" maxW="sm" borderWidth="1px" rounded="lg" alignItems="center">
+                        <Link to="/pickups">Find more Deliveries <br /> ({available.length} Available)</Link> 
+                        <Icon ml="auto" name="chevron-right" />
+                    </Flex>
+                    <Box mt={5}>
+                        <Heading mb={5} size="sm">Your current deliveries</Heading>
                         <TrackableCollection trackables={myTrackables} user={data.me} />
                     </Box>
 
@@ -119,7 +120,7 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
 
         return (
             <Link to={link} key={trackable.did}>
-                <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden">
+                <Box p="5" mt={2} maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden">
                     {trackable.image &&
                         <Image src={getUrl(trackable.image)} />
                     }
