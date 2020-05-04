@@ -50,6 +50,7 @@ export type Trackable = {
   collaborators?: Maybe<TrackableCollaboratorConnection>;
   status?: Maybe<TrackableStatus>;
   driver?: Maybe<User>;
+  metadata?: Maybe<Array<MetadataEntry>>;
 };
 
 export type TrackableCollaboratorConnection = {
@@ -388,6 +389,7 @@ export type TrackableResolvers<ContextType = any, ParentType extends ResolversPa
   collaborators?: Resolver<Maybe<ResolversTypes['TrackableCollaboratorConnection']>, ParentType, ContextType>,
   status?: Resolver<Maybe<ResolversTypes['TrackableStatus']>, ParentType, ContextType>,
   driver?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
+  metadata?: Resolver<Maybe<Array<ResolversTypes['MetadataEntry']>>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 

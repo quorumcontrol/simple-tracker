@@ -194,6 +194,14 @@ const resolvers: Resolvers = {
             const tree = await Tupelo.getLatest(did)
             return (await resolveWithUndefined(tree, "image")).value
         },
+        metadata: async (trackable: Trackable, _context): Promise<MetadataEntry[]> => {
+            if (trackable.metadata) {
+                return trackable.metadata
+            }
+            log("trackable metadata")
+            const tree = await Tupelo.getLatest(trackable.did)
+            return (await resolveWithUndefined(tree, "metadata")).value 
+        },
         updates: async (trackable: Trackable, _context): Promise<TrackableUpdateConnection> => {
             log("updates trackable: ", trackable)
 
@@ -294,10 +302,8 @@ const resolvers: Resolvers = {
                 name: input.name,
                 image: input.image,
                 status: TrackableStatus.Published,
+                metadata: [{ key: "location", value: input.address }],
             }
-
-            let metadata: MetadataEntry[] = []
-            metadata.push({ key: "location", value: input.address })
 
             let message = "ready for pickup"
             if ((input?.instructions?.trim() || "").length > 0) {
@@ -309,7 +315,6 @@ const resolvers: Resolvers = {
                 did: `${(await tree.id())}-${timestamp}`,
                 timestamp: timestamp,
                 message: message,
-                metadata: metadata,
             }
 
             log("playing Tupelo transactions for trackable")
@@ -395,20 +400,16 @@ const resolvers: Resolvers = {
 
         },
         addUpdate: async (_root, { input: { trackable, message, metadata } }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
-            let user
-            if (appUser.userPromise) {
-                log("loading current user")
-                const userResp = await appUser.userPromise
-                if (userResp !== undefined) {
-                    user = userResp!
-                    await user.load()
-                }
+            const user = await appUser.userPromise
+            await user?.load()
+            if (!user) {
+                throw new Error("you must be logged in to make an update")
             }
 
             let timestamp = (new Date()).toISOString()
 
             const trackableTree = await Tupelo.getLatest(trackable)
-            trackableTree.key = await drivers.key()
+            trackableTree.key = user.tree.key
 
             let update: TrackableUpdate = {
                 did: `${(await trackableTree.id())}-${timestamp}`,
@@ -504,14 +505,17 @@ const resolvers: Resolvers = {
                 userDid: loggedinUser.did!,
                 userName: loggedinUser.userName,
             }
-            console.log("update: ", update)
+            log("update: ", update)
             let c = await communityPromise
+            const driversTree = await drivers.treePromise
+            const driversDid = await driversTree.id()
 
             await c.playTransactions(trackableTree, [
                 setDataTransaction('driver', loggedinUser.did!),
                 setDataTransaction('status', TrackableStatus.Accepted),
                 setDataTransaction(`updates/${timestamp}`, update),
-                setOwnershipTransaction([loggedinUser.did])
+                setOwnershipTransaction([loggedinUser.did, driversDid!]),
+                setDataTransaction(`collaborators/${loggedinUser.did}`, true),
             ])
 
             // then mark it owned on the appCollection

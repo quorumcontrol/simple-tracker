@@ -6,10 +6,11 @@ import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
 import Header from '../components/header'
 import debug from 'debug'
+import PickupAddr from '../components/pickupaddr';
 
 const log = debug("pages.summary")
 
-const SUMMARY_PAGE_QUERY = gql`
+export const SUMMARY_PAGE_QUERY = gql`
     {
         me {
             did
@@ -21,6 +22,10 @@ const SUMMARY_PAGE_QUERY = gql`
                 status
                 name
                 image
+                metadata {
+                    key
+                    value
+                }
                 driver {
                     did
                 }
@@ -83,11 +88,12 @@ export function SummaryPage() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
-                    <Box mt="2" color="gray.600" fontSize="sm">
-                        <Link to="/pickups">Find more Deliveries <br /> ({available.length} Available) </Link> 
-                    </Box>
-                    <Box>
-                        <Heading mb={3}>Your current deliveries</Heading>
+                    <Flex p="5" maxW="sm" borderWidth="1px" rounded="lg" alignItems="center">
+                        <Link to="/pickups">Find more Deliveries <br /> ({available.length} Available)</Link> 
+                        <Icon ml="auto" name="chevron-right" />
+                    </Flex>
+                    <Box mt={5}>
+                        <Heading mb={5} size="sm">Your current deliveries</Heading>
                         <TrackableCollection trackables={myTrackables} user={data.me} />
                     </Box>
 
@@ -110,17 +116,18 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
                 break;
             }
         }
+        const pickupAddr = trackable.metadata?.find((m) => m.key === "location")?.value
 
         return (
             <Link to={link} key={trackable.did}>
-                <Box p="5" ml="2" maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden">
+                <Box p="5" mt={2} maxW="sm" borderWidth="1px" rounded="lg" overflow="hidden">
                     {trackable.image &&
                         <Image src={getUrl(trackable.image)} />
                     }
                     { trackable.status == TrackableStatus.PickedUp ?
                         <Text> <Icon name="check" /> Picked Up</Text>
                     :
-                        <Text> TODO: Pick Up Address </Text>
+                        <PickupAddr addr={pickupAddr}/>
                     }
                     <Text> TODO: Drop Off Address </Text>
                 </Box>
