@@ -3,6 +3,8 @@ import { Box, Heading, Flex, Button } from "@chakra-ui/core";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery } from "@apollo/client";
 import { LOGOUT_USER, CURRENT_USER } from "../store/queries";
+import { Image } from "@chakra-ui/core";
+import { Stack } from "@chakra-ui/core";
 
 const Header = () => {
     const [show, setShow] = React.useState(false);
@@ -32,12 +34,14 @@ const Header = () => {
             padding="1.5rem"
             bg="teal.500"
             color="white"
-        >
+        > 
+        
             <Flex align="center" mr={5}>
-                <Heading as="h1" size="lg">
-                    <Link to="/">
-                        GivingChain
-          </Link>
+                <Heading as="h1" size="xl">
+                <Stack isInline>
+                    <Image size="35px" rounded="full" src="GC400x400.jpg" alt="GivingChain Logo"/> 
+                    <Link to="/"> GivingChain </Link>
+                </Stack>
                 </Heading>
             </Flex>
 

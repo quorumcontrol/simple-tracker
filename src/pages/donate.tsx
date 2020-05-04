@@ -125,7 +125,7 @@ export function DonatePage() {
                 <form onSubmit={handleSubmit(onSubmit)}>
                     {
                         image.size === 0 ?
-                        <Button leftIcon="attachment" onClick={() => imageFileField.click()}>Take a Picture</Button>
+                        <Button width="225px" leftIcon="attachment" onClick={() => imageFileField.click()}>Take a Picture</Button>
                         :
                         (imageUploading ? 
                             <Flex><Spinner mr={5} /> Picture uploading</Flex>
@@ -166,13 +166,12 @@ export function DonatePage() {
                                 {errors.pickupAddr && errors.pickupAddr.cityStateZip && (errors.pickupAddr.cityStateZip)}
                             </FormErrorMessage>
                         </FormControl>
-                    </Stack>
-                    <Stack mt={10} spacing={3}>
+
                         <Text>Special Pickup Instructions?</Text>
                         <FormControl>
                             <Textarea
                                 name="instructions"
-                                placeholder="By mailbox?, Backporch?"
+                                placeholder="By mailbox? Backporch?"
                                 ref={register()}>
                             </Textarea>
                         </FormControl>
