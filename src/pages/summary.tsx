@@ -6,10 +6,11 @@ import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
 import Header from '../components/header'
 import debug from 'debug'
+import PickupAddr from '../components/pickupaddr';
 
 const log = debug("pages.summary")
 
-const SUMMARY_PAGE_QUERY = gql`
+export const SUMMARY_PAGE_QUERY = gql`
     {
         me {
             did
@@ -21,6 +22,10 @@ const SUMMARY_PAGE_QUERY = gql`
                 status
                 name
                 image
+                metadata {
+                    key
+                    value
+                }
                 driver {
                     did
                 }
@@ -110,6 +115,7 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
                 break;
             }
         }
+        const pickupAddr = trackable.metadata?.find((m) => m.key === "location")?.value
 
         return (
             <Link to={link} key={trackable.did}>
@@ -120,7 +126,7 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
                     { trackable.status == TrackableStatus.PickedUp ?
                         <Text> <Icon name="check" /> Picked Up</Text>
                     :
-                        <Text> TODO: Pick Up Address </Text>
+                        <PickupAddr addr={pickupAddr}/>
                     }
                     <Text> TODO: Drop Off Address </Text>
                 </Box>
