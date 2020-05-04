@@ -20,7 +20,7 @@ export function Index() {
           </Text>
                     <Text>
                         Your donations will help feed the hungry.<br />
-            There can be no greater gift.
+                        There can be no greater gift.
           </Text>
                     <Text>
                         Just snap a picture of your donation and tell us where you are
