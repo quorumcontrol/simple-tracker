@@ -427,9 +427,6 @@ export function ObjectPage() {
                             {updates}
                         </List>
                     </Box>
-                    <Box borderWidth="1px" p={10} rounded="sm" ml={5}>
-                        <CollaboratorUI did={objectId!} />
-                    </Box>
                 </Flex>
                 <Box mt={10}>
                     <QRCode value={window.location.href} />

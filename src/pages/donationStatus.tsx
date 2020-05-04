@@ -6,8 +6,7 @@ import { useParams } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 import { Trackable, TrackableUpdate } from "../generated/graphql";
 import { getUrl } from "../lib/skynet";
-import { getAppCommunity } from "../store/community";
-import { Tupelo } from "tupelo-wasm-sdk";
+import moment from 'moment';
 
 const log = debug("pages.donationStatus")
 
@@ -52,7 +51,9 @@ export function DonationStatusPage() {
         }
     })
 
-    const sortedUpdates = enhancedUpdates?.sort((a, b) => b.timestampDate.getTime() - a.timestampDate.getTime())
+    log('enhancedUpdates: ', enhancedUpdates)
+
+    const sortedUpdates = enhancedUpdates?.sort((a, b) => a.timestampDate.getTime() - b.timestampDate.getTime())
     const firstUpdate = sortedUpdates && sortedUpdates[0]
     const restUpdates = sortedUpdates?.slice(1)
 
@@ -61,33 +62,38 @@ export function DonationStatusPage() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column" align="center">
                 <Stack spacing={5}>
-                    <Text>Donation Status for {trackableId}</Text>
-                    { query.loading && <Spinner />}
-                    <Flex>
+                    <Text>Donation Status for</Text>
+                    <Text fontSize="xs">{trackableId}</Text>
+                    <Flex p={5} shadow="md" borderWidth="1px">
+                        { query.loading && <Spinner />}
                         {
-                            trackable.image && trackable.image.length > 0 &&
+                            trackable.image &&
                             <Image src={getUrl(trackable.image!)} size="150px" rounded="lg" />
                         }
                         {
                             firstUpdate &&
-                            <Flex alignItems="center">
-                                <Text ml={4}>Donated: {firstUpdate.timestampDate.toLocaleDateString()}</Text>
-                            </Flex>
+                            <Box p={4}>
+                                <Text>{firstUpdate.timestampDate.toLocaleString()}</Text>
+                                <Text>Donated</Text>
+                            </Box>
                         }
                     </Flex>
                     {
                         restUpdates && restUpdates.map((u) => {
                             return (
-                                <Flex>
+                                <Flex key={u.did} p={5} shadow="md" borderWidth="1px">
                                     { 
-                                        u.image && u.image.length > 0 &&
-                                        <Image src={getUrl(u.image)} size="150px" rounded="lg" />
+                                        u.image && 
+                                        <Image fallbackSrc="https://via.placeholder.com/150" src={getUrl(u.image)} size="150px" rounded="lg" />
                                     }
-                                    <Flex alignItems="center">
-                                        <Text ml={4}>
-                                            {u.message}: {u.timestampDate.toLocaleDateString()}
+                                    <Box p={4}>
+                                        <Text>
+                                            {u.timestampDate.toLocaleString()}
                                         </Text>
-                                    </Flex>
+                                        <Text>
+                                            {u.message}
+                                        </Text>
+                                    </Box>
                                 </Flex>
                             )
                         })
