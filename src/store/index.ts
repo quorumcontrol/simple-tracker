@@ -382,20 +382,16 @@ const resolvers: Resolvers = {
 
         },
         addUpdate: async (_root, { input: { trackable, message, metadata } }: MutationAddUpdateArgs, { communityPromise }: TrackerContext): Promise<AddUpdatePayload | undefined> => {
-            let user
-            if (appUser.userPromise) {
-                log("loading current user")
-                const userResp = await appUser.userPromise
-                if (userResp !== undefined) {
-                    user = userResp!
-                    await user.load()
-                }
+            const user = await appUser.userPromise
+            await user?.load()
+            if (!user) {
+                throw new Error("you must be logged in to make an update")
             }
 
             let timestamp = (new Date()).toISOString()
 
             const trackableTree = await Tupelo.getLatest(trackable)
-            trackableTree.key = await drivers.key()
+            trackableTree.key = user.tree.key
 
             let update: TrackableUpdate = {
                 did: `${(await trackableTree.id())}-${timestamp}`,
@@ -493,12 +489,15 @@ const resolvers: Resolvers = {
             }
             log("update: ", update)
             let c = await communityPromise
+            const driversTree = await drivers.treePromise
+            const driversDid = await driversTree.id()
 
             await c.playTransactions(trackableTree, [
                 setDataTransaction('driver', loggedinUser.did!),
                 setDataTransaction('status', TrackableStatus.Accepted),
                 setDataTransaction(`updates/${timestamp}`, update),
-                setOwnershipTransaction([loggedinUser.did])
+                setOwnershipTransaction([loggedinUser.did, driversDid!]),
+                setDataTransaction(`collaborators/${loggedinUser.did}`, true),
             ])
 
             // then mark it owned on the appCollection
