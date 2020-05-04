@@ -37,7 +37,7 @@ export type Recipient = {
    __typename?: 'Recipient';
   did: Scalars['ID'];
   name?: Maybe<Scalars['String']>;
-  address?: Maybe<Scalars['String']>;
+  address?: Maybe<Address>;
   instructions?: Maybe<Scalars['String']>;
 };
 
@@ -199,7 +199,7 @@ export type MutationLogoutArgs = {
 export type MutationCreateRecipientArgs = {
   name: Scalars['String'];
   password: Scalars['String'];
-  address: Scalars['String'];
+  address: Address;
   instructions: Scalars['String'];
 };
 
@@ -376,7 +376,7 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
 export type RecipientResolvers<ContextType = any, ParentType extends ResolversParentTypes['Recipient'] = ResolversParentTypes['Recipient']> = {
   did?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
-  address?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  address?: Resolver<Maybe<ResolversTypes['Address']>, ParentType, ContextType>,
   instructions?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };

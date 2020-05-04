@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 import { Trackable, TrackableUpdate } from "../generated/graphql";
 import { getUrl } from "../lib/skynet";
-import moment from 'moment';
 
 const log = debug("pages.donationStatus")
 
@@ -34,7 +33,7 @@ const GET_TRACKABLE = gql`
 export function DonationStatusPage() {
     const { trackableId } = useParams()
 
-    const query = useQuery(GET_TRACKABLE, { variables: { did: trackableId! }})
+    const query = useQuery(GET_TRACKABLE, { variables: { did: trackableId! } })
     let trackable: Trackable = { name: "Loading", did: trackableId!, image: "", updates: {} }
     if (query.error) {
         throw query.error
@@ -65,7 +64,7 @@ export function DonationStatusPage() {
                     <Text>Donation Status for</Text>
                     <Text fontSize="xs">{trackableId}</Text>
                     <Flex p={5} shadow="md" borderWidth="1px">
-                        { query.loading && <Spinner />}
+                        {query.loading && <Spinner />}
                         {
                             trackable.image &&
                             <Image src={getUrl(trackable.image!)} size="150px" rounded="lg" />
@@ -82,8 +81,8 @@ export function DonationStatusPage() {
                         restUpdates && restUpdates.map((u) => {
                             return (
                                 <Flex key={u.did} p={5} shadow="md" borderWidth="1px">
-                                    { 
-                                        u.image && 
+                                    {
+                                        u.image &&
                                         <Image fallbackSrc="https://via.placeholder.com/150" src={getUrl(u.image)} size="150px" rounded="lg" />
                                     }
                                     <Box p={4}>

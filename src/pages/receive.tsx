@@ -1,19 +1,20 @@
 import React, { useState } from 'react'
-import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Link } from '@chakra-ui/core'
+import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Stack, Text } from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
-import { Redirect, Link as RouterLink } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import { useMutation, gql } from '@apollo/client';
+import { AddressInput } from '../generated/graphql';
 
 type RecipientFormData = {
     name: string;
     password: string;
     passwordConfirmation: string
-    address: string
+    address: AddressInput
     instructions: String
 };
 
 const CREATE_RECIPIENT = gql`
-    mutation CreateRecipient($name: String!, $password: String!, $address: String!, $instructions: String) {
+    mutation CreateRecipient($name: String!, $password: String!, $address: AddressInput!, $instructions: String) {
         createRecipient(name: $name, password: $password, address: $address, instructions: $instructions) {
             did
             name
@@ -96,18 +97,29 @@ export function ReceivePage() {
                             {errors.passwordConfirmation && errors.passwordConfirmation.message}
                         </FormErrorMessage>
                     </FormControl>
-                    <FormControl isInvalid={!!errors.address}>
-                        <FormLabel htmlFor="address">Address</FormLabel>
-                        <Input
-                            id="address"
-                            name="address"
-                            placeholder="Address"
-                            ref={register({ required: "Address is required" })}
-                        />
-                        <FormErrorMessage>
-                            {errors.name && errors.name.message}
-                        </FormErrorMessage>
-                    </FormControl>
+                    <Stack mt={10} spacing={3}>
+                        <Text>Address for Pickup</Text>
+                        <FormControl isInvalid={!!errors.address?.street}>
+                            <Input
+                                name="address.street"
+                                placeholder="Street Address"
+                                ref={register({ required: "Street Address is required" })}
+                            />
+                            <FormErrorMessage>
+                                {errors.address && errors.address.street && (errors.address.street.message)}
+                            </FormErrorMessage>
+                        </FormControl>
+                        <FormControl isInvalid={!!errors.address?.cityStateZip}>
+                            <Input
+                                name="address.cityStateZip"
+                                placeholder="City, ST Zip"
+                                ref={register({ required: "City, ST Zip is required" })}
+                            />
+                            <FormErrorMessage>
+                                {errors.address && errors.address.cityStateZip && (errors.address.cityStateZip)}
+                            </FormErrorMessage>
+                        </FormControl>
+                    </Stack>
                     <FormControl isInvalid={!!errors.instructions}>
                         <FormLabel htmlFor="name">Instructions</FormLabel>
                         <Input

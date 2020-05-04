@@ -200,7 +200,7 @@ const resolvers: Resolvers = {
             }
             log("trackable metadata")
             const tree = await Tupelo.getLatest(trackable.did)
-            return (await resolveWithUndefined(tree, "metadata")).value 
+            return (await resolveWithUndefined(tree, "metadata")).value
         },
         updates: async (trackable: Trackable, _context): Promise<TrackableUpdateConnection> => {
             log("updates trackable: ", trackable)

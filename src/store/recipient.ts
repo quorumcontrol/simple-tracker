@@ -2,7 +2,7 @@ import { ChainTree, Tupelo, EcdsaKey, setDataTransaction, Community } from "tupe
 import { getAppCommunity } from './community';
 import { createNamedTree } from './identity';
 import { findOrCreateTree, updateTree } from "./openTree"
-import { Recipient } from '../generated/graphql'
+import { Address, Recipient } from '../generated/graphql'
 import debug from 'debug';
 
 const log = debug("store.recipient")
@@ -13,7 +13,7 @@ export const recipientAddressPath = `${recipientNamespace}/address`
 export const recipientInstructionsPath = `${recipientNamespace}/instructions`
 export const recipientListPath = `${recipientNamespace}/collection`
 
-export async function createRecipientTree(name: string, password: string, address: string, instructions: string) {
+export async function createRecipientTree(name: string, password: string, address: Address, instructions: string) {
     const c = await getAppCommunity()
 
     log("creating recipient chaintree")
