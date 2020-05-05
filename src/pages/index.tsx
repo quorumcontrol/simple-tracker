@@ -18,21 +18,21 @@ export function Index() {
                     <Text>
                         To donate, just click the button above, enter donation information 
                         and then submit it for pick up (don't forget to snap a picture!)
-          </Text>
+                    </Text>
                     <Text>
                         Once submitted, your donation will be picked up and brought to one of 
                         our Food Banks. 
-          </Text>
-          <br /> 
+                    </Text>
+                    <Text fontSize="sm" color="gray.500" mt={10}>
+                        <Link href="https://tupelo.org/" mt={5} isExternal>
+                            This site is built on the Tupelo DLT
+                        </Link>
+                    </Text>
                     <Text fontSize="sm" color="gray.500">
-                    <Link href="https://tupelo.org/" mt={5} isExternal>
-                        This site is built on the Tupelo DLT
-                    <br /> 
-          </Link>
-          <Link href="https://www.netlify.com/" mt={5} isExternal>
-                        This site is powered by Netlify
-          </Link>
-          </Text>
+                        <Link href="https://www.netlify.com/" mt={5} isExternal>
+                            This site is powered by Netlify
+                        </Link>
+                    </Text>
                 </Stack>
             </Flex>
         </Box>
