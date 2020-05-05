@@ -271,6 +271,9 @@ const resolvers: Resolvers = {
                 did: await tree.id(),
             }
         },
+        getRecipients: async (_root, _ctx: TrackerContext): Promise<Recipient[]> => {
+            return recipients.getAll()
+        },
         me: async (_, { communityPromise }: TrackerContext): Promise<User | undefined> => {
             if (!appUser.userPromise) {
                 return undefined

@@ -130,8 +130,9 @@ type AcceptJobPayload {
 }
 
 type Query {
-    getTrackable(did: ID!):Trackable
-    getTrackables:AppCollection
+    getTrackable(did: ID!): Trackable
+    getTrackables: AppCollection
+    getRecipients: [Recipient]
     me: User
 }
 

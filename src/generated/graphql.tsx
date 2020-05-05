@@ -156,6 +156,7 @@ export type Query = {
    __typename?: 'Query';
   getTrackable?: Maybe<Trackable>;
   getTrackables?: Maybe<AppCollection>;
+  getRecipients?: Maybe<Array<Maybe<Recipient>>>;
   me?: Maybe<User>;
 };
 
@@ -462,6 +463,7 @@ export type AcceptJobPayloadResolvers<ContextType = any, ParentType extends Reso
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getTrackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType, RequireFields<QueryGetTrackableArgs, 'did'>>,
   getTrackables?: Resolver<Maybe<ResolversTypes['AppCollection']>, ParentType, ContextType>,
+  getRecipients?: Resolver<Maybe<Array<Maybe<ResolversTypes['Recipient']>>>, ParentType, ContextType>,
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
 };
 

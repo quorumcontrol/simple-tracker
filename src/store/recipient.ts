@@ -52,13 +52,24 @@ export class RecipientCollection {
     }
 
     async add(recipient: Recipient) {
-        let tree = await this.updateTree()
         const c = await getAppCommunity()
+
+        let tree = await this.updateTree()
         let dids = (await tree.resolveData(recipientListPath)).value
         if (!dids) {
             dids = []
         }
         dids.push(recipient.did)
         return c.playTransactions(tree, [setDataTransaction(recipientListPath, dids)])
+    }
+
+    async getAll() {
+        let tree = await this.updateTree()
+        let dids = (await tree.resolveData(recipientListPath)).value
+        if (!dids) {
+            dids = []
+        }
+
+        return dids
     }
 }
