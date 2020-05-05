@@ -10,6 +10,7 @@ import { Index } from './pages';
 import { LoginPage } from './pages/login';
 import { RegisterPage } from './pages/register';
 import { ReceivePage } from './pages/receive';
+import { RecipientsPage } from './pages/recipients'
 import { DonatePage } from './pages/donate';
 import { DonationThanksPage } from './pages/donationThanks';
 import { DonationStatusPage } from './pages/donationStatus';
@@ -84,6 +85,9 @@ function App() {
                         </Route>
                         <Route path="/receive">
                             <ReceivePage />
+                        </Route>
+                        <Route path="/recipients">
+                            <RecipientsPage />
                         </Route>
                         <AuthenticatedRoute path="/objects/:objectId">
                             <ObjectPage />

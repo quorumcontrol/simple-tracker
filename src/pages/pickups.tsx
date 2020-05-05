@@ -47,7 +47,7 @@ export function PickUpsPage() {
                 <Header />
                 <Flex align="center" justify="center" h="100%">
                     <Spinner />
-                    <Text ml="1rem">Loading pickups</Text>
+                    <Text ml="1rem">Loading recipients</Text>
                 </Flex>
             </Box>
         )

@@ -132,7 +132,7 @@ type AcceptJobPayload {
 type Query {
     getTrackable(did: ID!): Trackable
     getTrackables: AppCollection
-    getRecipients: [Recipient]
+    getRecipients: [Recipient!]!
     me: User
 }
 
@@ -140,7 +140,7 @@ type Mutation {
     login(namespace: String!, username: String!, password: String!): User
     register(namespace: String!, username: String!, password: String!): User
     logout(did:String): User
-    createRecipient(name: String!, password: String!, address: Address!, instructions: String!): Recipient
+    createRecipient(name: String!, password: String!, address: AddressInput!, instructions: String!): Recipient
     createTrackable(input:CreateTrackableInput!): CreateTrackablePayload
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload

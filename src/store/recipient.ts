@@ -20,9 +20,10 @@ export async function createRecipientTree(name: string, password: string, addres
     let recipientTree = await createNamedTree(name, password, Buffer.from(recipientNamespace))
 
     log("setting recipient address and instructions")
+    const nameTx = setDataTransaction(recipientNamePath, name)
     const addressTx = setDataTransaction(recipientAddressPath, address)
     const instructionsTx = setDataTransaction(recipientInstructionsPath, instructions)
-    await c.playTransactions(recipientTree, [addressTx, instructionsTx])
+    await c.playTransactions(recipientTree, [nameTx, addressTx, instructionsTx])
 
     return recipientTree
 }

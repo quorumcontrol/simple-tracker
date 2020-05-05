@@ -272,7 +272,11 @@ const resolvers: Resolvers = {
             }
         },
         getRecipients: async (_root, _ctx: TrackerContext): Promise<Recipient[]> => {
-            return recipients.getAll()
+            const recs = await recipients.getAll()
+
+            return recs.map((did: string) => {
+                return { did: did }
+            })
         },
         me: async (_, { communityPromise }: TrackerContext): Promise<User | undefined> => {
             if (!appUser.userPromise) {

@@ -156,7 +156,7 @@ export type Query = {
    __typename?: 'Query';
   getTrackable?: Maybe<Trackable>;
   getTrackables?: Maybe<AppCollection>;
-  getRecipients?: Maybe<Array<Maybe<Recipient>>>;
+  getRecipients: Array<Recipient>;
   me?: Maybe<User>;
 };
 
@@ -200,7 +200,7 @@ export type MutationLogoutArgs = {
 export type MutationCreateRecipientArgs = {
   name: Scalars['String'];
   password: Scalars['String'];
-  address: Address;
+  address: AddressInput;
   instructions: Scalars['String'];
 };
 
@@ -463,7 +463,7 @@ export type AcceptJobPayloadResolvers<ContextType = any, ParentType extends Reso
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getTrackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType, RequireFields<QueryGetTrackableArgs, 'did'>>,
   getTrackables?: Resolver<Maybe<ResolversTypes['AppCollection']>, ParentType, ContextType>,
-  getRecipients?: Resolver<Maybe<Array<Maybe<ResolversTypes['Recipient']>>>, ParentType, ContextType>,
+  getRecipients?: Resolver<Array<ResolversTypes['Recipient']>, ParentType, ContextType>,
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
 };
 
