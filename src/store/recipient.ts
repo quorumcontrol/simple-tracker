@@ -45,7 +45,8 @@ export class RecipientCollection {
     }
 
     async did() {
-        return (await this.key()).toDid()
+        const tree = await this.treePromise
+        return await tree.id()
     }
 
     key() {
