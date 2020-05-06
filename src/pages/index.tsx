@@ -10,27 +10,29 @@ export function Index() {
     return (
         <Box>
             <Header />
-            <Flex mt={5} p={10} flexDirection="column" align="center">
+            <Flex mt={5} p={10} flexDirection="column" align="center" >
                 <RouterLink to="/donate">
-                    <Button>Make a Donation</Button>
+                    <Button variantColor="teal" size="lg">Make a Donation</Button>
                 </RouterLink>
-                <Stack mt={5} spacing={3} align="center" width="50%">
+                <Stack mt={5} spacing={3} align="center" width="66%">
                     <Text>
-                        Thank you so much for giving!
-          </Text>
+                        To donate, just click the button above, enter donation information
+                        and then submit it for pick up (don't forget to snap a picture!)
+                    </Text>
                     <Text>
-                        Your donations will help feed the hungry.<br />
-                        There can be no greater gift.
-          </Text>
-                    <Text>
-                        Just snap a picture of your donation and tell us where you are
-                        leaving it and our volunteers will be there to pick it up and get
-                        it where it is needed.
-          </Text>
-
-                    <Link href="https://www.netlify.com/" mt={10} isExternal>
-                        This site is powered by Netlify
-          </Link>
+                        Once submitted, your donation will be picked up and brought to one of
+                        our Food Banks.
+                    </Text>
+                    <Text fontSize="sm" color="gray.500" mt={10}>
+                        <Link href="https://tupelo.org/" mt={5} isExternal>
+                            This site is built on the Tupelo DLT
+                        </Link>
+                    </Text>
+                    <Text fontSize="sm" color="gray.500">
+                        <Link href="https://www.netlify.com/" mt={5} isExternal>
+                            This site is powered by Netlify
+                        </Link>
+                    </Text>
                 </Stack>
             </Flex>
         </Box>
