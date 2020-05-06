@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Box, Flex, FormControl, FormLabel, FormErrorMessage, Button, Input, Heading, Stack, Text } from '@chakra-ui/core'
 import { useForm } from "react-hook-form";
-import { Redirect } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
 import { useMutation, gql } from '@apollo/client';
 import { AddressInput } from '../generated/graphql';
 
@@ -26,9 +26,8 @@ const CREATE_RECIPIENT = gql`
 
 export function ReceivePage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<RecipientFormData>();
-
     const [createRecipient,] = useMutation(CREATE_RECIPIENT)
-    const [wasAdded, setWasAdded] = useState(false)
+    const history = useHistory()
 
     async function onSubmit({ name, password, passwordConfirmation, address, instructions }: RecipientFormData) {
         if (password !== passwordConfirmation) {
@@ -41,17 +40,7 @@ export function ReceivePage() {
             setError("name", "unknown", `Could not create that donation recipient: ${e.message}`)
             return
         }
-        setWasAdded(true)
-    }
-
-    if (wasAdded) {
-        return (
-            <Redirect
-                to={{
-                    pathname: "/recipients",
-                }}
-            />
-        )
+        history.push("/recipients")
     }
 
     return (
@@ -98,7 +87,7 @@ export function ReceivePage() {
                         </FormErrorMessage>
                     </FormControl>
                     <Stack mt={10} spacing={3}>
-                        <Text>Address for Pickup</Text>
+                        <Text>Drop Off Address</Text>
                         <FormControl isInvalid={!!errors.address?.street}>
                             <Input
                                 name="address.street"
