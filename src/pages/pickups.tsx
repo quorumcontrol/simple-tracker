@@ -7,7 +7,7 @@ import { useHistory } from "react-router-dom";
 import Header from '../components/header'
 import { SUMMARY_PAGE_QUERY } from './summary'
 import debug from 'debug'
-import PickupAddr from '../components/pickupaddr'
+import AddressComponent from '../components/address'
 
 const log = debug("pages.pickups")
 
@@ -97,12 +97,12 @@ export function PickUpsPage() {
     )
 }
 
-function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
+function AcceptJobButton({ trackable, user }: { trackable: Trackable, user: User }) {
     const [acceptJob] = useMutation(ACCEPT_JOB_MUTATION)
     const history = useHistory()
-    const [loading,setLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
 
-    const onClick = async ()=> {
+    const onClick = async () => {
         setLoading(true)
         await acceptJob({
             variables: {
@@ -111,7 +111,7 @@ function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
                     user: user.did,
                 }
             },
-            refetchQueries: [{query: PICKUPS_PAGE_QUERY}, {query: SUMMARY_PAGE_QUERY}]
+            refetchQueries: [{ query: PICKUPS_PAGE_QUERY }, { query: SUMMARY_PAGE_QUERY }]
         })
         history.push('/summary')
     }
@@ -121,7 +121,7 @@ function AcceptJobButton({trackable, user}:{trackable:Trackable, user:User}) {
     )
 }
 
-function TrackableCollection({ trackables,user }: { trackables: Trackable[],user:User }) {
+function TrackableCollection({ trackables, user }: { trackables: Trackable[], user: User }) {
 
 
     const trackableElements = trackables.map((trackable: Trackable) => {
@@ -132,9 +132,9 @@ function TrackableCollection({ trackables,user }: { trackables: Trackable[],user
                 {trackable.image &&
                     <Image src={getUrl(trackable.image)} />
                 }
-                <PickupAddr addr={pickupAddr}/>
+                <AddressComponent addr={pickupAddr} />
                 <Text> TODO: Drop Off Address </Text>
-                { AcceptJobButton({trackable, user}) }
+                {AcceptJobButton({ trackable, user })}
             </Box>
         )
     })

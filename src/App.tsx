@@ -9,10 +9,12 @@ import {
 import { Index } from './pages';
 import { LoginPage } from './pages/login';
 import { RegisterPage } from './pages/register';
+import { ReceivePage } from './pages/receive';
+import { RecipientsPage } from './pages/recipients'
 import { DonatePage } from './pages/donate';
 import { DonationThanksPage } from './pages/donationThanks';
 import { DonationStatusPage } from './pages/donationStatus';
-import { ObjectPage, LocationWidget } from './pages/object';
+import { ObjectPage } from './pages/object';
 import './store'; // for side effects only
 import { ApolloProvider, useQuery } from '@apollo/client';
 import { client } from './store/index';
@@ -80,6 +82,12 @@ function App() {
                         </Route>
                         <Route path="/register">
                             <RegisterPage />
+                        </Route>
+                        <Route path="/receive">
+                            <ReceivePage />
+                        </Route>
+                        <Route path="/recipients">
+                            <RecipientsPage />
                         </Route>
                         <AuthenticatedRoute path="/objects/:objectId">
                             <ObjectPage />

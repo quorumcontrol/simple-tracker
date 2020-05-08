@@ -7,6 +7,8 @@ import {
 import {
     User,
     MutationRegisterArgs,
+    Recipient,
+    MutationCreateRecipientArgs,
     TrackableCollection,
     Trackable,
     MutationCreateTrackableArgs,
@@ -35,6 +37,8 @@ import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
 import debug from 'debug';
 import { Drivers } from './drivers';
+import { RecipientCollection, createRecipientTree, recipientNamePath, recipientAddressPath, recipientInstructionsPath } from './recipient'
+
 const GraphQLJSON = require('graphql-type-json');
 
 export const userNamespace = 'givingchain-v1' // increment this to reset data
@@ -58,13 +62,14 @@ Tupelo.setLogLevel("*", "error")
 const appCollection = new AppCollection({ name: `${userNamespace}/trackables`, namespace: userNamespace })
 
 const drivers = new Drivers({ region: 'princeton, nj', namespace: `${userNamespace}/drivers` })
+const recipients = new RecipientCollection('princeton, nj')
 
 // there is a crappy IPLD bug where if you're resolving to something that has a value of undefined
 // then IPLD will error with 'Cannot convert undefined or null to object'
-const resolveWithUndefined = async (tree:ChainTree, path:string):Promise<IResolveResponse> => {
+const resolveWithUndefined = async (tree: ChainTree, path: string): Promise<IResolveResponse> => {
     try {
         return await tree.resolveData(path)
-    } catch(err) {
+    } catch (err) {
         if (err.message.includes('Cannot convert undefined or null to object')) {
             return {
                 remainderPath: [],
@@ -187,7 +192,7 @@ const resolvers: Resolvers = {
             log("image trackable: ", trackable)
             const did = trackable.did
             const tree = await Tupelo.getLatest(did)
-            return (await resolveWithUndefined(tree, "image")).value 
+            return (await resolveWithUndefined(tree, "image")).value
         },
         metadata: async (trackable: Trackable, _context): Promise<MetadataEntry[]> => {
             if (trackable.metadata) {
@@ -195,7 +200,7 @@ const resolvers: Resolvers = {
             }
             log("trackable metadata")
             const tree = await Tupelo.getLatest(trackable.did)
-            return (await resolveWithUndefined(tree, "metadata")).value 
+            return (await resolveWithUndefined(tree, "metadata")).value
         },
         updates: async (trackable: Trackable, _context): Promise<TrackableUpdateConnection> => {
             log("updates trackable: ", trackable)
@@ -236,9 +241,22 @@ const resolvers: Resolvers = {
             })
         }
     },
-
+    Recipient: {
+        name: async (recipient: Recipient, _context): Promise<String> => {
+            const tree = await Tupelo.getLatest(recipient.did)
+            return (await tree.resolveData(recipientNamePath)).value
+        },
+        address: async (recipient: Recipient, _context): Promise<String> => {
+            const tree = await Tupelo.getLatest(recipient.did)
+            return (await tree.resolveData(recipientAddressPath)).value
+        },
+        instructions: async (recipient: Recipient, _context): Promise<String> => {
+            const tree = await Tupelo.getLatest(recipient.did)
+            return (await tree.resolveData(recipientInstructionsPath)).value
+        },
+    },
     Query: {
-        getTrackables: async (_root, _ctx: TrackerContext):Promise<GraphQLAppCollection> => {
+        getTrackables: async (_root, _ctx: TrackerContext): Promise<GraphQLAppCollection> => {
             const trackables = await appCollection.getTrackables()
             return {
                 did: (await (await appCollection.treePromise).id())!,
@@ -252,6 +270,13 @@ const resolvers: Resolvers = {
             return {
                 did: await tree.id(),
             }
+        },
+        getRecipients: async (_root, _ctx: TrackerContext): Promise<Recipient[]> => {
+            const recs = await recipients.getAll()
+
+            return recs.map((did: string) => {
+                return { did: did }
+            })
         },
         me: async (_, { communityPromise }: TrackerContext): Promise<User | undefined> => {
             if (!appUser.userPromise) {
@@ -306,7 +331,7 @@ const resolvers: Resolvers = {
                 setOwnershipTransaction(await drivers.graftableOwnership())
             ])
 
-            let trackable:Trackable = {
+            let trackable: Trackable = {
                 did: (await tree.id())!,
                 updates: {
                     edges: [
@@ -502,7 +527,24 @@ const resolvers: Resolvers = {
 
             // then mark it owned on the appCollection
             await appCollection.ownTrackable({ did: trackable, updates: {} }, { did: user })
-        }
+        },
+
+        createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, { communityPromise }: TrackerContext): Promise<Recipient> => {
+            log("createRecipient")
+
+            let recipientTree = await createRecipientTree(name, password, address, instructions)
+            const id = await recipientTree.id()
+            let newRecipient = {
+                did: id!,
+                name: name,
+                address: address,
+                instructions: instructions,
+            }
+
+            recipients.add(newRecipient)
+
+            return newRecipient
+        },
     }
 }
 

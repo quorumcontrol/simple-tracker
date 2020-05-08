@@ -16,12 +16,12 @@ export function Index() {
                 </RouterLink>
                 <Stack mt={5} spacing={3} align="center" width="66%">
                     <Text>
-                        To donate, just click the button above, enter donation information 
+                        To donate, just click the button above, enter donation information
                         and then submit it for pick up (don't forget to snap a picture!)
                     </Text>
                     <Text>
-                        Once submitted, your donation will be picked up and brought to one of 
-                        our Food Banks. 
+                        Once submitted, your donation will be picked up and brought to one of
+                        our Food Banks.
                     </Text>
                     <Text fontSize="sm" color="gray.500" mt={10}>
                         <Link href="https://tupelo.org/" mt={5} isExternal>

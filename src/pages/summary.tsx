@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
 import Header from '../components/header'
 import debug from 'debug'
-import PickupAddr from '../components/pickupaddr';
+import AddressComponent from '../components/address';
 
 const log = debug("pages.summary")
 
@@ -89,7 +89,7 @@ export function SummaryPage() {
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
                     <Flex p="5" maxW="sm" borderWidth="1px" rounded="lg" alignItems="center">
-                        <Link to="/pickups">Find more Deliveries <br /> ({available.length} Available)</Link> 
+                        <Link to="/pickups">Find more Deliveries <br /> ({available.length} Available)</Link>
                         <Icon ml="auto" name="chevron-right" />
                     </Flex>
                     <Box mt={5}>
@@ -105,8 +105,8 @@ export function SummaryPage() {
 
 function TrackableCollection({ trackables, user }: { trackables: Trackable[], user: User }) {
     const trackableElements = trackables.map((trackable: Trackable) => {
-        let link:string = ""
-        switch(trackable.status) {
+        let link: string = ""
+        switch (trackable.status) {
             case TrackableStatus.Accepted: {
                 link = `/objects/${trackable.did}/pickup`
                 break;
@@ -124,10 +124,10 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
                     {trackable.image &&
                         <Image src={getUrl(trackable.image)} />
                     }
-                    { trackable.status == TrackableStatus.PickedUp ?
+                    {trackable.status == TrackableStatus.PickedUp ?
                         <Text> <Icon name="check" /> Picked Up</Text>
-                    :
-                        <PickupAddr addr={pickupAddr}/>
+                        :
+                        <AddressComponent addr={pickupAddr} />
                     }
                     <Text> TODO: Drop Off Address </Text>
                 </Box>
