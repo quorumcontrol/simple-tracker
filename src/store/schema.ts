@@ -129,6 +129,17 @@ type AcceptJobPayload {
     trackable: Trackable
 }
 
+type CompleteJobPayload {
+    trackable: Trackable
+    recipient: Recipient
+}
+
+input CompleteJobInput {
+    user: ID!
+    recipient: ID!
+    trackable: ID!
+}
+
 type Query {
     getTrackable(did: ID!): Trackable
     getTrackables: AppCollection
@@ -145,6 +156,7 @@ type Mutation {
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload
     acceptJob(input: AcceptJobInput!):AcceptJobPayload
+    completeJob(input: CompleteJobInput!): CompleteJobPayload
 }
 `
 
