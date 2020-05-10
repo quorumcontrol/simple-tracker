@@ -33,6 +33,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { SchemaLink } from '@apollo/link-schema';
 import { getAppCommunity } from './community';
 import { appUser } from './user';
+import { User as UserIdentity } from './identity'
 import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
 import debug from 'debug';
@@ -112,6 +113,19 @@ const findUserAccount = async (username: string, appNamespace: Uint8Array): Prom
     return tree
 };
 
+const loadCurrentUser = async (user: string): Promise<UserIdentity | undefined> => {
+    if (!appUser.userPromise) {
+        return undefined
+    }
+
+    let loggedinUser = await appUser.userPromise
+    if (!loggedinUser || (loggedinUser.did !== user)) {
+        return undefined
+    }
+
+    return loggedinUser
+};
+
 /**
  * Find the username from the given user account ChainTree
  */
@@ -122,6 +136,10 @@ const resolveUsername = async (tree: ChainTree) => {
     } else {
         return usernameResp.value
     }
+}
+
+function now(): string {
+    return (new Date()).toISOString()
 }
 
 const resolvers: Resolvers = {
@@ -316,7 +334,7 @@ const resolvers: Resolvers = {
             if ((input?.instructions?.trim() || "").length > 0) {
                 message = `${message}: ${input?.instructions?.trim()}`
             }
-            let timestamp = (new Date()).toISOString()
+            let timestamp = now()
 
             let update: TrackableUpdate = {
                 did: `${(await tree.id())}-${timestamp}`,
@@ -413,7 +431,7 @@ const resolvers: Resolvers = {
                 throw new Error("you must be logged in to make an update")
             }
 
-            let timestamp = (new Date()).toISOString()
+            let timestamp = now()
 
             const trackableTree = await Tupelo.getLatest(trackable)
             trackableTree.key = user.tree.key
@@ -491,16 +509,12 @@ const resolvers: Resolvers = {
             }
         },
         acceptJob: async (_root, { input: { user, trackable } }: MutationAcceptJobArgs, { cache, communityPromise }: TrackerContext): Promise<AcceptJobPayload | undefined> => {
-            if (!appUser.userPromise) {
-                return undefined
-            }
-            let loggedinUser = await appUser.userPromise
+            let loggedinUser = await loadCurrentUser(user)
             if (!loggedinUser || (loggedinUser.did !== user)) {
                 return undefined
             }
-            await loggedinUser.load()
 
-            let timestamp = (new Date()).toISOString()
+            let timestamp = now()
 
             const trackableTree = await Tupelo.getLatest(trackable)
             trackableTree.key = loggedinUser.tree.key
