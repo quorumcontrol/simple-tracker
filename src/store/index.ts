@@ -26,6 +26,8 @@ import {
     MutationAcceptJobArgs,
     TrackableStatus,
     MetadataEntry,
+    MutationCompleteJobArgs,
+    CompleteJobPayload,
 } from '../generated/graphql'
 import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, IResolveResponse } from 'tupelo-wasm-sdk'
 import { AppUser } from './user';
@@ -543,7 +545,40 @@ const resolvers: Resolvers = {
             await appCollection.ownTrackable({ did: trackable, updates: {} }, { did: user })
         },
 
-        createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, { communityPromise }: TrackerContext): Promise<Recipient> => {
+        completeJob: async (_root, { input: { user, trackable, recipient } }: MutationCompleteJobArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
+            log("completeJob")
+
+            let currentUser = await loadCurrentUser(user)
+            if (!currentUser || (currentUser.did !== user)) {
+                return undefined
+            }
+
+            let timestamp = now()
+
+            const trackableTree = await Tupelo.getLatest(trackable)
+            trackableTree.key = currentUser.tree.key
+
+            let update: TrackableUpdate = {
+                did: `${(await trackableTree.id())}-${timestamp}`,
+                timestamp: timestamp,
+                message: "Delivered",
+                userDid: currentUser.did!,
+                userName: currentUser.userName,
+            }
+
+            log("update: ", update)
+
+            let c = await communityPromise
+
+            await c.playTransactions(trackableTree, [
+                setDataTransaction('status', TrackableStatus.Delivered),
+                setDataTransaction(`updates/${timestamp}`, update),
+                setDataTransaction('recipient', recipient),
+                setOwnershipTransaction([recipient]),
+            ])
+        },
+
+        createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, _context: TrackerContext): Promise<Recipient> => {
             log("createRecipient")
 
             let recipientTree = await createRecipientTree(name, password, address, instructions)

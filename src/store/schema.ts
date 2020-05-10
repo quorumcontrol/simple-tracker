@@ -54,6 +54,8 @@ type TrackableUpdate {
     metadata: [MetadataEntry!]
     userDid: String
     userName: String
+    recipientDid: String
+    recipientName: String
 }
 
 type MetadataEntry {

@@ -71,6 +71,8 @@ export type TrackableUpdate = {
   metadata?: Maybe<Array<MetadataEntry>>;
   userDid?: Maybe<Scalars['String']>;
   userName?: Maybe<Scalars['String']>;
+  recipientDid?: Maybe<Scalars['String']>;
+  recipientName?: Maybe<Scalars['String']>;
 };
 
 export type MetadataEntry = {
@@ -433,6 +435,8 @@ export type TrackableUpdateResolvers<ContextType = any, ParentType extends Resol
   metadata?: Resolver<Maybe<Array<ResolversTypes['MetadataEntry']>>, ParentType, ContextType>,
   userDid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   userName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  recipientDid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  recipientName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
