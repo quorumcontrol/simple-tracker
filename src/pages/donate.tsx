@@ -163,7 +163,7 @@ export function DonatePage() {
                                 ref={register({ required: "City, ST Zip is required" })}
                             />
                             <FormErrorMessage>
-                                {errors.pickupAddr && errors.pickupAddr.cityStateZip && (errors.pickupAddr.cityStateZip)}
+                                {errors.pickupAddr && errors.pickupAddr.cityStateZip && (errors.pickupAddr.cityStateZip.message)}
                             </FormErrorMessage>
                         </FormControl>
                     </Stack>

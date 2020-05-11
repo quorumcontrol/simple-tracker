@@ -172,7 +172,7 @@ export function TrackablePage() {
                                     ref={register({ required: "Name is required" })}
                                 />
                                 <FormErrorMessage>
-                                    {errors.name && errors.name.message}
+                                    {errors.name && (errors.name.message)}
                                 </FormErrorMessage>
                             </FormControl>
                             <FormControl mb={10} mt={5}>
