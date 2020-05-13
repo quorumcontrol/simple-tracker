@@ -76,6 +76,15 @@ function App() {
             <CSSReset />
             <ApolloProvider client={client}>
                 <Router>
+                    {process.env.NODE_ENV === 'production' && <Route path="/" render={({ location }) => {
+                        (window as any).gtag('config', 'UA-165951313-1', {
+                            'page_title': document.title,
+                            'page_location': window.location.href,
+                            'page_path': location.pathname
+                        });
+
+                        return null;
+                    }} /> }
                     <Switch>
                         <Route path="/login">
                             <LoginPage />
