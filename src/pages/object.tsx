@@ -1,7 +1,13 @@
 import React, { useState } from 'react'
 import { Box, Flex, Heading, Button, Collapse, FormControl, Input, FormErrorMessage, FormLabel, ListItem, List, Image, Text, Icon } from '@chakra-ui/core'
 import Header from '../components/header'
-import { useParams } from 'react-router-dom'
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    useRouteMatch,
+    useParams,
+} from "react-router-dom";
 import debug from 'debug'
 import { useForm } from 'react-hook-form'
 import moment from 'moment';
@@ -253,7 +259,7 @@ function ObjectUpdate({ update }: { update: TrackableUpdate }) {
     )
 }
 
-export function ObjectPage() {
+export function ObjectDetail() {
     const { objectId } = useParams()
 
     const query = useQuery(GET_TRACKABLE, { variables: { did: objectId! } })
@@ -433,5 +439,18 @@ export function ObjectPage() {
                 </Box>
             </Flex>
         </Box>
+    )
+}
+
+export function ObjectPage() {
+    let { path } = useRouteMatch()
+    return (
+        <div>
+            <Switch>
+                <Route exact path={path}>
+                    <ObjectDetail />
+                </Route>
+            </Switch>
+        </div >
     )
 }
