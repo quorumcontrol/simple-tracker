@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
-import { Box, Spinner, Heading, Image, Text, Flex, Button, Icon } from '@chakra-ui/core'
+import { Box, Heading, Image, Text, Flex, Button, Icon } from '@chakra-ui/core'
+import LoadingSpinner from '../components/loading'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
 import { getUrl } from '../lib/skynet'
 import { useHistory } from "react-router-dom";
@@ -12,7 +13,7 @@ import AddressComponent from '../components/address'
 const log = debug("pages.pickups")
 
 const PICKUPS_PAGE_QUERY = gql`
-     {
+    {
         me {
             did
         }
@@ -42,15 +43,7 @@ export function PickUpsPage() {
     const { data, loading, error } = useQuery(PICKUPS_PAGE_QUERY)
 
     if (loading) {
-        return (
-            <Box>
-                <Header />
-                <Flex align="center" justify="center" h="100%">
-                    <Spinner />
-                    <Text ml="1rem">Loading pickups</Text>
-                </Flex>
-            </Box>
-        )
+        return LoadingSpinner("Loading pickups")
     }
 
     if (error) {
