@@ -2,10 +2,11 @@ import debug from "debug";
 import React from "react";
 import { Box, Flex, Text, Image, Stack, Spinner } from "@chakra-ui/core";
 import Header from "../components/header";
-import { DisplayUpdate, DonationTime } from "../components/donation";
+import { DonationTime } from "../components/donation";
 import { useParams } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
-import { Trackable, TrackableUpdate } from "../generated/graphql";
+import { Trackable } from "../generated/graphql";
+import { sortUpdates } from "../store/trackables";
 import { getUrl } from "../lib/skynet";
 
 const log = debug("pages.donationStatus")
@@ -43,17 +44,7 @@ export function DonationStatusPage() {
         trackable = query.data.getTrackable
     }
 
-    const enhancedUpdates = trackable.updates.edges?.map((u: TrackableUpdate) => {
-        return {
-            ...u,
-            timestampDate: new Date(u.timestamp),
-            image: u.metadata?.find((m) => m.key === "image")?.value,
-        }
-    })
-
-    log('enhancedUpdates: ', enhancedUpdates)
-
-    const sortedUpdates = enhancedUpdates?.sort((a, b) => a.timestampDate.getTime() - b.timestampDate.getTime())
+    const sortedUpdates = sortUpdates(trackable)
     const firstUpdate = sortedUpdates && sortedUpdates[0]
     const restUpdates = sortedUpdates?.slice(1)
 
