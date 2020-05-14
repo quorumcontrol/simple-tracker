@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/core";
 import React, { useState, useEffect } from 'react';
 import Header from "../components/header";
+import { PictureButton } from "../components/pictureForm";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
@@ -46,20 +47,23 @@ export function DonatePage() {
 
     const history = useHistory()
 
-    const [image, setImage] = useState(new Blob())
-    const [imageURL, setImageURL] = useState("")
-    const [imageUploading, setImageUploading] = useState(false)
+    const imageState = {
+        data: useState(new Blob()),
+        url: useState(""),
+        uploading: useState(false),
+    }
 
     async function onSubmit({ pickupAddr, instructions }: DonationData) {
         setSubmitLoading(true)
         log("submitted:", pickupAddr, instructions);
 
-        let donationInput:CreateTrackableInput = {
+        let donationInput: CreateTrackableInput = {
             name: "donation",
             address: pickupAddr,
             instructions: instructions,
         }
 
+        const [imageURL] = imageState.url
         if (imageURL.length > 0) {
             donationInput.image = imageURL
         }
@@ -76,71 +80,15 @@ export function DonatePage() {
         history.push(`/donation/${donation.did}/thanks`)
     }
 
-    let imageFileField: HTMLInputElement
-    const imageRefHandler = (el: HTMLInputElement) => {
-        register()(el)
-        imageFileField = el
-    }
-
-    const handleAddedImage = () => {
-        if (imageFileField.files?.length === 0) {
-            return
-        }
-
-        log("resizing and compressing image")
-        Resizer.imageFileResizer(
-            imageFileField.files?.item(0)!,
-            300,
-            300,
-            "JPEG",
-            90,
-            0,
-            (resized: Blob) => { setImage(resized) },
-            'blob'
-        )
-        log("image resize and compression complete")
-    }
-
-    useEffect(() => {
-        const uploadToSkynet = async (file: Blob) => {
-            setImageUploading(true)
-            log("uploading image to Skynet")
-            const { skylink } = await upload(file, {})
-            log("upload complete")
-            setImageURL(skylink)
-            setImageUploading(false)
-        }
-
-        if (image.size > 0) {
-            uploadToSkynet(image)
-        }
-    }, [image])
-
     const [submitLoading, setSubmitLoading] = useState(false)
+    const [imageUploading] = imageState.uploading
 
     return (
         <Box>
             <Header />
             <Flex mt={5} p={10} flexDirection="column" align="center" justify="center">
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    {
-                        image.size === 0 ?
-                        <Button width="225px" leftIcon="attachment" onClick={() => imageFileField.click()}>Take a Picture</Button>
-                        :
-                        (imageUploading ? 
-                            <Flex><Spinner mr={5} /> Picture uploading</Flex>
-                            :
-                            <Box display="inline-flex"><Icon color="green" name="check" mr={5} /> Picture attached</Box>
-                        )
-                    }
-                    <Input
-                        hidden
-                        id="imageFileField"
-                        name="image"
-                        type="file"
-                        ref={imageRefHandler}
-                        onChange={handleAddedImage}
-                    />
+                    <PictureButton formRegister={register} imageState={imageState} buttonText="Take a picture" />
                     <FormErrorMessage>
                         {errors.image && "There was a problem uploading your picture"}
                     </FormErrorMessage>
