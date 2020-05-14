@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Box, Heading, Image, Text, Flex, Button, Icon } from '@chakra-ui/core'
 import LoadingSpinner from '../components/loading'
+import ShowError from '../components/errors'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
 import { getUrl } from '../lib/skynet'
 import { useHistory } from "react-router-dom";
@@ -47,13 +48,7 @@ export function PickUpsPage() {
     }
 
     if (error) {
-        console.error(error)
-        return (
-            <Box>
-                <Text>{error.message}:</Text>
-                <code>{error.stack}</code>
-            </Box>
-        )
+        return ShowError(error)
     }
 
 

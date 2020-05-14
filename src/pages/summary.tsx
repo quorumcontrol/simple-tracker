@@ -2,6 +2,7 @@ import React from 'react'
 import { gql, useQuery } from '@apollo/client'
 import { Box, Heading, Image, Icon, Text, Flex } from '@chakra-ui/core'
 import LoadingSpinner from '../components/loading'
+import ShowError from '../components/errors'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
 import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
@@ -42,13 +43,7 @@ export function SummaryPage() {
     }
 
     if (error) {
-        console.error(error)
-        return (
-            <Box>
-                <Text>{error.message}:</Text>
-                <code>{error.stack}</code>
-            </Box>
-        )
+        return ShowError(error)
     }
 
     log("summary page data: ", data)
