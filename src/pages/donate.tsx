@@ -8,10 +8,8 @@ import {
     FormErrorMessage,
     Stack,
     Textarea,
-    Icon,
-    Spinner,
 } from "@chakra-ui/core";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from "../components/header";
 import { PictureButton } from "../components/pictureForm";
 import { useForm } from "react-hook-form";
@@ -19,8 +17,6 @@ import { gql, useMutation } from "@apollo/client";
 import debug from "debug";
 import { Trackable, AddressInput, CreateTrackablePayload, CreateTrackableInput } from '../generated/graphql';
 import { useHistory } from "react-router-dom";
-import { upload } from "../lib/skynet";
-import Resizer from 'react-image-file-resizer';
 
 const log = debug("pages.donate")
 

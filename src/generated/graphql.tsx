@@ -154,6 +154,17 @@ export type AcceptJobPayload = {
   trackable?: Maybe<Trackable>;
 };
 
+export type PickupInput = {
+  user: Scalars['ID'];
+  trackable: Scalars['ID'];
+  imageUrl?: Maybe<Scalars['String']>;
+};
+
+export type PickupPayload = {
+   __typename?: 'PickupPayload';
+  trackable?: Maybe<Trackable>;
+};
+
 export type CompleteJobPayload = {
    __typename?: 'CompleteJobPayload';
   trackable?: Maybe<Trackable>;
@@ -189,6 +200,7 @@ export type Mutation = {
   addUpdate?: Maybe<AddUpdatePayload>;
   addCollaborator?: Maybe<AddCollaboratorPayload>;
   acceptJob?: Maybe<AcceptJobPayload>;
+  pickupDonation?: Maybe<PickupPayload>;
   completeJob?: Maybe<CompleteJobPayload>;
 };
 
@@ -237,6 +249,11 @@ export type MutationAddCollaboratorArgs = {
 
 export type MutationAcceptJobArgs = {
   input: AcceptJobInput;
+};
+
+
+export type MutationPickupDonationArgs = {
+  input: PickupInput;
 };
 
 
@@ -343,6 +360,8 @@ export type ResolversTypes = {
   AddCollaboratorInput: AddCollaboratorInput,
   AcceptJobInput: AcceptJobInput,
   AcceptJobPayload: ResolverTypeWrapper<AcceptJobPayload>,
+  PickupInput: PickupInput,
+  PickupPayload: ResolverTypeWrapper<PickupPayload>,
   CompleteJobPayload: ResolverTypeWrapper<CompleteJobPayload>,
   CompleteJobInput: CompleteJobInput,
   Query: ResolverTypeWrapper<{}>,
@@ -377,6 +396,8 @@ export type ResolversParentTypes = {
   AddCollaboratorInput: AddCollaboratorInput,
   AcceptJobInput: AcceptJobInput,
   AcceptJobPayload: AcceptJobPayload,
+  PickupInput: PickupInput,
+  PickupPayload: PickupPayload,
   CompleteJobPayload: CompleteJobPayload,
   CompleteJobInput: CompleteJobInput,
   Query: {},
@@ -486,6 +507,11 @@ export type AcceptJobPayloadResolvers<ContextType = any, ParentType extends Reso
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
+export type PickupPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['PickupPayload'] = ResolversParentTypes['PickupPayload']> = {
+  trackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
 export type CompleteJobPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CompleteJobPayload'] = ResolversParentTypes['CompleteJobPayload']> = {
   trackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType>,
   recipient?: Resolver<Maybe<ResolversTypes['Recipient']>, ParentType, ContextType>,
@@ -508,6 +534,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   addUpdate?: Resolver<Maybe<ResolversTypes['AddUpdatePayload']>, ParentType, ContextType, RequireFields<MutationAddUpdateArgs, 'input'>>,
   addCollaborator?: Resolver<Maybe<ResolversTypes['AddCollaboratorPayload']>, ParentType, ContextType, RequireFields<MutationAddCollaboratorArgs, 'input'>>,
   acceptJob?: Resolver<Maybe<ResolversTypes['AcceptJobPayload']>, ParentType, ContextType, RequireFields<MutationAcceptJobArgs, 'input'>>,
+  pickupDonation?: Resolver<Maybe<ResolversTypes['PickupPayload']>, ParentType, ContextType, RequireFields<MutationPickupDonationArgs, 'input'>>,
   completeJob?: Resolver<Maybe<ResolversTypes['CompleteJobPayload']>, ParentType, ContextType, RequireFields<MutationCompleteJobArgs, 'input'>>,
 };
 
@@ -527,6 +554,7 @@ export type Resolvers<ContextType = any> = {
   AddUpdatePayload?: AddUpdatePayloadResolvers<ContextType>,
   AddCollaboratorPayload?: AddCollaboratorPayloadResolvers<ContextType>,
   AcceptJobPayload?: AcceptJobPayloadResolvers<ContextType>,
+  PickupPayload?: PickupPayloadResolvers<ContextType>,
   CompleteJobPayload?: CompleteJobPayloadResolvers<ContextType>,
   Query?: QueryResolvers<ContextType>,
   Mutation?: MutationResolvers<ContextType>,

@@ -131,6 +131,16 @@ type AcceptJobPayload {
     trackable: Trackable
 }
 
+input PickupInput {
+    user: ID!
+    trackable: ID!
+    imageUrl: String
+}
+
+type PickupPayload {
+    trackable: Trackable
+}
+
 type CompleteJobPayload {
     trackable: Trackable
     recipient: Recipient
@@ -158,6 +168,7 @@ type Mutation {
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload
     acceptJob(input: AcceptJobInput!):AcceptJobPayload
+    pickupDonation(input: PickupInput!): PickupPayload
     completeJob(input: CompleteJobInput!): CompleteJobPayload
 }
 `

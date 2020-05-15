@@ -17,6 +17,7 @@ import { Map, Marker, Popup, TileLayer } from 'react-leaflet'
 import { LatLngTuple } from 'leaflet'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Trackable, TrackableUpdate, MetadataEntry, Scalars, User } from '../generated/graphql'
+import { PickupPage } from './pickup'
 
 const log = debug("pages.object")
 
@@ -449,6 +450,9 @@ export function ObjectPage() {
             <Switch>
                 <Route exact path={path}>
                     <ObjectDetail />
+                </Route>
+                <Route path={`${path}/pickup`}>
+                    <PickupPage />
                 </Route>
             </Switch>
         </div >
