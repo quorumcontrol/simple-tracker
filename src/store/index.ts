@@ -587,7 +587,7 @@ const resolvers: Resolvers = {
             return { trackable: updatedTrackable }
         },
 
-        completeJob: async (_root, { input: { user, trackable, recipient } }: MutationCompleteJobArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
+        completeJob: async (_root, { input: { user, trackable } }: MutationCompleteJobArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
             log("completeJob")
 
             let currentUser = await loadCurrentUser(user)
@@ -615,9 +615,18 @@ const resolvers: Resolvers = {
             await c.playTransactions(trackableTree, [
                 setDataTransaction('status', TrackableStatus.Delivered),
                 setDataTransaction(`updates/${timestamp}`, update),
-                setDataTransaction('recipient', recipient),
-                setOwnershipTransaction([recipient]),
             ])
+
+            let updatedTrackable: Trackable = {
+                did: (await trackableTree.id())!,
+                updates: {
+                    edges: [
+                        update
+                    ]
+                },
+            }
+
+            return { trackable: updatedTrackable }
         },
 
         createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, _context: TrackerContext): Promise<Recipient> => {

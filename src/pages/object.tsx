@@ -17,6 +17,7 @@ import { Map, Marker, Popup, TileLayer } from 'react-leaflet'
 import { LatLngTuple } from 'leaflet'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Trackable, TrackableUpdate, MetadataEntry, Scalars, User } from '../generated/graphql'
+import { DropoffPage } from './dropoff'
 import { PickupPage } from './pickup'
 
 const log = debug("pages.object")

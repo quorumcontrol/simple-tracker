@@ -148,8 +148,8 @@ type CompleteJobPayload {
 
 input CompleteJobInput {
     user: ID!
-    recipient: ID!
     trackable: ID!
+    imageUrl: String
 }
 
 type Query {

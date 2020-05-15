@@ -173,8 +173,8 @@ export type CompleteJobPayload = {
 
 export type CompleteJobInput = {
   user: Scalars['ID'];
-  recipient: Scalars['ID'];
   trackable: Scalars['ID'];
+  imageUrl?: Maybe<Scalars['String']>;
 };
 
 export type Query = {
