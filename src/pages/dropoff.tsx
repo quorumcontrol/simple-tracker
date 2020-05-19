@@ -132,11 +132,6 @@ export function DropoffPage() {
             variables: { input: completeJobInput }
         })
 
-        const payload: CompleteJobPayload = result.data.pickupDonation
-        const donation: Trackable = payload.trackable!
-
-        log("completeJob result:", donation)
-
         history.push(`/summary`)
     }
 
