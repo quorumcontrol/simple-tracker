@@ -2,7 +2,7 @@ import debug from "debug";
 import React from "react";
 import { Box, Flex, Text, Image, Stack, Spinner } from "@chakra-ui/core";
 import Header from "../components/header";
-import { DonationTime } from "../components/donation";
+import { UpdateTime } from "../components/donation";
 import { useParams } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 import { Trackable } from "../generated/graphql";
@@ -56,7 +56,7 @@ export function DonationStatusPage() {
                     <Text>Donation Status for</Text>
                     <Text fontSize="xs">{trackableId}</Text>
                     {query.loading && <Spinner />}
-                    {DonationTime(trackable, firstUpdate)}
+                    {UpdateTime(trackable, "Donated", firstUpdate)}
                     {
                         restUpdates && restUpdates.map((u) => {
                             return (

@@ -6,11 +6,12 @@ import { useHistory } from "react-router-dom";
 import Header from '../components/header'
 import LoadingSpinner from '../components/loading'
 import ShowError from '../components/errors'
-import { DonationTime } from "../components/donation";
+import { UpdateTime } from "../components/donation";
 import { Box, Button, Flex, FormErrorMessage, Heading, Stack, Text } from '@chakra-ui/core'
-import { CompleteJobInput, CompleteJobPayload, Trackable } from '../generated/graphql'
+import { CompleteJobInput, CompleteJobPayload, Trackable, Recipient } from '../generated/graphql'
 import { PictureButton } from "../components/pictureForm";
 import { sortUpdates } from "../store/trackables";
+import AddressComponent from '../components/address';
 import debug from 'debug'
 
 const log = debug("pages.dropoff")
@@ -45,7 +46,7 @@ const DROPOFF_QUERY = gql`
 
 const DROPOFF_MUTATION = gql`
     mutation DeliverDonation($input: CompleteJobInput!) {
-        completeJob(input: $input!){
+        completeJob(input: $input){
             user
             trackable
             recipient
@@ -90,6 +91,7 @@ export function DropoffPage() {
 
     log("dropoff page data: ", data)
 
+    let recipient: Recipient;
 
     if (!data.getFirstRecipient) {
         return (<Box>
@@ -102,6 +104,8 @@ export function DropoffPage() {
                 </Box>
             </Flex>
         </Box>)
+    } else {
+        recipient = data.getFirstRecipient
     }
 
     trackable = data.getTrackable
@@ -116,6 +120,7 @@ export function DropoffPage() {
         let completeJobInput: CompleteJobInput = {
             user: data.me.did,
             trackable: objectId,
+            recipient: recipient.did
         }
 
         const [imageURL] = imageState.url
@@ -140,16 +145,16 @@ export function DropoffPage() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column" align="center" justify="center">
                 <Stack spacing={5}>
-                    {DonationTime(trackable, firstUpdate)}
-                    {DonationTime(trackable, lastUpdate)}
-                    <Text>{data.getFirstRecipient.address}</Text>
-                    <Text>{data.getFirstRecipient.instructions}</Text>
+                    {UpdateTime(trackable, "Donated", firstUpdate)}
+                    {UpdateTime(trackable, "Picked up", lastUpdate)}
+                    <AddressComponent addr={recipient.address} />
+                    <Text>{recipient.instructions}</Text>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <PictureButton formRegister={register} imageState={imageState} buttonText="Add photo confirmation" />
                         <FormErrorMessage>
                             {errors.image && "There was a problem uploading your picture"}
                         </FormErrorMessage>
-                        <Button type="submit" isLoading={submitLoading} isDisabled={imageUploading}>Pick Up Donation</Button>
+                        <Button type="submit" isLoading={submitLoading} isDisabled={imageUploading}>Drop Off Donation</Button>
                         <FormErrorMessage>
                             {dropoffError && (dropoffError.message)}
                         </FormErrorMessage>

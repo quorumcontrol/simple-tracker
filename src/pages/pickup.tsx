@@ -6,11 +6,12 @@ import { useHistory } from "react-router-dom";
 import Header from '../components/header'
 import LoadingSpinner from '../components/loading'
 import ShowError from '../components/errors'
-import { DonationTime } from "../components/donation";
+import { UpdateTime } from "../components/donation";
 import { Box, Button, Flex, FormErrorMessage, Heading, Stack, Text } from '@chakra-ui/core'
-import { PickupInput, PickupPayload, Trackable } from '../generated/graphql'
+import { PickupInput, PickupPayload, Trackable, Recipient } from '../generated/graphql'
 import { PictureButton } from "../components/pictureForm";
 import { sortUpdates } from "../store/trackables";
+import AddressComponent from '../components/address';
 import debug from 'debug'
 
 const log = debug("pages.pickup")
@@ -89,6 +90,8 @@ export function PickupPage() {
 
     log("pickup data: ", data)
 
+    let recipient: Recipient;
+
     if (!data.getFirstRecipient) {
         return (<Box>
             <Header />
@@ -100,6 +103,8 @@ export function PickupPage() {
                 </Box>
             </Flex>
         </Box>)
+    } else {
+        recipient = data.getFirstRecipient
     }
 
     const sortedUpdates = sortUpdates(trackable)
@@ -134,9 +139,9 @@ export function PickupPage() {
             <Header />
             <Flex mt={5} p={10} flexDirection="column" align="center" justify="center">
                 <Stack spacing={5}>
-                    {DonationTime(trackable, firstUpdate)}
-                    <Text>{data.getFirstRecipient.address}</Text>
-                    <Text>{data.getFirstRecipient.instructions}</Text>
+                    {UpdateTime(trackable, "Donated", firstUpdate)}
+                    <AddressComponent addr={recipient.address} />
+                    <Text>{recipient.instructions}</Text>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <PictureButton formRegister={register} imageState={imageState} buttonText="Add photo confirmation" />
                         <FormErrorMessage>

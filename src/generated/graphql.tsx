@@ -168,12 +168,12 @@ export type PickupPayload = {
 export type CompleteJobPayload = {
    __typename?: 'CompleteJobPayload';
   trackable?: Maybe<Trackable>;
-  recipient?: Maybe<Recipient>;
 };
 
 export type CompleteJobInput = {
   user: Scalars['ID'];
   trackable: Scalars['ID'];
+  recipient: Scalars['ID'];
   imageUrl?: Maybe<Scalars['String']>;
 };
 
@@ -182,7 +182,7 @@ export type Query = {
   getTrackable?: Maybe<Trackable>;
   getTrackables?: Maybe<AppCollection>;
   getRecipients: Array<Recipient>;
-  getFirstRecipient: Recipient;
+  getFirstRecipient?: Maybe<Recipient>;
   me?: Maybe<User>;
 };
 
@@ -515,7 +515,6 @@ export type PickupPayloadResolvers<ContextType = any, ParentType extends Resolve
 
 export type CompleteJobPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CompleteJobPayload'] = ResolversParentTypes['CompleteJobPayload']> = {
   trackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType>,
-  recipient?: Resolver<Maybe<ResolversTypes['Recipient']>, ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
@@ -523,7 +522,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   getTrackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType, RequireFields<QueryGetTrackableArgs, 'did'>>,
   getTrackables?: Resolver<Maybe<ResolversTypes['AppCollection']>, ParentType, ContextType>,
   getRecipients?: Resolver<Array<ResolversTypes['Recipient']>, ParentType, ContextType>,
-  getFirstRecipient?: Resolver<ResolversTypes['Recipient'], ParentType, ContextType>,
+  getFirstRecipient?: Resolver<Maybe<ResolversTypes['Recipient']>, ParentType, ContextType>,
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
 };
 

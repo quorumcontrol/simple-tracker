@@ -3,7 +3,7 @@ import { gql, useQuery, useMutation } from '@apollo/client'
 import { Box, Heading, Image, Text, Flex, Button, Icon } from '@chakra-ui/core'
 import LoadingSpinner from '../components/loading'
 import ShowError from '../components/errors'
-import { Trackable, User, TrackableStatus, Recipient } from '../generated/graphql'
+import { Address, Trackable, User, TrackableStatus, Recipient } from '../generated/graphql'
 import { getUrl } from '../lib/skynet'
 import { useHistory } from "react-router-dom";
 import Header from '../components/header'
@@ -74,6 +74,8 @@ export function PickUpsPage() {
         </Box>)
     }
 
+    let recipient: Recipient;
+
     if (!data.getFirstRecipient) {
         return (<Box>
             <Header />
@@ -85,7 +87,10 @@ export function PickUpsPage() {
                 </Box>
             </Flex>
         </Box>)
+    } else {
+        recipient = data.getFirstRecipient
     }
+
 
     const available = data.getTrackables.trackables.filter((trackable: Trackable) => {
         return trackable.status == TrackableStatus.Published
@@ -97,7 +102,7 @@ export function PickUpsPage() {
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
                     <Box>
-                        <TrackableCollection trackables={available} user={data.me} recipient={data.getFirstRecipient} />
+                        <TrackableCollection trackables={available} user={data.me} recipient={recipient} />
                     </Box>
                 </Box>
             </Flex>
@@ -141,7 +146,7 @@ function TrackableCollection({ trackables, user, recipient }: { trackables: Trac
                     <Image src={getUrl(trackable.image)} />
                 }
                 <AddressComponent addr={pickupAddr} />
-                <Text>{recipient.address}</Text>
+                <AddressComponent addr={recipient.address} />
                 <Text>{recipient.instructions}</Text>
                 {AcceptJobButton({ trackable, user })}
             </Box>

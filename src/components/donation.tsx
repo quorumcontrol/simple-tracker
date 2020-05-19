@@ -5,7 +5,7 @@ import { getUrl } from "../lib/skynet";
 
 export type DisplayUpdate = TrackableUpdate & { timestampDate: Date, image: any }
 
-export function DonationTime(trackable: Trackable, firstUpdate?: TrackableUpdate) {
+export function UpdateTime(trackable: Trackable, label: string, update?: TrackableUpdate) {
     return (
         <Flex p={5} shadow="md" borderWidth="1px">
             {
@@ -13,10 +13,10 @@ export function DonationTime(trackable: Trackable, firstUpdate?: TrackableUpdate
                 <Image src={getUrl(trackable.image!)} size="150px" rounded="lg" />
             }
             {
-                firstUpdate &&
+                update &&
                 <Box p={4}>
-                    <Text>{new Date(firstUpdate.timestamp).toLocaleString()}</Text>
-                    <Text>Donated</Text>
+                    <Text>{new Date(update.timestamp).toLocaleString()}</Text>
+                    <Text>{label}</Text>
                 </Box>
             }
         </Flex>

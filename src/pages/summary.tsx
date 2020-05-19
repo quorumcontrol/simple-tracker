@@ -67,6 +67,8 @@ export function SummaryPage() {
         </Box>)
     }
 
+    let recipient: Recipient;
+
     if (!data.getFirstRecipient) {
         return (<Box>
             <Header />
@@ -78,6 +80,8 @@ export function SummaryPage() {
                 </Box>
             </Flex>
         </Box>)
+    } else {
+        recipient = data.getFirstRecipient
     }
 
     const available = data.getTrackables.trackables.filter((trackable: Trackable) => {
@@ -101,7 +105,7 @@ export function SummaryPage() {
                     </Flex>
                     <Box mt={5}>
                         <Heading mb={5} size="sm">Your current deliveries</Heading>
-                        <TrackableCollection trackables={myTrackables} recipient={data.getFirstRecipient} />
+                        <TrackableCollection trackables={myTrackables} recipient={recipient} />
                     </Box>
 
                 </Box>
@@ -136,7 +140,7 @@ function TrackableCollection({ trackables, recipient }: { trackables: Trackable[
                         :
                         <AddressComponent addr={pickupAddr} />
                     }
-                    <Text>{recipient.address}</Text>
+                    <AddressComponent addr={recipient.address} />
                     <Text>{recipient.instructions}</Text>
                 </Box>
             </Link>
