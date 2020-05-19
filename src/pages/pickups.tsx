@@ -3,7 +3,7 @@ import { gql, useQuery, useMutation } from '@apollo/client'
 import { Box, Heading, Image, Text, Flex, Button, Icon } from '@chakra-ui/core'
 import LoadingSpinner from '../components/loading'
 import ShowError from '../components/errors'
-import { Trackable, User, TrackableStatus } from '../generated/graphql'
+import { Trackable, User, TrackableStatus, Recipient } from '../generated/graphql'
 import { getUrl } from '../lib/skynet'
 import { useHistory } from "react-router-dom";
 import Header from '../components/header'
@@ -30,8 +30,15 @@ const PICKUPS_PAGE_QUERY = gql`
                 }
             }
         }
+        getFirstRecipient {
+            did
+            name
+            address
+            instructions
+        }
     }
 `
+
 const ACCEPT_JOB_MUTATION = gql`
     mutation PickUpsPageAccept($input: AcceptJobInput!) {
         acceptJob(input: $input) {
@@ -67,6 +74,19 @@ export function PickUpsPage() {
         </Box>)
     }
 
+    if (!data.getFirstRecipient) {
+        return (<Box>
+            <Header />
+            <Flex mt={5} p={10} flexDirection="column">
+                <Box>
+                    <Box>
+                        <Heading>No donation recipients available.</Heading>
+                    </Box>
+                </Box>
+            </Flex>
+        </Box>)
+    }
+
     const available = data.getTrackables.trackables.filter((trackable: Trackable) => {
         return trackable.status == TrackableStatus.Published
     })
@@ -77,7 +97,7 @@ export function PickUpsPage() {
             <Flex mt={5} p={10} flexDirection="column">
                 <Box>
                     <Box>
-                        <TrackableCollection trackables={available} user={data.me} />
+                        <TrackableCollection trackables={available} user={data.me} recipient={data.getFirstRecipient} />
                     </Box>
                 </Box>
             </Flex>
@@ -109,7 +129,7 @@ function AcceptJobButton({ trackable, user }: { trackable: Trackable, user: User
     )
 }
 
-function TrackableCollection({ trackables, user }: { trackables: Trackable[], user: User }) {
+function TrackableCollection({ trackables, user, recipient }: { trackables: Trackable[], user: User, recipient: Recipient }) {
 
 
     const trackableElements = trackables.map((trackable: Trackable) => {
@@ -121,7 +141,8 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
                     <Image src={getUrl(trackable.image)} />
                 }
                 <AddressComponent addr={pickupAddr} />
-                <Text> TODO: Drop Off Address </Text>
+                <Text>{recipient.address}</Text>
+                <Text>{recipient.instructions}</Text>
                 {AcceptJobButton({ trackable, user })}
             </Box>
         )

@@ -7,7 +7,7 @@ import Header from '../components/header'
 import LoadingSpinner from '../components/loading'
 import ShowError from '../components/errors'
 import { DonationTime } from "../components/donation";
-import { Box, Button, Flex, FormErrorMessage, Stack } from '@chakra-ui/core'
+import { Box, Button, Flex, FormErrorMessage, Heading, Stack, Text } from '@chakra-ui/core'
 import { CompleteJobInput, CompleteJobPayload, Trackable } from '../generated/graphql'
 import { PictureButton } from "../components/pictureForm";
 import { sortUpdates } from "../store/trackables";
@@ -32,6 +32,13 @@ const DROPOFF_QUERY = gql`
                     timestamp
                 }
             }
+        }
+
+        getFirstRecipient {
+            did
+            name
+            address
+            instructions
         }
     }
 `
@@ -84,6 +91,19 @@ export function DropoffPage() {
     log("dropoff page data: ", data)
 
 
+    if (!data.getFirstRecipient) {
+        return (<Box>
+            <Header />
+            <Flex mt={5} p={10} flexDirection="column">
+                <Box>
+                    <Box>
+                        <Heading>No donation recipients available.</Heading>
+                    </Box>
+                </Box>
+            </Flex>
+        </Box>)
+    }
+
     trackable = data.getTrackable
 
     const sortedUpdates = sortUpdates(trackable)
@@ -122,6 +142,8 @@ export function DropoffPage() {
                 <Stack spacing={5}>
                     {DonationTime(trackable, firstUpdate)}
                     {DonationTime(trackable, lastUpdate)}
+                    <Text>{data.getFirstRecipient.address}</Text>
+                    <Text>{data.getFirstRecipient.instructions}</Text>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <PictureButton formRegister={register} imageState={imageState} buttonText="Add photo confirmation" />
                         <FormErrorMessage>
