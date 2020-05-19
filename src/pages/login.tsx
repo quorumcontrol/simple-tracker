@@ -53,7 +53,7 @@ export function LoginPage() {
         return (
             <Redirect
                 to={{
-                    pathname: "/",
+                    pathname: "/summary",
                 }}
             />
         )
