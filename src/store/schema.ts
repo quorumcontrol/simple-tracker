@@ -156,6 +156,7 @@ type Query {
     getTrackable(did: ID!): Trackable
     getTrackables: AppCollection
     getRecipients: [Recipient!]!
+    getFirstRecipient: Recipient!
     me: User
 }
 

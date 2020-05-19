@@ -182,6 +182,7 @@ export type Query = {
   getTrackable?: Maybe<Trackable>;
   getTrackables?: Maybe<AppCollection>;
   getRecipients: Array<Recipient>;
+  getFirstRecipient: Recipient;
   me?: Maybe<User>;
 };
 
@@ -522,6 +523,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   getTrackable?: Resolver<Maybe<ResolversTypes['Trackable']>, ParentType, ContextType, RequireFields<QueryGetTrackableArgs, 'did'>>,
   getTrackables?: Resolver<Maybe<ResolversTypes['AppCollection']>, ParentType, ContextType>,
   getRecipients?: Resolver<Array<ResolversTypes['Recipient']>, ParentType, ContextType>,
+  getFirstRecipient?: Resolver<ResolversTypes['Recipient'], ParentType, ContextType>,
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>,
 };
 

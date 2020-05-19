@@ -300,7 +300,12 @@ const resolvers: Resolvers = {
                 return { did: did }
             })
         },
-        me: async (_, { communityPromise }: TrackerContext): Promise<User | undefined> => {
+        getFirstRecipient: async (_root, _ctx: TrackerContext): Promise<Recipient> => {
+            const recipient = await recipients.getFirst()
+
+            return { did: recipient }
+        },
+        me: async (_, _ctx: TrackerContext): Promise<User | undefined> => {
             if (!appUser.userPromise) {
                 return undefined
             }

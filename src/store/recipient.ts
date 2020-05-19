@@ -12,6 +12,7 @@ export const recipientNamePath = `${recipientNamespace}/name`
 export const recipientAddressPath = `${recipientNamespace}/address`
 export const recipientInstructionsPath = `${recipientNamespace}/instructions`
 export const recipientListPath = `${recipientNamespace}/collection`
+export const firstRecipientPath = `${recipientListPath}/0`
 
 export async function createRecipientTree(name: string, password: string, address: Address, instructions: string) {
     const c = await getAppCommunity()
@@ -73,5 +74,10 @@ export class RecipientCollection {
         }
 
         return dids
+    }
+
+    async getFirst() {
+        let tree = await this.updateTree()
+        return (await tree.resolveData(firstRecipientPath)).value
     }
 }
