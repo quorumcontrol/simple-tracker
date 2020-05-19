@@ -1,6 +1,8 @@
 import React from 'react'
 import { gql, useQuery } from '@apollo/client'
-import { Box, Spinner, Heading, Image, Icon, Text, Flex } from '@chakra-ui/core'
+import { Box, Heading, Image, Icon, Text, Flex } from '@chakra-ui/core'
+import LoadingSpinner from '../components/loading'
+import ShowError from '../components/errors'
 import { Trackable, User, TrackableStatus } from '../generated/graphql'
 import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
@@ -37,25 +39,11 @@ export const SUMMARY_PAGE_QUERY = gql`
 export function SummaryPage() {
     const { data, loading, error } = useQuery(SUMMARY_PAGE_QUERY)
     if (loading) {
-        return (
-            <Box>
-                <Header />
-                <Flex align="center" justify="center" h="100%">
-                    <Spinner />
-                    <Text ml="1rem">Loading donations</Text>
-                </Flex>
-            </Box>
-        )
+        return LoadingSpinner("Loading donations")
     }
 
     if (error) {
-        console.error(error)
-        return (
-            <Box>
-                <Text>{error.message}:</Text>
-                <code>{error.stack}</code>
-            </Box>
-        )
+        return ShowError(error)
     }
 
     log("summary page data: ", data)

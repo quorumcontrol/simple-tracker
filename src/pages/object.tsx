@@ -1,7 +1,13 @@
 import React, { useState } from 'react'
 import { Box, Flex, Heading, Button, Collapse, FormControl, Input, FormErrorMessage, FormLabel, ListItem, List, Image, Text, Icon } from '@chakra-ui/core'
 import Header from '../components/header'
-import { useParams } from 'react-router-dom'
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    useRouteMatch,
+    useParams,
+} from "react-router-dom";
 import debug from 'debug'
 import { useForm } from 'react-hook-form'
 import moment from 'moment';
@@ -11,6 +17,8 @@ import { Map, Marker, Popup, TileLayer } from 'react-leaflet'
 import { LatLngTuple } from 'leaflet'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Trackable, TrackableUpdate, MetadataEntry, Scalars, User } from '../generated/graphql'
+import { DropoffPage } from './dropoff'
+import { PickupPage } from './pickup'
 
 const log = debug("pages.object")
 
@@ -253,7 +261,7 @@ function ObjectUpdate({ update }: { update: TrackableUpdate }) {
     )
 }
 
-export function ObjectPage() {
+export function ObjectDetail() {
     const { objectId } = useParams()
 
     const query = useQuery(GET_TRACKABLE, { variables: { did: objectId! } })
@@ -433,5 +441,21 @@ export function ObjectPage() {
                 </Box>
             </Flex>
         </Box>
+    )
+}
+
+export function ObjectPage() {
+    let { path } = useRouteMatch()
+    return (
+        <div>
+            <Switch>
+                <Route exact path={path}>
+                    <ObjectDetail />
+                </Route>
+                <Route path={`${path}/pickup`}>
+                    <PickupPage />
+                </Route>
+            </Switch>
+        </div >
     )
 }

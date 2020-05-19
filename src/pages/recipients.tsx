@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { gql, useQuery } from '@apollo/client'
-import { Box, Spinner, Heading, Text, Flex, Button } from '@chakra-ui/core'
+import { Box, Heading, Text, Flex, Button } from '@chakra-ui/core'
+import ShowError from '../components/errors'
+import LoadingSpinner from '../components/loading'
 import { Recipient } from '../generated/graphql'
 import Header from '../components/header'
 import RecipientAddress from '../components/recipientAddress'
@@ -19,25 +21,11 @@ export function RecipientsPage() {
     const { data, loading, error } = useQuery(GET_RECIPIENTS)
 
     if (loading) {
-        return (
-            <Box>
-                <Header />
-                <Flex align="center" justify="center" h="100%">
-                    <Spinner />
-                    <Text ml="1rem">Loading recipients</Text>
-                </Flex>
-            </Box>
-        )
+        return LoadingSpinner("Loading recipients")
     }
 
     if (error) {
-        console.error(error)
-        return (
-            <Box>
-                <Text>{error.message}:</Text>
-                <code>{error.stack}</code>
-            </Box>
-        )
+        return ShowError(error)
     }
 
     if (!(data && data.getRecipients && data.getRecipients?.length > 0)) {

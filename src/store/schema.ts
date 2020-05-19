@@ -54,6 +54,8 @@ type TrackableUpdate {
     metadata: [MetadataEntry!]
     userDid: String
     userName: String
+    recipientDid: String
+    recipientName: String
 }
 
 type MetadataEntry {
@@ -129,6 +131,27 @@ type AcceptJobPayload {
     trackable: Trackable
 }
 
+input PickupInput {
+    user: ID!
+    trackable: ID!
+    imageUrl: String
+}
+
+type PickupPayload {
+    trackable: Trackable
+}
+
+type CompleteJobPayload {
+    trackable: Trackable
+    recipient: Recipient
+}
+
+input CompleteJobInput {
+    user: ID!
+    trackable: ID!
+    imageUrl: String
+}
+
 type Query {
     getTrackable(did: ID!): Trackable
     getTrackables: AppCollection
@@ -145,6 +168,8 @@ type Mutation {
     addUpdate(input:AddUpdateInput!): AddUpdatePayload
     addCollaborator(input: AddCollaboratorInput!):AddCollaboratorPayload
     acceptJob(input: AcceptJobInput!):AcceptJobPayload
+    pickupDonation(input: PickupInput!): PickupPayload
+    completeJob(input: CompleteJobInput!): CompleteJobPayload
 }
 `
 

@@ -26,6 +26,10 @@ import {
     MutationAcceptJobArgs,
     TrackableStatus,
     MetadataEntry,
+    MutationCompleteJobArgs,
+    CompleteJobPayload,
+    MutationPickupDonationArgs,
+    PickupPayload,
 } from '../generated/graphql'
 import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, IResolveResponse } from 'tupelo-wasm-sdk'
 import { AppUser } from './user';
@@ -33,6 +37,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { SchemaLink } from '@apollo/link-schema';
 import { getAppCommunity } from './community';
 import { appUser } from './user';
+import { User as UserIdentity } from './identity'
 import { CURRENT_USER } from './queries';
 import { AppCollection } from './collection';
 import debug from 'debug';
@@ -112,6 +117,19 @@ const findUserAccount = async (username: string, appNamespace: Uint8Array): Prom
     return tree
 };
 
+const loadCurrentUser = async (user: string): Promise<UserIdentity | undefined> => {
+    if (!appUser.userPromise) {
+        return undefined
+    }
+
+    let loggedinUser = await appUser.userPromise
+    if (!loggedinUser || (loggedinUser.did !== user)) {
+        return undefined
+    }
+
+    return loggedinUser
+};
+
 /**
  * Find the username from the given user account ChainTree
  */
@@ -122,6 +140,10 @@ const resolveUsername = async (tree: ChainTree) => {
     } else {
         return usernameResp.value
     }
+}
+
+function now(): string {
+    return (new Date()).toISOString()
 }
 
 const resolvers: Resolvers = {
@@ -296,7 +318,7 @@ const resolvers: Resolvers = {
         }
     },
     Mutation: {
-        createTrackable: async (_root, { input }: MutationCreateTrackableArgs, { communityPromise, cache }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
+        createTrackable: async (_root, { input }: MutationCreateTrackableArgs, { communityPromise }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
             log('createTrackable')
             const key = await EcdsaKey.generate()
             const c = await communityPromise
@@ -316,7 +338,7 @@ const resolvers: Resolvers = {
             if ((input?.instructions?.trim() || "").length > 0) {
                 message = `${message}: ${input?.instructions?.trim()}`
             }
-            let timestamp = (new Date()).toISOString()
+            let timestamp = now()
 
             let update: TrackableUpdate = {
                 did: `${(await tree.id())}-${timestamp}`,
@@ -413,7 +435,7 @@ const resolvers: Resolvers = {
                 throw new Error("you must be logged in to make an update")
             }
 
-            let timestamp = (new Date()).toISOString()
+            let timestamp = now()
 
             const trackableTree = await Tupelo.getLatest(trackable)
             trackableTree.key = user.tree.key
@@ -491,16 +513,12 @@ const resolvers: Resolvers = {
             }
         },
         acceptJob: async (_root, { input: { user, trackable } }: MutationAcceptJobArgs, { cache, communityPromise }: TrackerContext): Promise<AcceptJobPayload | undefined> => {
-            if (!appUser.userPromise) {
-                return undefined
-            }
-            let loggedinUser = await appUser.userPromise
+            let loggedinUser = await loadCurrentUser(user)
             if (!loggedinUser || (loggedinUser.did !== user)) {
                 return undefined
             }
-            await loggedinUser.load()
 
-            let timestamp = (new Date()).toISOString()
+            let timestamp = now()
 
             const trackableTree = await Tupelo.getLatest(trackable)
             trackableTree.key = loggedinUser.tree.key
@@ -529,7 +547,89 @@ const resolvers: Resolvers = {
             await appCollection.ownTrackable({ did: trackable, updates: {} }, { did: user })
         },
 
-        createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, { communityPromise }: TrackerContext): Promise<Recipient> => {
+        pickupDonation: async (_root, { input: { user, trackable, imageUrl } }: MutationPickupDonationArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
+            let loggedinUser = await loadCurrentUser(user)
+            if (!loggedinUser || (loggedinUser.did !== user)) {
+                return undefined
+            }
+
+            let timestamp = now()
+
+            const trackableTree = await Tupelo.getLatest(trackable)
+            trackableTree.key = loggedinUser.tree.key
+
+            let update: TrackableUpdate = {
+                did: `${(await trackableTree.id())}-${timestamp}`,
+                timestamp: timestamp,
+                message: "Picked up the donation",
+                userDid: loggedinUser.did!,
+                userName: loggedinUser.userName,
+                metadata: [{ key: "confirmationImage", value: imageUrl }],
+            }
+            log("update: ", update)
+            let c = await communityPromise
+
+            await c.playTransactions(trackableTree, [
+                setDataTransaction('status', TrackableStatus.PickedUp),
+                setDataTransaction('confirmation/pickup/image', imageUrl),
+                setDataTransaction(`updates/${timestamp}`, update),
+            ])
+
+            let updatedTrackable: Trackable = {
+                did: (await trackableTree.id())!,
+                updates: {
+                    edges: [
+                        update
+                    ]
+                },
+            }
+
+            return { trackable: updatedTrackable }
+        },
+
+        completeJob: async (_root, { input: { user, trackable } }: MutationCompleteJobArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
+            log("completeJob")
+
+            let currentUser = await loadCurrentUser(user)
+            if (!currentUser || (currentUser.did !== user)) {
+                return undefined
+            }
+
+            let timestamp = now()
+
+            const trackableTree = await Tupelo.getLatest(trackable)
+            trackableTree.key = currentUser.tree.key
+
+            let update: TrackableUpdate = {
+                did: `${(await trackableTree.id())}-${timestamp}`,
+                timestamp: timestamp,
+                message: "Delivered",
+                userDid: currentUser.did!,
+                userName: currentUser.userName,
+            }
+
+            log("update: ", update)
+
+            let c = await communityPromise
+
+            await c.playTransactions(trackableTree, [
+                setDataTransaction('status', TrackableStatus.Delivered),
+                setDataTransaction(`updates/${timestamp}`, update),
+            ])
+
+            let updatedTrackable: Trackable = {
+                did: (await trackableTree.id())!,
+                updates: {
+                    edges: [
+                        update
+                    ]
+                },
+            }
+
+            return { trackable: updatedTrackable }
+        },
+
+        createRecipient: async (_root, { name, password, address, instructions }: MutationCreateRecipientArgs, _context: TrackerContext): Promise<Recipient> => {
             log("createRecipient")
 
             let recipientTree = await createRecipientTree(name, password, address, instructions)
