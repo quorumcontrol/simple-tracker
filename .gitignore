@@ -26,3 +26,4 @@ public/tupelo.wasm
 /ambientUser/*
 /tupelolocal/*
 /user/*
+/.env
