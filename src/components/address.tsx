@@ -1,11 +1,11 @@
 import React from 'react'
 import { Text } from '@chakra-ui/core'
-import { AddressInput } from '../generated/graphql'
+import { Address, AddressInput } from '../generated/graphql'
 
 
-export function PickupAddr({ addr }: { addr: AddressInput | undefined }) {
+export function AddressComponent({ addr }: { addr: AddressInput | Address | undefined | null }) {
     if (!addr) {
-        return <Text>Unknown pickup address</Text>
+        return <Text>Unknown address</Text>
     }
     return (
         <Text>
@@ -15,4 +15,4 @@ export function PickupAddr({ addr }: { addr: AddressInput | undefined }) {
     )
 }
 
-export default PickupAddr
+export default AddressComponent

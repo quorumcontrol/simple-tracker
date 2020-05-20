@@ -3,7 +3,7 @@ import { gql, useQuery } from '@apollo/client'
 import { Box, Heading, Image, Icon, Text, Flex } from '@chakra-ui/core'
 import LoadingSpinner from '../components/loading'
 import ShowError from '../components/errors'
-import { Trackable, User, TrackableStatus } from '../generated/graphql'
+import { Trackable, User, TrackableStatus, Recipient } from '../generated/graphql'
 import { Link } from 'react-router-dom';
 import { getUrl } from '../lib/skynet'
 import Header from '../components/header'
@@ -33,6 +33,12 @@ export const SUMMARY_PAGE_QUERY = gql`
                 }
             }
         }
+        getFirstRecipient {
+            did
+            name
+            address
+            instructions
+        }
     }
 `
 
@@ -61,6 +67,23 @@ export function SummaryPage() {
         </Box>)
     }
 
+    let recipient: Recipient;
+
+    if (!data.getFirstRecipient) {
+        return (<Box>
+            <Header />
+            <Flex mt={5} p={10} flexDirection="column">
+                <Box>
+                    <Box>
+                        <Heading>No donation recipients available.</Heading>
+                    </Box>
+                </Box>
+            </Flex>
+        </Box>)
+    } else {
+        recipient = data.getFirstRecipient
+    }
+
     const available = data.getTrackables.trackables.filter((trackable: Trackable) => {
         return trackable.status === TrackableStatus.Published
     })
@@ -82,7 +105,7 @@ export function SummaryPage() {
                     </Flex>
                     <Box mt={5}>
                         <Heading mb={5} size="sm">Your current deliveries</Heading>
-                        <TrackableCollection trackables={myTrackables} user={data.me} />
+                        <TrackableCollection trackables={myTrackables} recipient={recipient} />
                     </Box>
 
                 </Box>
@@ -91,7 +114,7 @@ export function SummaryPage() {
     )
 }
 
-function TrackableCollection({ trackables, user }: { trackables: Trackable[], user: User }) {
+function TrackableCollection({ trackables, recipient }: { trackables: Trackable[], recipient: Recipient }) {
     const trackableElements = trackables.map((trackable: Trackable) => {
         let link: string = ""
         switch (trackable.status) {
@@ -117,7 +140,8 @@ function TrackableCollection({ trackables, user }: { trackables: Trackable[], us
                         :
                         <AddressComponent addr={pickupAddr} />
                     }
-                    <Text> TODO: Drop Off Address </Text>
+                    <AddressComponent addr={recipient.address} />
+                    <Text>{recipient.instructions}</Text>
                 </Box>
             </Link>
         )

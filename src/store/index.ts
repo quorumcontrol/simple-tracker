@@ -300,7 +300,15 @@ const resolvers: Resolvers = {
                 return { did: did }
             })
         },
-        me: async (_, { communityPromise }: TrackerContext): Promise<User | undefined> => {
+        getFirstRecipient: async (_root, _ctx: TrackerContext): Promise<Recipient | null> => {
+            const recipient = await recipients.getFirst()
+            if (recipient) {
+                return { did: recipient }
+            } else {
+                return null
+            }
+        },
+        me: async (_, _ctx: TrackerContext): Promise<User | undefined> => {
             if (!appUser.userPromise) {
                 return undefined
             }
@@ -547,7 +555,7 @@ const resolvers: Resolvers = {
             await appCollection.ownTrackable({ did: trackable, updates: {} }, { did: user })
         },
 
-        pickupDonation: async (_root, { input: { user, trackable, imageUrl } }: MutationPickupDonationArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
+        pickupDonation: async (_root, { input: { user, trackable, imageUrl } }: MutationPickupDonationArgs, { communityPromise }: TrackerContext): Promise<PickupPayload | undefined> => {
             let loggedinUser = await loadCurrentUser(user)
             if (!loggedinUser || (loggedinUser.did !== user)) {
                 return undefined
@@ -587,7 +595,7 @@ const resolvers: Resolvers = {
             return { trackable: updatedTrackable }
         },
 
-        completeJob: async (_root, { input: { user, trackable } }: MutationCompleteJobArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
+        completeJob: async (_root, { input: { user, trackable, recipient } }: MutationCompleteJobArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
             log("completeJob")
 
             let currentUser = await loadCurrentUser(user)
@@ -615,6 +623,7 @@ const resolvers: Resolvers = {
             await c.playTransactions(trackableTree, [
                 setDataTransaction('status', TrackableStatus.Delivered),
                 setDataTransaction(`updates/${timestamp}`, update),
+                setOwnershipTransaction([recipient!]),
             ])
 
             let updatedTrackable: Trackable = {

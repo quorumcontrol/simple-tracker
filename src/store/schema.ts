@@ -143,12 +143,12 @@ type PickupPayload {
 
 type CompleteJobPayload {
     trackable: Trackable
-    recipient: Recipient
 }
 
 input CompleteJobInput {
     user: ID!
     trackable: ID!
+    recipient: ID!
     imageUrl: String
 }
 
@@ -156,6 +156,7 @@ type Query {
     getTrackable(did: ID!): Trackable
     getTrackables: AppCollection
     getRecipients: [Recipient!]!
+    getFirstRecipient: Recipient
     me: User
 }
 

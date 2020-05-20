@@ -176,7 +176,7 @@ export function CollaboratorUI({ did }: { did: Scalars['ID'] }) {
             <Box mt={5}>
                 <Button isLoading={addLoading} onClick={handleToggle}>
                     Add Owner
-                    </Button>
+                </Button>
                 <Collapse mt={4} isOpen={show}>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <FormControl>
@@ -454,6 +454,9 @@ export function ObjectPage() {
                 </Route>
                 <Route path={`${path}/pickup`}>
                     <PickupPage />
+                </Route>
+                <Route path={`${path}/dropoff`}>
+                    <DropoffPage />
                 </Route>
             </Switch>
         </div >
