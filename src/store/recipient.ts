@@ -1,4 +1,4 @@
-import { ChainTree, Tupelo, EcdsaKey, setDataTransaction, Community } from "tupelo-wasm-sdk"
+import { Community, ChainTree, EcdsaKey, setDataTransaction } from "tupelo-lite"
 import { getAppCommunity } from './community';
 import { createNamedTree } from './identity';
 import { findOrCreateTree, updateTree } from "./openTree"
@@ -35,9 +35,10 @@ export class RecipientCollection {
     treePromise: Promise<ChainTree>
 
     constructor(region: string) {
-        this.region = Buffer.from(region)
+        this.region = Buffer.from(region + "-recipients")
         this._key = EcdsaKey.passPhraseKey(this.region, Buffer.from(recipientNamespace))
-        this.treePromise = findOrCreateTree(this.region, Buffer.from(recipientNamespace))
+        // this.treePromise = findOrCreateTree(this.region, Buffer.from(recipientNamespace))
+        this.treePromise = new Promise(()=>{})
     }
 
     updateTree() {

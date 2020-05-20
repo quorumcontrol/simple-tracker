@@ -2,7 +2,7 @@ import 'mocha';
 import { expect } from 'chai';
 import { AppCollection } from './collection';
 import { getAppCommunity } from './community';
-import { ChainTree, EcdsaKey, setDataTransaction, Tupelo } from 'tupelo-wasm-sdk';
+import { ChainTree, EcdsaKey, setDataTransaction } from 'tupelo-lite';
 import { Trackable } from '../generated/graphql';
 
 const namespace = "testnamespace"
@@ -18,8 +18,7 @@ describe('AppCollection', () => {
             updates: {},
         }
 
-        const proof = await collection.addTrackable(trackable)
-        expect(proof).to.not.be.undefined
+        await collection.addTrackable(trackable)
 
         expect((await collection.getTrackables()).map((t) => { return t.did })).to.include(trackable.did)
     })
@@ -37,9 +36,8 @@ describe('AppCollection', () => {
             updates: {},
         }
 
-        const proof = await collection.addTrackable(trackable)
-        expect(proof).to.not.be.undefined
-        tree = await Tupelo.getLatest(await key.toDid())
+        await collection.addTrackable(trackable)
+        tree = await c.getLatest(key.toDid())
         const resp = await tree.resolveData(`trackables/${trackable.did}`)
         expect(resp.value).to.be.false // false means 'unowned'
     })
@@ -60,11 +58,13 @@ describe('AppCollection', () => {
             updates: {},
         }
 
-        const proof = await collection1.addTrackable(trackable1)
-        const proof2 = await collection2.addTrackable(trackable2)
-        expect(proof).to.not.be.undefined
-        expect(proof2).to.not.be.undefined
+        console.log("add to collection1")
+        await collection1.addTrackable(trackable1)
+        console.log("add to collection2")
+        await collection2.addTrackable(trackable2)
+        console.log("collection1 update tree")
         await collection1.updateTree()
+        console.log("collection2 update tree")
         await collection2.updateTree()
         expect((await collection1.getTrackables()).map((t) => { return t.did })).to.have.members([trackable1.did, trackable2.did])
         expect((await collection2.getTrackables()).map((t) => { return t.did })).to.have.members([trackable1.did, trackable2.did])
@@ -81,9 +81,6 @@ describe('AppCollection', () => {
         }
 
         const proof = await collection.addTrackable(trackable)
-        expect(proof).to.not.be.undefined
-
-
 
         expect((await collection.getTrackables()).some((listTrackable) => {
             return listTrackable.did === trackable.did

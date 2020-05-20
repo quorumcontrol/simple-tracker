@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
 import { getAppCommunity } from './community'
 import { User, verifyAccount, register } from './identity';
-import { EcdsaKey, Repo } from 'tupelo-wasm-sdk';
+import { EcdsaKey, Repo } from 'tupelo-lite';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 const Key = require("interface-datastore").Key
@@ -84,7 +83,6 @@ export class AppUser extends EventEmitter {
         }
         log('registering user')
         const repo = await this.repo
-
         let user = await register(username, password, AppUser.userNamespace)
         await repo.put(usernameKey, Buffer.from(username))
         //TODO: need to more securely store the private key here

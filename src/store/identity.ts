@@ -1,5 +1,5 @@
 import { debug } from "debug";
-import { ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, Tupelo, Community } from "tupelo-wasm-sdk";
+import { ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, Community } from "tupelo-lite";
 import { EventEmitter } from "events";
 import { getAppCommunity } from './community';
 
@@ -38,7 +38,7 @@ const securePasswordKey = async (username: string, password: string) => {
  * by that pairing
  */
 const didFromKey = async (key: EcdsaKey) => {
-    return await Tupelo.ecdsaPubkeyToDid(key.publicKey)
+    return key.toDid()
 }
 
 /**
@@ -79,7 +79,7 @@ export const findUserAccount = async (username: string, appNamespace: Uint8Array
  */
 export const verifyAccount = async (username: string, password: string, appNamespace: Uint8Array): Promise<[boolean, User?]> => {
     let secureKey = await securePasswordKey(username, password)
-    let secureAddr = await secureKey.address()
+    let secureAddr = secureKey.address()
     const community = await getAppCommunity()
 
     const tree = await findUserAccount(username, appNamespace)
@@ -102,11 +102,11 @@ export const verifyAccount = async (username: string, password: string, appNames
 export const createNamedTree = async (name: string, password: string, appNamespace: Uint8Array) => {
     const c = await getAppCommunity()
 
-    log('creating key')
+    log(`creating key for ${name}`)
     const insecureKey = await insecureUsernameKey(name, appNamespace)
     const secureKey = await securePasswordKey(name, password)
-    const secureKeyAddress = await secureKey.address()
-    const treeDid = await insecureKey.toDid()
+    const secureKeyAddress = secureKey.address()
+    const treeDid = insecureKey.toDid()
 
     try {
         let tip = await c.getTip(treeDid)
@@ -120,10 +120,10 @@ export const createNamedTree = async (name: string, password: string, appNamespa
         // otherwise we didn't find the user so we can proceed
     }
 
-    log("creating named chaintree")
+    log("creating named chaintree", name, insecureKey.toDid())
     const namedTree = await ChainTree.newEmptyTree(c.blockservice, insecureKey)
 
-    log("transferring ownership of user chaintree and registering tweet feed")
+    log("transferring ownership of user chaintree")
     await c.playTransactions(namedTree, [
         // Set the ownership of the user chaintree to our secure key (thus
         // owning the username)
@@ -146,11 +146,11 @@ export const createNamedTree = async (name: string, password: string, appNamespa
  * Returns a handle for the created * chaintree
  */
 export const register = async (username: string, password: string, appNamespace: Uint8Array) => {
-    log("register")
+    log("register ", username)
     const c = await getAppCommunity()
 
     let userTree = await createNamedTree(username, password, appNamespace)
-
+    log("user tree for ", username, " created")
     return new User(username, userTree, c)
 }
 
