@@ -46,7 +46,7 @@ import { RecipientCollection, createRecipientTree, recipientNamePath, recipientA
 
 const GraphQLJSON = require('graphql-type-json');
 
-export const userNamespace = 'givingchain-v1' // increment this to reset data
+export const userNamespace = 'givingchain-v2' // increment this to reset data
 export const usernamePath = "givingchain/username"
 
 const log = debug("store.resolvers")

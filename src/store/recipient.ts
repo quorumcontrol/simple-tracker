@@ -7,7 +7,7 @@ import debug from 'debug';
 
 const log = debug("store.recipient")
 
-export const recipientNamespace = 'givingchain/recipient'
+export const recipientNamespace = 'givingchain/recipient-v2'
 export const recipientNamePath = `${recipientNamespace}/name`
 export const recipientAddressPath = `${recipientNamespace}/address`
 export const recipientInstructionsPath = `${recipientNamespace}/instructions`
