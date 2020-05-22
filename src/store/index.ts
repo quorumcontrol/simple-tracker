@@ -295,8 +295,9 @@ const resolvers: Resolvers = {
             }
         },
         getRecipients: async (_root, _ctx: TrackerContext): Promise<Recipient[]> => {
+            log("getRecipients")
             const recs = await recipients.getAll()
-
+            log("afterGet")
             return recs.map((did: string) => {
                 return { did: did }
             })
@@ -521,7 +522,9 @@ const resolvers: Resolvers = {
                 loggedIn: false,
             }
         },
-        acceptJob: async (_root, { input: { user, trackable } }: MutationAcceptJobArgs, { cache, communityPromise }: TrackerContext): Promise<AcceptJobPayload | undefined> => {
+        acceptJob: async (_root, { input: { user, trackable } }: MutationAcceptJobArgs, { cache }: TrackerContext): Promise<AcceptJobPayload | undefined> => {
+           
+            const c = await getAppCommunity()
             let loggedinUser = await loadCurrentUser(user)
             if (!loggedinUser || (loggedinUser.did !== user)) {
                 return undefined
@@ -529,7 +532,7 @@ const resolvers: Resolvers = {
 
             let timestamp = now()
 
-            const trackableTree = await (await communityPromise).getLatest(trackable)
+            const trackableTree = await c.getLatest(trackable)
             trackableTree.key = loggedinUser.tree.key
 
             let update: TrackableUpdate = {
@@ -540,7 +543,6 @@ const resolvers: Resolvers = {
                 userName: loggedinUser.userName,
             }
             log("update: ", update)
-            let c = await communityPromise
             const driversTree = await drivers.treePromise
             const driversDid = await driversTree.id()
 

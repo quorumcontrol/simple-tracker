@@ -28,6 +28,7 @@ export function ReceivePage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<RecipientFormData>();
     const [createRecipient,] = useMutation(CREATE_RECIPIENT)
     const history = useHistory()
+    console.error("errors: ", errors)
 
     async function onSubmit({ name, password, passwordConfirmation, address, instructions }: RecipientFormData) {
         if (password !== passwordConfirmation) {
@@ -105,7 +106,7 @@ export function ReceivePage() {
                                 ref={register({ required: "City, ST Zip is required" })}
                             />
                             <FormErrorMessage>
-                                {errors.address && errors.address.cityStateZip && (errors.address.cityStateZip)}
+                                {errors.address && errors.address.cityStateZip && (errors.address.cityStateZip.message)}
                             </FormErrorMessage>
                         </FormControl>
                     </Stack>

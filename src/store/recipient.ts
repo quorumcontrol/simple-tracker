@@ -37,8 +37,7 @@ export class RecipientCollection {
     constructor(region: string) {
         this.region = Buffer.from(region + "-recipients")
         this._key = EcdsaKey.passPhraseKey(this.region, Buffer.from(recipientNamespace))
-        // this.treePromise = findOrCreateTree(this.region, Buffer.from(recipientNamespace))
-        this.treePromise = new Promise(()=>{})
+        this.treePromise = findOrCreateTree(this.region, Buffer.from(recipientNamespace))
     }
 
     updateTree() {
@@ -68,7 +67,9 @@ export class RecipientCollection {
     }
 
     async getAll() {
+        log("getAll")
         let tree = await this.updateTree()
+        log("afterTree")
         let dids = (await tree.resolveData(recipientListPath)).value
         if (!dids) {
             dids = []
