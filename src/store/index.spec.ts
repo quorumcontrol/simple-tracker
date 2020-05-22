@@ -31,25 +31,6 @@ describe('resolvers', () => {
         expect(resp.errors).to.be.undefined
     })
 
-    // it('registers', async () => {
-    //     const registerMutation = gql`
-    //         mutation RegisterUser($namespace: String!, $username: String!, $password: String!) {
-    //             register(namespace: $namespace, username: $username, password: $password) {
-    //                 did
-    //                 username
-    //                 loggedIn
-    //             }
-    //         }
-    //     `
-    //     console.log("running mutation")
-    //     const resp = await client.mutate({
-    //         mutation: registerMutation,
-    //         variables: { namespace: userNamespace, username: userEmail, password: password }
-    //     })
-    //     console.log("mutation returned")
-    //     expect(resp.error).to.be.undefined
-    // })
-
     it('creates trackables', async () => {
         const CREATE_TRACKABLE = gql`
             mutation CreateTrackable($input: CreateTrackableInput!) {
