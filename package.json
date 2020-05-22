@@ -36,7 +36,7 @@
     "react-qrcode-logo": "^2.2.1",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1",
-    "tupelo-lite": "0.0.14",
+    "tupelo-lite": "0.0.15",
     "typescript": "^3.8.3",
     "url-parse": "^1.4.7",
     "uuid": "^7.0.3"
