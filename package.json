@@ -36,7 +36,7 @@
     "react-qrcode-logo": "^2.2.1",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1",
-    "tupelo-wasm-sdk": "^0.7.3",
+    "tupelo-lite": "0.0.15",
     "typescript": "^3.8.3",
     "url-parse": "^1.4.7",
     "uuid": "^7.0.3"
@@ -45,9 +45,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha",
-    "integration-test": "react-scripts test",
     "eject": "react-scripts eject",
-    "cp:wasm": "cp ./node_modules/tupelo-wasm-sdk/lib/js/go/tupelo.wasm ./public/",
     "generate": "graphql-codegen --config codegen.yml"
   },
   "eslintConfig": {

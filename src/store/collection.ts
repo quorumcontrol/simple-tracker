@@ -1,4 +1,4 @@
-import { ChainTree, setDataTransaction } from "tupelo-wasm-sdk"
+import { ChainTree, setDataTransaction } from "tupelo-lite"
 import { Trackable, User } from "../generated/graphql"
 import { getAppCommunity } from "./community"
 import { findOrCreateTree, updateTree } from "./openTree"
@@ -60,9 +60,11 @@ export class AppCollection {
         // TODO: this needs to retry but for now we'll assume low throughput
         //  and just grab the latest
         let tree = await this.updateTree()
-
+        log(`addTrackable updating tree @ `, tree.tip.toBaseEncodedString())
         const c = await getAppCommunity()
-        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, false)]) // false means "unowned"
+        await c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, false)]) // false means "unowned"
+        log(`addTrackable updated to `, tree.tip.toBaseEncodedString())
+        return
     }
 
     async ownTrackable(trackable: Trackable, user: User) {
@@ -72,6 +74,8 @@ export class AppCollection {
 
         const c = await getAppCommunity()
         // set the trackable DID to the DID of the driver picking it up
-        return c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, user.did)])
+        await c.playTransactions(tree, [setDataTransaction(`trackables/${trackable.did}`, user.did)])
+        log(`ownTrackable updated to `, tree.tip.toBaseEncodedString())
+        return
     }
 }

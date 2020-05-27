@@ -31,11 +31,11 @@ import {
     MutationPickupDonationArgs,
     PickupPayload,
 } from '../generated/graphql'
-import { Tupelo, Community, ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, IResolveResponse } from 'tupelo-wasm-sdk'
+import { ChainTree, EcdsaKey, setDataTransaction, setOwnershipTransaction, IResolveResponse,Community } from 'tupelo-lite'
 import { AppUser } from './user';
 import { makeExecutableSchema } from 'graphql-tools';
 import { SchemaLink } from '@apollo/link-schema';
-import { getAppCommunity } from './community';
+import { getAppCommunity} from './community';
 import { appUser } from './user';
 import { User as UserIdentity } from './identity'
 import { CURRENT_USER } from './queries';
@@ -62,11 +62,9 @@ function namespaceToPath(namespace: string) {
     return `/apps/${namespace}/collection`
 }
 
-Tupelo.setLogLevel("*", "error")
-
 const appCollection = new AppCollection({ name: `${userNamespace}/trackables`, namespace: userNamespace })
 
-const drivers = new Drivers({ region: 'princeton, nj', namespace: `${userNamespace}/drivers` })
+const drivers = new Drivers({ region: 'DRIVERS', namespace: `${userNamespace}/drivers` })
 const recipients = new RecipientCollection('princeton, nj')
 
 // there is a crappy IPLD bug where if you're resolving to something that has a value of undefined
@@ -93,7 +91,7 @@ const findUserAccount = async (username: string, appNamespace: Uint8Array): Prom
     const community = await getAppCommunity()
 
     const insecureKey = await EcdsaKey.passPhraseKey(Buffer.from(username), appNamespace)
-    const did = await insecureKey.toDid()
+    const did = insecureKey.toDid()
 
     let tip
     let tree: ChainTree | undefined = undefined
@@ -149,12 +147,15 @@ function now(): string {
 const resolvers: Resolvers = {
     JSON: GraphQLJSON,
     User: {
-        username: async (user: User, { communityPromise }: TrackerContext): Promise<String> => {
-            const tree = await Tupelo.getLatest(user.did)
+        username: async (user: User): Promise<String> => {
+            const c = await getAppCommunity()
+            const tree = await c.getLatest(user.did)
             return resolveUsername(tree)
         },
         collection: async (user: User, { communityPromise }: TrackerContext): Promise<TrackableCollection | undefined> => {
-            const tree = await Tupelo.getLatest(user.did)
+            const c = await getAppCommunity()
+
+            const tree = await c.getLatest(user.did)
             if (!user.namespace) {
                 return undefined
             }
@@ -165,9 +166,9 @@ const resolvers: Resolvers = {
         }
     },
     Trackable: {
-        collaborators: async (trackable: Trackable, _context): Promise<TrackableCollaboratorConnection> => {
+        collaborators: async (trackable: Trackable): Promise<TrackableCollaboratorConnection> => {
             const did = trackable.did
-            const tree = await Tupelo.getLatest(did)
+            const tree = await (await getAppCommunity()).getLatest(did)
             const resp = await tree.resolveData("collaborators")
             if (!resp.value) {
                 return { edges: [] }
@@ -178,57 +179,57 @@ const resolvers: Resolvers = {
 
             return { edges }
         },
-        name: async (trackable: Trackable, _context): Promise<string> => {
+        name: async (trackable: Trackable): Promise<string> => {
             if (trackable.name) {
                 return trackable.name
             }
             log("name trackable: ", trackable)
             const did = trackable.did
-            const tree = await Tupelo.getLatest(did)
+            const tree = await (await getAppCommunity()).getLatest(did)
             return (await resolveWithUndefined(tree, "name")).value
         },
-        status: async (trackable: Trackable, _context): Promise<TrackableStatus | null> => {
+        status: async (trackable: Trackable): Promise<TrackableStatus | null> => {
             if (trackable.status) {
                 return trackable.status
             }
             log("status trackable: ", trackable)
-            const tree = await Tupelo.getLatest(trackable.did)
+            const tree = await (await getAppCommunity()).getLatest(trackable.did)
             return (await resolveWithUndefined(tree, "status")).value
         },
-        driver: async (trackable: Trackable, _context): Promise<User | null> => {
+        driver: async (trackable: Trackable): Promise<User | null> => {
             if (trackable.driver) {
                 return trackable.driver
             }
             log("driver trackable: ", trackable)
-            const tree = await Tupelo.getLatest(trackable.did)
+            const tree = await (await getAppCommunity()).getLatest(trackable.did)
             const driver = (await resolveWithUndefined(tree, "driver")).value
             if (!driver) {
                 return null
             }
             return { did: driver }
         },
-        image: async (trackable: Trackable, _context): Promise<string | null> => {
+        image: async (trackable: Trackable): Promise<string | null> => {
             if (trackable.image) {
                 return trackable.image
             }
             log("image trackable: ", trackable)
             const did = trackable.did
-            const tree = await Tupelo.getLatest(did)
+            const tree = await (await getAppCommunity()).getLatest(did)
             return (await resolveWithUndefined(tree, "image")).value
         },
-        metadata: async (trackable: Trackable, _context): Promise<MetadataEntry[]> => {
+        metadata: async (trackable: Trackable): Promise<MetadataEntry[]> => {
             if (trackable.metadata) {
                 return trackable.metadata
             }
             log("trackable metadata")
-            const tree = await Tupelo.getLatest(trackable.did)
+            const tree = await (await getAppCommunity()).getLatest(trackable.did)
             return (await resolveWithUndefined(tree, "metadata")).value
         },
-        updates: async (trackable: Trackable, _context): Promise<TrackableUpdateConnection> => {
+        updates: async (trackable: Trackable,): Promise<TrackableUpdateConnection> => {
             log("updates trackable: ", trackable)
 
             const did = trackable.did
-            const tree = await Tupelo.getLatest(did)
+            const tree = await (await getAppCommunity()).getLatest(did)
             let updates = await tree.resolveData("updates")
             log("updates from resolve: ", updates.value)
             if (updates.value) {
@@ -248,8 +249,8 @@ const resolvers: Resolvers = {
         }
     },
     TrackableCollection: {
-        trackables: async (collection: TrackableCollection, _context): Promise<Trackable[]> => {
-            const tree = await Tupelo.getLatest(collection.did)
+        trackables: async (collection: TrackableCollection): Promise<Trackable[]> => {
+            const tree = await (await getAppCommunity()).getLatest(collection.did)
             // this will be a map of timestamp to did
             const trackableResp = (await resolveWithUndefined(tree, "updates"))
             log(trackableResp)
@@ -264,16 +265,16 @@ const resolvers: Resolvers = {
         }
     },
     Recipient: {
-        name: async (recipient: Recipient, _context): Promise<String> => {
-            const tree = await Tupelo.getLatest(recipient.did)
+        name: async (recipient: Recipient): Promise<String> => {
+            const tree = await (await getAppCommunity()).getLatest(recipient.did)
             return (await tree.resolveData(recipientNamePath)).value
         },
-        address: async (recipient: Recipient, _context): Promise<String> => {
-            const tree = await Tupelo.getLatest(recipient.did)
+        address: async (recipient: Recipient): Promise<String> => {
+            const tree = await (await getAppCommunity()).getLatest(recipient.did)
             return (await tree.resolveData(recipientAddressPath)).value
         },
-        instructions: async (recipient: Recipient, _context): Promise<String> => {
-            const tree = await Tupelo.getLatest(recipient.did)
+        instructions: async (recipient: Recipient): Promise<String> => {
+            const tree = await (await getAppCommunity()).getLatest(recipient.did)
             return (await tree.resolveData(recipientInstructionsPath)).value
         },
     },
@@ -285,17 +286,18 @@ const resolvers: Resolvers = {
                 trackables: trackables,
             }
         },
-        getTrackable: async (_root, { did }: QueryGetTrackableArgs, { communityPromise }: TrackerContext) => {
+        getTrackable: async (_root, { did }: QueryGetTrackableArgs) => {
             log("get trackable: ", did)
-            await communityPromise
-            const tree = await Tupelo.getLatest(did)
+            const c = await getAppCommunity()
+            const tree = await c.getLatest(did)
             return {
                 did: await tree.id(),
             }
         },
         getRecipients: async (_root, _ctx: TrackerContext): Promise<Recipient[]> => {
+            log("getRecipients")
             const recs = await recipients.getAll()
-
+            log("afterGet")
             return recs.map((did: string) => {
                 return { did: did }
             })
@@ -308,7 +310,7 @@ const resolvers: Resolvers = {
                 return null
             }
         },
-        me: async (_, _ctx: TrackerContext): Promise<User | undefined> => {
+        me: async (): Promise<User | undefined> => {
             if (!appUser.userPromise) {
                 return undefined
             }
@@ -328,7 +330,7 @@ const resolvers: Resolvers = {
     Mutation: {
         createTrackable: async (_root, { input }: MutationCreateTrackableArgs, { communityPromise }: TrackerContext): Promise<CreateTrackablePayload | undefined> => {
             log('createTrackable')
-            const key = await EcdsaKey.generate()
+            const key = EcdsaKey.generate()
             const c = await communityPromise
 
             log('creating trackable tree')
@@ -416,7 +418,7 @@ const resolvers: Resolvers = {
             }
             let collaboratorAuths = (await collaboratorTree.resolve("tree/_tupelo/authentications")).value
 
-            const trackableTree = await Tupelo.getLatest(trackable)
+            const trackableTree = await (await communityPromise).getLatest(trackable)
             trackableTree.key = user.tree.key
 
             let trackableAuthsResp = await trackableTree.resolve("tree/_tupelo/authentications")
@@ -445,7 +447,7 @@ const resolvers: Resolvers = {
 
             let timestamp = now()
 
-            const trackableTree = await Tupelo.getLatest(trackable)
+            const trackableTree = await (await communityPromise).getLatest(trackable)
             trackableTree.key = user.tree.key
 
             let update: TrackableUpdate = {
@@ -464,9 +466,9 @@ const resolvers: Resolvers = {
             }
 
         },
-        register: async (_root, { username, password }: MutationRegisterArgs, { communityPromise }: TrackerContext): Promise<User | undefined> => {
-            await communityPromise
-
+        register: async (_root, { username, password }: MutationRegisterArgs, ctx: TrackerContext): Promise<User | undefined> => {
+            const c = await ctx.communityPromise
+            console.log("registering")
             let user = await appUser.register(username!, password!)
             if (!user) {
                 return undefined
@@ -488,15 +490,15 @@ const resolvers: Resolvers = {
 
             let appKey = await EcdsaKey.passPhraseKey(Buffer.from(passphrase), Buffer.from(namespace))
 
-            const c = await communityPromise
             let tree = await ChainTree.newEmptyTree(c.blockservice, appKey)
+            const did = await tree.id()
 
-            log('setting data')
+            log('setting data on ', did)
             await Promise.all([
-                c.playTransactions(user.tree, [setDataTransaction(pathToTree, await (await tree).id())]),
-                c.playTransactions(tree, [setOwnershipTransaction([await user.tree.key!.address()])]),
-                drivers.addDriver(user),
+                c.playTransactions(user.tree, [setDataTransaction(pathToTree, did)]),
+                c.playTransactions(tree, [setOwnershipTransaction([user.tree.key!.address()])]),
             ])
+            await drivers.addDriver(user)
 
             log("post register resolve: ", await user.tree.resolveData(`/apps/${namespace}`))
 
@@ -520,7 +522,9 @@ const resolvers: Resolvers = {
                 loggedIn: false,
             }
         },
-        acceptJob: async (_root, { input: { user, trackable } }: MutationAcceptJobArgs, { cache, communityPromise }: TrackerContext): Promise<AcceptJobPayload | undefined> => {
+        acceptJob: async (_root, { input: { user, trackable } }: MutationAcceptJobArgs, { cache }: TrackerContext): Promise<AcceptJobPayload | undefined> => {
+           
+            const c = await getAppCommunity()
             let loggedinUser = await loadCurrentUser(user)
             if (!loggedinUser || (loggedinUser.did !== user)) {
                 return undefined
@@ -528,7 +532,7 @@ const resolvers: Resolvers = {
 
             let timestamp = now()
 
-            const trackableTree = await Tupelo.getLatest(trackable)
+            const trackableTree = await c.getLatest(trackable)
             trackableTree.key = loggedinUser.tree.key
 
             let update: TrackableUpdate = {
@@ -539,7 +543,6 @@ const resolvers: Resolvers = {
                 userName: loggedinUser.userName,
             }
             log("update: ", update)
-            let c = await communityPromise
             const driversTree = await drivers.treePromise
             const driversDid = await driversTree.id()
 
@@ -555,7 +558,8 @@ const resolvers: Resolvers = {
             await appCollection.ownTrackable({ did: trackable, updates: {} }, { did: user })
         },
 
-        pickupDonation: async (_root, { input: { user, trackable, imageUrl } }: MutationPickupDonationArgs, { communityPromise }: TrackerContext): Promise<PickupPayload | undefined> => {
+        pickupDonation: async (_root, { input: { user, trackable, imageUrl } }: MutationPickupDonationArgs): Promise<PickupPayload | undefined> => {
+            const c = await getAppCommunity()
             let loggedinUser = await loadCurrentUser(user)
             if (!loggedinUser || (loggedinUser.did !== user)) {
                 return undefined
@@ -563,7 +567,7 @@ const resolvers: Resolvers = {
 
             let timestamp = now()
 
-            const trackableTree = await Tupelo.getLatest(trackable)
+            const trackableTree = await c.getLatest(trackable)
             trackableTree.key = loggedinUser.tree.key
 
             let update: TrackableUpdate = {
@@ -575,7 +579,6 @@ const resolvers: Resolvers = {
                 metadata: [{ key: "confirmationImage", value: imageUrl }],
             }
             log("update: ", update)
-            let c = await communityPromise
 
             await c.playTransactions(trackableTree, [
                 setDataTransaction('status', TrackableStatus.PickedUp),
@@ -595,8 +598,9 @@ const resolvers: Resolvers = {
             return { trackable: updatedTrackable }
         },
 
-        completeJob: async (_root, { input: { user, trackable, recipient } }: MutationCompleteJobArgs, { communityPromise }: TrackerContext): Promise<CompleteJobPayload | undefined> => {
+        completeJob: async (_root, { input: { user, trackable, recipient } }: MutationCompleteJobArgs): Promise<CompleteJobPayload | undefined> => {
             log("completeJob")
+            const c = await getAppCommunity()
 
             let currentUser = await loadCurrentUser(user)
             if (!currentUser || (currentUser.did !== user)) {
@@ -605,7 +609,7 @@ const resolvers: Resolvers = {
 
             let timestamp = now()
 
-            const trackableTree = await Tupelo.getLatest(trackable)
+            const trackableTree = await c.getLatest(trackable)
             trackableTree.key = currentUser.tree.key
 
             let update: TrackableUpdate = {
@@ -617,8 +621,6 @@ const resolvers: Resolvers = {
             }
 
             log("update: ", update)
-
-            let c = await communityPromise
 
             await c.playTransactions(trackableTree, [
                 setDataTransaction('status', TrackableStatus.Delivered),

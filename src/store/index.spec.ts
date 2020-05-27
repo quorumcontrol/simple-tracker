@@ -22,12 +22,13 @@ describe('resolvers', () => {
                 }
             }
         `
-
+        console.log("running mutation")
         const resp = await client.mutate({
             mutation: registerMutation,
             variables: { namespace: userNamespace, username: userEmail, password: password }
         })
-        expect(resp.error).to.be.undefined
+        console.log("mutation returned")
+        expect(resp.errors).to.be.undefined
     })
 
     it('creates trackables', async () => {
@@ -61,7 +62,7 @@ describe('resolvers', () => {
             variables: { input: { name: "test1" } },
             refetchQueries: [{ query: appTrackableQuery }]
         })
-        expect(mutateResp.error).to.be.undefined
+        expect(mutateResp.errors).to.be.undefined
         expect(mutateResp.data.createTrackable.trackable.name).to.equal("test1")
 
 
@@ -118,13 +119,13 @@ describe('resolvers', () => {
             mutation: createTrackableMutation,
             variables: { input: { name: "testtrackable" } }
         })
-        expect(createTrackableResp.error).to.be.undefined
+        expect(createTrackableResp.errors).to.be.undefined
 
         const resp = await client.mutate({
             mutation: acceptMutation,
             variables: { input: { user: currUserResp.data.me.did, trackable: createTrackableResp.data.createTrackable.trackable.did } }
         })
 
-        expect(resp.error).to.be.undefined
+        expect(resp.errors).to.be.undefined
     })
 })

@@ -1,10 +1,11 @@
-import { ChainTree, EcdsaKey, setDataTransaction } from "tupelo-wasm-sdk"
+import { ChainTree, EcdsaKey, setDataTransaction } from "tupelo-lite"
 import { User } from "./identity"
 import { getAppCommunity } from "./community"
 import { findOrCreateTree, updateTree } from "./openTree"
 import debug from 'debug'
+import { SimpleSyncer } from "./syncer"
 
-const log = debug("Drivers")
+const log = debug("store.drivers")
 
 export class Drivers {
     private namespace: Buffer
@@ -12,12 +13,14 @@ export class Drivers {
     private driversPath: string
     private _key: Promise<EcdsaKey>
     treePromise: Promise<ChainTree>
+    queue:SimpleSyncer
 
     constructor({ region, namespace }: { region: string, namespace: string }) {
         this.region = Buffer.from(region)
         this.namespace = Buffer.from(namespace)
         this._key = EcdsaKey.passPhraseKey(this.region, this.namespace)
-        this.treePromise = findOrCreateTree(this.region, this.namespace)
+        this.queue = new SimpleSyncer("drivers")
+        this.treePromise = this.queue.send(()=>{return findOrCreateTree(this.region, this.namespace)}) as Promise<ChainTree>
         this.driversPath = "drivers"
     }
 
@@ -43,13 +46,24 @@ export class Drivers {
     }
 
     async addDriver(driver: User) {
-        let tree = await this.updateTree()
         const c = await getAppCommunity()
-        let dids = (await tree.resolveData(this.driversPath)).value
-        if (!dids) {
-            dids = []
-        }
-        dids.push(driver.did)
-        return c.playTransactions(tree, [setDataTransaction(this.driversPath, dids)])
+        return this.queue.send((async ()=> {
+            let tree = await this.updateTree()
+            log("resolving driversPath")
+            let dids = (await tree.resolveData(this.driversPath)).value
+            if (!dids) {
+                dids = []
+            }
+            dids.push(driver.did)
+            log("playing driver transaction: ", dids, " tree: ", tree)
+            try {
+                await c.playTransactions(tree, [setDataTransaction(this.driversPath, dids)])
+            } catch(err) {
+                log("error playing transaction: ", err)
+                throw err
+            }
+            log("driver transaction worked")
+            return
+        }).bind(this))
     }
 }
