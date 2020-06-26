@@ -651,7 +651,7 @@ const resolvers: Resolvers = {
                 address: address,
                 instructions: instructions,
             }
-
+            log("new recipient: ", newRecipient)
             recipients.add(newRecipient)
 
             return newRecipient

@@ -28,7 +28,6 @@ export function ReceivePage() {
     const { handleSubmit, errors, setError, register, formState } = useForm<RecipientFormData>();
     const [createRecipient,] = useMutation(CREATE_RECIPIENT)
     const history = useHistory()
-    console.error("errors: ", errors)
 
     async function onSubmit({ name, password, passwordConfirmation, address, instructions }: RecipientFormData) {
         if (password !== passwordConfirmation) {
